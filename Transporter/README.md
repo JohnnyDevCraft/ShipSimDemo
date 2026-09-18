@@ -1,0 +1,15 @@
+# Transporter discovery preview
+
+Latest discovery revision: the compact centered buffer shows a pattern count, not cards. Standard max mass defaults provisionally to 160 kg and cargo max mass to 500 kg; both are editable in the footer. Either endpoint being our Cargo Bay selects the cargo limit regardless of Bio/Non-bio. Locks reserve mass in selection order, skipping targets that do not fit the remaining capacity. Only completed locks enter a transfer batch. Remaining targets wait on the left while the batch is buffered and delivered. The right lever stays raised after delivery; lowering it to zero allows the next batch to lock. Changing a destination or mass limit before transfer resets locks to revalidate capacity. Active-cycle settings remain locked. These rules supersede the earlier all-targets-lock and cards-inside-buffer descriptions below.
+
+The buffer and its two levers are centered between equal-width selected and delivered manifests. Cards move from the left into the buffer after dematerialization, and to the right after materialization. Target locks acquire sequentially in selection order. The configurable demo lock speed defaults to three seconds per target; each card shows progress until locked. Dematerialization waits for all selected targets to lock.
+
+Open `/Transporter/` on the Templates static preview server. This is an HTML/CSS/JavaScript discovery artifact with local sample state and no live APIs, database writes, or Angular application changes.
+
+Target, Transport, and Destination are separate panels. The requested 20:80:20 proportions are interpreted as relative 1:4:1 column weights, with readable minimum widths. Smaller displays stack sections. Styling reuses the existing reactor/helm template theme.
+
+Scan a source, select Bio personnel or Non-bio mission cargo, and choose a different destination. Selected targets appear in a two-column manifest. Raise the left lever to dematerialize; lower it to pause. Once the buffer is full, manually lower the left lever to zero before raising the right lever. The right lever materializes targets at the locked destination. Completed targets move in local demo state and can be found by scanning their new location. Reset restores the fixture.
+
+The shared progress bar reports the current stage. Buffer occupancy rises during dematerialization and falls during materialization. Power use and remaining available power appear above the controls; maximum variable power appears at bottom right. Target and destination settings lock during an active cycle.
+
+Preview assumptions: Compact Transporter Mark I has a 12 PU variable allowance; each stage takes eight seconds at full power, scales proportionally with lever setting, and pauses at zero. All offered external locations are illustrative in-range fixtures. Bio targets are people; non-bio candidates are mission items only. The destination environment reports gas composition, temperature, and Terran breathability; the outpost demonstrates non-breathable conditions. Environmental eligibility, shielding, capacity, range calculations, and real power allocation remain discovery topics.

@@ -1,0 +1,7 @@
+
+demo-app/node_modules/
+demo-app/dist/
+demo-app/.angular/
+
+# Private local build workspace; never publish editable simulator source.
+/demo-app/

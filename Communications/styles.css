@@ -79,3 +79,19 @@ button:disabled{opacity:.4;cursor:default}.communication-editor{min-width:0}
 .view-filter-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.view-filter-section h3{font-size:13px;margin:0 0 12px}.view-filter-buttons button,.view-mode-buttons button{position:relative;text-align:center;display:block;padding:12px 18px;min-height:42px}.view-filter-buttons .broadcast-light,.view-mode-buttons .broadcast-light{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:8px;height:8px}.view-filter-buttons button[aria-pressed='true'] .broadcast-light{background:#65ff9a}.view-filter-buttons button[aria-pressed='true']{color:var(--cyan);border-color:#427d70}.view-filter-buttons button{font-size:11px}@media(max-width:500px){.view-filter-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 #broadcastSettingsView:not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:32px}.view-screen-settings{display:flex;flex-direction:column;gap:18px}.view-screen-settings label{max-width:none!important;width:100%}@media(max-width:850px){#broadcastSettingsView:not([hidden]){grid-template-columns:1fr}}
+.communication-editor.chat-open .compose-fields,
+.communication-editor.chat-open .compose-fields + .muted,
+.communication-editor.chat-open #encryptionControl,
+.communication-editor.chat-open > h3{display:none;}
+#conversation[hidden]{display:none;}
+.chat-open #conversation{height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;min-height:0;border-top:1px solid #294350;}
+#conversation .chat-bubble{max-width:85%;padding:12px;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;flex-shrink:0;}
+#conversation .chat-bubble.incoming{align-self:flex-start;background:#203440;}
+#conversation .chat-bubble.outgoing{align-self:flex-end;background:#17534f;}
+.chat-bubble strong{display:block;font-size:12px;margin-bottom:8px;}
+.chat-bubble span{display:block;line-height:1.6;}
+.chat-open #sendMessage{width:100%;box-sizing:border-box;}
+
+#connectionSetup[hidden],#activeChat[hidden]{display:none!important}
+.chat-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#connectionDetails{padding-bottom:12px;border-bottom:1px solid #294350}

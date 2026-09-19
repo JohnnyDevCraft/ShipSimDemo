@@ -1,27 +1,23 @@
-# ShipsMS demo collection
+# ShipsMS demos
 
-`index.html` is the ShipsMS introduction and links to all twelve demos. Every demo has its own folder directly under `Templates`:
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all twelve demos; each screen lives in its own folder. `Weapons/` contains the shared compiled assets for the six weapon and defense screens.
 
-- Helm, Reactor, PowerDistribution, Communications, Transporter, ViewScreen
-- TacticalOfficer, TorpedoAssembly, TorpedoLaunch, PhaseCannon, PhaserArray, Shields
-
-The six weapon and defense demos share compiled Angular assets in `Weapons/`. Keep that folder alongside the individual demo folders. All demos run in the browser without a simulation server.
-
-## Rebuild and publish
-
-From the repository root:
+## Local preview
 
 ```sh
-npm --prefix ng-app ci
-npm --prefix ng-app run build:demos
+python3 -m http.server 18087 --bind 127.0.0.1
 ```
 
-This updates the weapon demo pages and shared assets inside `Templates`, then copies the complete collection to `ng-app/dist/github-pages/`. Publish the contents of either folder as the GitHub Pages artifact. Relative links and hash routes support repository subpaths without server rewrites. The export does not change GitHub Pages settings.
+Open http://localhost:18087/. No simulator server or account is needed. Demo state is local sample state.
 
-To preview directly from Templates:
+## Helm map verification
 
-```sh
-python3 -m http.server 18086 --bind 127.0.0.1 --directory Templates
-```
+With Playwright installed, run `node tests/helm-map.cjs` against the preview above. Set `PLAYWRIGHT_MODULE` to an existing Playwright installation if necessary, and `DEMO_URL` to override the Helm URL.
 
-Open `http://localhost:18086/`. The plain HTML demos remain editable in their folders. Edit weapon demos in `ng-app/src`, then rebuild; their exported HTML and shared bundles are generated files.
+Helm supports LRS and SRS contact selection, system-map repeated-click centering, pan and wheel/pinch zoom, and a 30-light-year maximum system radius. SRS selection does not assign a navigation destination. Sample naval ships provide contacts at near, system, and interstellar scales.
+
+The plain HTML screens are edited directly here. The weapon pages currently use compiled Angular assets exported from ShipSim; their editable Angular source is still in that repository. Avoid overwriting this repository with an older wholesale export.
+
+## Weapon demo builds
+
+The editable `demo-app/` workspace is private and ignored by Git. It is not shipped in this repository. On the maintainer machine, `node scripts/build-weapons.cjs` produces the minified production bundles and updates the public entry pages. No source maps are published. Browser JavaScript remains inspectable despite minification.

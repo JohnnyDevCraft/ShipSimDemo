@@ -1,0 +1,24 @@
+{
+  "name": "Mars",
+  "assetType": "planet",
+  "classification": null,
+  "classificationNote": "No fictional planet class assigned by this request.",
+  "static": true,
+  "coordinates": "glTF right-handed Y-up; origin at planet center",
+  "geometryUnits": "Each GLB has unit vertex radius; multiply all layer scales by the application's planet radius.",
+  "layers": [
+    {"file": "mars-surface.glb", "radiusRatio": 1.0, "collision": "solid", "opaque": true},
+    {"file": "mars-atmosphere.glb", "radiusRatio": 1.008, "collision": "none", "opaque": false,
+     "material": {
+       "fallback": "GLB alpha blend 0.025; base-color texture is the Meshy texture generated from the GPT Image atmosphere reference.",
+       "rimShader": "mars-atmosphere.frag.glsl",
+       "depthTest": true, "depthWrite": false, "blend": "normal-alpha", "side": "front",
+       "insidePolicy": "No collision; cull back faces when inside shell. Interior atmospheric scattering is not simulated."
+     }}
+  ],
+  "cloudLayer": null,
+  "atmosphereScaleNote": "1.008 is a visual shell ratio for this asset, not an authored simulation atmosphere height.",
+  "previews": {"topDown": "mars-top-down.png", "perspective": "mars-preview.png"},
+  "accuracy": "Generated artistic Mars likeness, not a scientific cartographic model.",
+  "integration": "Assets only. Application must honor collision roles, relative layer scale and the supplied rim shader. No simulator code was changed."
+}

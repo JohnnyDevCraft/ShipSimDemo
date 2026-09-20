@@ -1,0 +1,36 @@
+{
+  "referenceImages": "GPT Image through built-in Codex/ChatGPT tool",
+  "geometryAndTextures": "Meshy",
+  "localFinishing": "Blender: exact spherical radii, transparent atmosphere, renders",
+  "tasks": [
+    {
+      "stage": "atmosphere-geometry",
+      "resource": "text-to-3d",
+      "taskId": "01a0bc90-efc8-7077-9b00-ded2c1dfcef4",
+      "status": "SUCCEEDED",
+      "credits": 20
+    },
+    {
+      "stage": "atmosphere-texture",
+      "resource": "retexture",
+      "taskId": "01a0bc92-2288-7734-b1ec-c06b79d658f2",
+      "status": "SUCCEEDED",
+      "credits": 10
+    },
+    {
+      "stage": "surface-geometry",
+      "resource": "text-to-3d",
+      "taskId": "01a0bc90-960e-7109-8364-74c479aee228",
+      "status": "SUCCEEDED",
+      "credits": 20
+    },
+    {
+      "stage": "surface-texture",
+      "resource": "retexture",
+      "taskId": "01a0bc91-a222-7705-8fb3-128666d7e4b0",
+      "status": "SUCCEEDED",
+      "credits": 10
+    }
+  ],
+  "totalMeshyCredits": 60
+}

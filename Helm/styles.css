@@ -44,3 +44,16 @@ main{max-width:1900px;grid-template-columns:250px minmax(420px,1fr) 300px;grid-t
 .target .actions{gap:10px;}
 .target .actions button{padding:10px 6px;}
 @media(max-width:650px){.target strong{font-size:16px;}}
+
+/* Selected Destination widget (shared with Navigation Control) and the helm's own manual course. */
+.selected-destination [hidden]{display:none!important}
+.selected-destination>[data-sd-field]:first-child{flex:1 1 180px;min-width:0}
+.selected-destination [data-sd="note"]{display:block;font-size:11px;margin-top:4px}
+.sd-calculating{flex:1;min-width:240px}.sd-calculating progress{display:block;width:100%;margin:12px 0 0}
+.manual-result{margin:14px 0 6px;color:var(--cyan);font-variant-numeric:tabular-nums}
+#manualProgress{margin:6px 0 10px}#manualProgress[hidden]{display:none}
+.route #manualAlign{width:100%}
+footer{align-items:center;flex-wrap:wrap}
+.nav-status{color:var(--cyan)}.nav-status.offline{color:#ed6371}
+.console-link{color:var(--cyan);text-decoration:none}.console-link:hover{text-decoration:underline}
+.selected-destination .actions{flex:0 0 auto}.selected-destination .actions button{flex:0 0 auto;white-space:nowrap;padding:10px 14px}

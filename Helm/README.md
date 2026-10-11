@@ -1,8 +1,23 @@
 # Helm discovery preview
 
+## Navigation split (2026-10-10)
+
+This page follows the Version 3 navigation redesign. Navigation is its own console now: see `../Navigation/README.md`.
+
+- Map tabs are LRS and SRS. The system map moved to Navigation Control, and so did the Earth Settlements camera preset, the navigation computer power toggle and the calculation-seconds control.
+- The Selected Destination widget shows what the navigation computer holds for our ship (name, course, turn, distance, time at current speed). Its only button is Align. Helm cannot set or clear the destination.
+- Manual Navigation stays. A typed course is the helm's own manual course, shown in that panel with its own Align button; it does not change the navigation computer's destination. Galactic coordinates still need the navigation computer powered and still take its calculation time.
+- Change Heading puts the helm on a free course. Align on the widget returns it to navigation's destination. A new destination from navigation takes over from a manual or free course.
+- Warp still needs charged coils, zero impulse and alignment within 0.05 degrees of whatever the helm is steering to, and still stops at the safe arrival point.
+- The navigation computer is shared with Navigation Control through the browser's `localStorage`, so its state survives a refresh. Reset demo in the footer clears it.
+
+Sections below that mention the System view, the destination buttons or the Earth Settlements preset on this page describe the earlier preview; that behaviour now lives on Navigation Control.
+
+## Earlier preview notes
+
 Earth surface settlements: the footer's Earth Settlements camera preset centers Earth for review. SRS and System views show eight two-pixel yellow dots on the physical rim below 20,000 km radius, with labels at 10,000 km and closer. Click a dot for distance and Mark I range/line-of-sight status. Names: Paris, Jerusalem, Moscow, Hong Kong, Tokyo, San Francisco, St. Louis, Port Canaveral. Bearings are equally spaced fixtures, not geographic coordinates. The shared requirements for future live maps are captured in the Transporter discovery notes.
 
-Open index.html through a local static server. No build or dependencies required. index.html, styles.css and preview.js are standalone design references; assets/ is reserved for screen assets. Map graphics are canvas-drawn.
+Open index.html through a local static server serving the whole demo folder (the page loads `../Shared/` scripts). No build is needed to view it. The scripts are minified from `demo-app/static-src/` by `node scripts/build-static.cjs`; assets/ is reserved for screen assets. Map graphics are canvas-drawn.
 
 Sample state only: no live API, no persistent data, no actual simulation. Example hull turn rate 10°/s, 20% dampener boost, 8-second charge. Coil reset on exit and braking timing are preview assumptions. No damaging overdrive. Contact bearings and closest-zoom contacts are illustrative. Real barycentric coordinate transforms, boundary validation, power allocation, inertial motion and sensor eligibility belong to later implementation. Galactic entry demonstration assumes Sol at (0,26000) LY with system zero toward galactic center; exact game coordinates still need consolidation.
 

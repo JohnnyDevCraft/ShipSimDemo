@@ -7,6 +7,12 @@ const own = page => page.locator('#ownDestination');
 const other = page => page.locator('#otherDestination');
 const part = (widget, name) => widget.locator(`[data-sd="${name}"]`);
 const action = (widget, name) => widget.locator(`[data-sd-action="${name}"]`);
+// The known objects list is behind its tab; pick a row there and return to course control.
+const pickKnown = async (page, name) => {
+  await page.locator('#tabKnown').click();
+  await knownRow(page, name).click();
+  await page.locator('#tabCourse').click();
+};
 const calculationSeconds = async (page, seconds) => { await page.locator('#calculationSeconds').fill(String(seconds)); await page.locator('#calculationSeconds').blur(); };
 const knownRow = (page, name) => page.locator('#knownList [data-key]').filter({ has: page.locator('.known-name', { hasText: new RegExp(`^${name}$`) }) });
 // Click an object where the map draws it.
@@ -17,7 +23,7 @@ async function clickOnMap(page, key) {
 }
 // Centre the map on Mars with a 200,000 km radius, then click empty space up and to the right of it.
 async function dropPinNearMars(page) {
-  await knownRow(page, 'Mars').click();
+  await pickKnown(page, 'Mars');
   await page.evaluate(() => NavigationControl.setRadius(200000));
   const centre = await page.evaluate(() => NavigationControl.screenOf('Sol|Mars'));
   await page.locator('#map').click({ position: { x: centre.x + 60, y: centre.y - 40 } });
@@ -40,7 +46,7 @@ run({
     const navigation = await open('/Navigation/'), helm = await open('/Helm/');
     const helmName = helm.locator('.selected-destination [data-sd="name"]');
     await calculationSeconds(navigation, 0);
-    await knownRow(navigation, 'Mars').click();
+    await pickKnown(navigation, 'Mars');
     await action(own(navigation), 'set').click();
     await expect(helmName).toHaveText('Mars');
     await action(own(navigation), 'clear').click();
@@ -86,7 +92,7 @@ run({
   'a destination is still shown on both consoles after a reload': async ({ open }) => {
     const navigation = await open('/Navigation/'), helm = await open('/Helm/');
     await calculationSeconds(navigation, 0);
-    await knownRow(navigation, 'Mars').click();
+    await pickKnown(navigation, 'Mars');
     await action(own(navigation), 'set').click();
     await expect(part(own(navigation), 'name')).toHaveText('Mars');
     await navigation.reload();
@@ -107,7 +113,7 @@ run({
   },
   'unpowered, the destination still shows and cannot be changed': async ({ open }) => {
     const page = await open('/Navigation/');
-    await knownRow(page, 'Mars').click();
+    await pickKnown(page, 'Mars');
     await expect(action(own(page), 'set')).toBeEnabled();
     await page.locator('#demoNavigationPower').click();
     await expect(page.locator('#state')).toHaveText('OFFLINE');
@@ -118,8 +124,21 @@ run({
     await page.locator('#demoNavigationPower').click();
     await expect(action(own(page), 'clear')).toBeEnabled();
   },
+  'the side panel shows course control or the known objects, one tab at a time': async ({ open }) => {
+    const page = await open('/Navigation/');
+    await expect(page.locator('#pinDistance')).toBeVisible();
+    await expect(page.locator('#otherShip')).toBeVisible();
+    await expect(page.locator('#knownList')).toBeHidden();
+    await page.locator('#tabKnown').click();
+    await expect(page.locator('#knownList')).toBeVisible();
+    await expect(page.locator('#pinDistance')).toBeHidden();
+    await expect(page.locator('#otherShip')).toBeHidden();
+    await page.locator('#tabCourse').click();
+    await expect(page.locator('#pinDistance')).toBeVisible();
+  },
   'the known objects list hides what the computer does not know': async ({ open }) => {
     const page = await open('/Navigation/');
+    await page.locator('#tabKnown').click();
     const names = await page.locator('#knownList .known-name').allInnerTexts();
     for (const known of ['Wasp One', 'Neptune', 'Survey Buoy 7', 'TNS Endeavor', 'Gliese 1061']) assert.ok(names.includes(known), `${known} is listed`);
     for (const hidden of ['MV Corbin Trader', 'Listening Post Argus', 'TNS Meridian', 'TNS Horizon', 'Alpha Centauri I']) assert.ok(!names.includes(hidden), `${hidden} is not listed`);
@@ -131,7 +150,7 @@ run({
     const page = await open('/Navigation/');
     await calculationSeconds(page, 0);
     await page.locator('#otherShip').selectOption({ label: 'Wasp One · TF-101' });
-    await knownRow(page, 'Earth').click();
+    await pickKnown(page, 'Earth');
     await action(other(page), 'set').click();
     await expect(part(other(page), 'name')).toHaveText('Earth');
     const plot = await page.evaluate(() => {

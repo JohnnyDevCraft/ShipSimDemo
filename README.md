@@ -30,6 +30,7 @@ node --test tests/*.test.cjs        # navigation computer, world and widget rule
 node tests/helm-map.cjs             # Helm scanner maps
 node tests/helm-destination.cjs     # Helm's Selected Destination widget
 node tests/helm-flight.cjs          # align, charge, engage and exit warp
+node tests/helm-layout.cjs          # Helm fits iPad portrait/landscape through 4K
 node tests/navigation-control.cjs   # Navigation Control
 node tests/demo-index.cjs           # index link
 ```

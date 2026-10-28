@@ -1,4 +1,24 @@
-# Helm discovery preview
+# Helm Control
+
+## Full-screen layout (2026-10-28)
+
+The scanner map fills the window and every control floats over it. Readable source: `demo-app/static-src/Helm/helm.js`, minified to `helm.js` by `node scripts/build-static.cjs`. Styles: `helm.css`. (`styles.css` is the earlier Helm stylesheet; Navigation Control still loads it, so leave it in place.)
+
+- **Top bar:** emblem (back to the demo index), LRS / SRS, stardate and clock, ship state, and the menu.
+- **Propulsion (left):** Impulse and Warp tabs. Impulse is a 0–100% slider. Warp is set in warp factors from 0.25 up to the ship's rating (Warp 6 by default), with the coil charge, Charge Coils and Engage / Exit Warp under a shorter slider. The rules are unchanged: charged coils, zero impulse and alignment within 0.05° to engage; leaving warp discharges the coils.
+- **Heading (bottom left):** the heading and a left/right joystick, no status text. Hold the joystick (or the arrows, or the arrow keys) to turn; release and the turn eases to zero. Tap the heading for the Change Heading keypad.
+- **Selected Target (top right):** navigation's destination, or the helm's own course from Course or Plot, with bearing, turn, distance and ETAs at current speed, at the warp factor set and at maximum warp. Align To Course turns to it. The ⋯ menu returns to navigation's destination or discards the helm course. × folds the panel to a chip.
+- **Map Range (right):** a slider over the range presets. LRS runs 50 LY to 1 BKM; SRS runs 1 BKM to 1 KM. The mouse wheel and pinch zoom too.
+- **Dock (bottom):** Docking (Auto Dock / Undock, umbilical and indicators), Course (relative course, distance and KM / BKM / LY, each entered on a keypad, then Save Course), Plot (galactic coordinates, plotted by the navigation computer in its calculation time) and Range (jump straight to a preset). After a divider come Reverse (a toggle that lights up while on; reverse impulse is capped at 10%), Light Brake and Hard Brake (hold to apply) and Full Stop.
+- **Menu → Demo controls:** ship warp rating, navigation computer power, send a destination as Navigation would, move the ship next to Earth Orbital Station or back to the start, and reset the demo. These are demo aids, not helm functions.
+
+The map is heading-up, and the compass rose around our ship shows relative bearings: 000 is always dead ahead, 090 starboard, 180 astern, 270 port. The ship's own heading is in the Heading box. The long range scan is drawn as a radar: distance is measured outward from the compass hub, so nearby stars sit clear of it. The short range scan stays true to scale so bodies, rings and safety boundaries line up.
+
+The page scales as one piece: sizes are in rem and the root font size follows the window (`min(1.25vw, 2vh)` in landscape, `min(2.08vw, 1.56vh)` in portrait). `tests/helm-layout.cjs` checks iPad portrait and landscape through 4K.
+
+Four stars were added to the shared world for this layout: Barnard's Star, Wolf 359, Sirius and Tau Ceti, with spectral classes in `NavWorld.starClasses`. Navigation Control lists them too.
+
+## Earlier notes
 
 ## Navigation split (2026-10-10)
 

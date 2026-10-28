@@ -44,14 +44,14 @@ run({
   },
   'a destination set on navigation appears on helm, and clearing it empties helm': async ({ open }) => {
     const navigation = await open('/Navigation/'), helm = await open('/Helm/');
-    const helmName = helm.locator('.selected-destination [data-sd="name"]');
+    const helmName = helm.locator('#targetName');
     await calculationSeconds(navigation, 0);
     await pickKnown(navigation, 'Mars');
     await action(own(navigation), 'set').click();
     await expect(helmName).toHaveText('Mars');
     await action(own(navigation), 'clear').click();
-    await expect(helmName).toHaveText('Unset');
-    await expect(helm.locator('.selected-destination [data-sd-action="align"]')).toBeDisabled();
+    await expect(helmName).toHaveText('No target');
+    await expect(helm.locator('#alignBtn')).toBeDisabled();
   },
   'a pin dropped on empty space reads from the nearest object, moves when edited, and can be set': async ({ open }) => {
     const page = await open('/Navigation/');
@@ -98,7 +98,7 @@ run({
     await navigation.reload();
     await helm.reload();
     await expect(part(own(navigation), 'name')).toHaveText('Mars');
-    await expect(helm.locator('.selected-destination [data-sd="name"]')).toHaveText('Mars');
+    await expect(helm.locator('#targetName')).toHaveText('Mars');
   },
   'the locator warns when the pin is inside a body': async ({ open }) => {
     const page = await open('/Navigation/');

@@ -1,6 +1,196 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Helm · Ship Sim</title><link rel="icon" type="image/x-icon" href="../favicon.ico"><link rel="stylesheet" href="styles.css?v=navigation-split-32"><body>
-<header><div class="brand"><a href="../index.html" aria-label="Back to demo selector" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px"><img src="../brand/xelseor-emblem.png" alt="" width="44" height="44" style="display:block"></a> <span title="Xelseor Mission Protocol Sim">XMPS</span><b>HELM CONTROL</b></div><div><span class="pill">DISCOVERY PREVIEW</span> <span id="state" class="status">SUBLIGHT</span></div></header>
-<main><section class="panel propulsion"><div class="sectiontitle">PROPULSION <span>RATED WARP 6</span></div><div class="engines"><div class="engine"><small>IMPULSE</small><strong><span id="impValue">0</span><em>%</em></strong><input id="impulse" aria-label="Impulse percent" class="vertical" type="range" min="0" max="100" value="0"><span class="muted">0 — 100%</span><small id="impSpeed">0.00 km/s</small></div><div class="engine actual-speed"><small>SPEED</small><strong id="actualSpeedPercent">0<em>%</em></strong><div id="actualSpeedBar" role="progressbar" aria-label="Actual speed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="actualSpeedFill"></div><div class="speed-scale" aria-hidden="true"><span class="speed-tick" style="bottom:5%"></span><span class="speed-tick" style="bottom:10%"></span><span class="speed-tick" style="bottom:15%"></span><span class="speed-tick" style="bottom:20%"></span><span class="speed-tick major" style="bottom:25%"><b>25%</b></span><span class="speed-tick" style="bottom:30%"></span><span class="speed-tick" style="bottom:35%"></span><span class="speed-tick" style="bottom:40%"></span><span class="speed-tick" style="bottom:45%"></span><span class="speed-tick major" style="bottom:50%"><b>50%</b></span><span class="speed-tick" style="bottom:55%"></span><span class="speed-tick" style="bottom:60%"></span><span class="speed-tick" style="bottom:65%"></span><span class="speed-tick" style="bottom:70%"></span><span class="speed-tick major" style="bottom:75%"><b>75%</b></span><span class="speed-tick" style="bottom:80%"></span><span class="speed-tick" style="bottom:85%"></span><span class="speed-tick" style="bottom:90%"></span><span class="speed-tick" style="bottom:95%"></span><span class="speed-tick major" style="bottom:100%"></span></div></div><span class="muted" id="actualSpeedMode">IMPULSE</span><small id="actualSpeedValue">0 km/s</small></div><div class="engine"><small>WARP FACTOR</small><strong id="warpValue">1.00</strong><input id="warp" aria-label="Warp factor" class="vertical" type="range" min="1" max="6" step="0.01" value="1"><span class="muted">1 — 6</span><small id="warpSpeed">1.00 × c</small></div></div><div class="split"><small>WARP COIL CHARGE</small><b id="chargeValue">0%</b></div><progress id="charge" max="100" value="0"></progress><div class="actions"><button id="chargeBtn">Charge coils</button><button id="engage" class="primary" disabled>Engage warp</button></div><p id="engineNote">Impulse offline. Select warp factor, then charge coils.</p></section><section class="workspace"><div class="maphead"><div><small>SCANNERS / SOL NEIGHBORHOOD</small><h1 id="currentSystem">Sol System</h1></div><div class="tabs" role="group" aria-label="Map mode"><button class="active" data-mode="LRS">LRS</button><button data-mode="SRS">SRS</button></div></div><div class="map"><canvas id="map" aria-label="Illustrative scanner map"></canvas><div class="maptag"><span id="mapTitle">LONG RANGE SCAN</span><small id="scale">RADIUS 30 LR</small><small id="gridScale">GRID 5 LR × 5 LR</small><small id="scanRange" hidden>MAX SCAN RANGE 1 BKM</small></div><div class="bearing"><span id="mapHeading">000.0°</span><br><small>HEADING</small></div><div id="blank" hidden>SRS cannot scan while at warp.</div><div id="mapSelection" class="muted" aria-live="polite">Select a target</div><div class="mapbottom"><span>◎ SHIP CENTERED</span><label>Zoom <input id="zoom" step="any" type="range" min="0" max="100" value="0"></label></div></div><div id="destination" aria-label="Selected destination"></div></section>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Helm Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="helm.css?v=1">
+</head>
+<body>
+<canvas id="map" aria-label="Scanner map. Select a contact for its course and distance."></canvas>
+<div id="srsBlank" class="srs-blank" hidden><b>SHORT RANGE SCAN UNAVAILABLE</b><span>SRS cannot scan while at warp.</span></div>
 
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="scan-tabs" role="group" aria-label="Scanner mode"><button type="button" data-mode="LRS" class="active" aria-pressed="true">LRS</button><button type="button" data-mode="SRS" aria-pressed="false">SRS</button></div>
+    <div class="scan-caption"><span id="scanTitle">LONG RANGE SCAN</span> · <span id="currentSystem">Sol System</span></div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state" title="Ship state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 6.5 17l5.5-3 5.5 3Z"/><path d="M4 21.5c2.5-2 5-2 8 0s5.5 2 8 0"/></svg><span id="state">SUBLIGHT</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
 
-<div class="under-map"><section class="panel steering"><div class="sectiontitle">ATTITUDE CONTROL <span id="lock">MANUAL</span></div><small>CURRENT COURSE · SYSTEM REFERENCE</small><div class="coursevalue"><span id="heading">000.0</span><em>°</em><button id="changeHeading">Change Heading</button></div><div class="split muted"><span>PORT</span><span id="turnRate">0.0°/s</span><span>STARBOARD</span></div><input id="steer" aria-label="Steering" type="range" min="-100" max="100" value="0"><button id="centerTurn" type="button">Zero Turn</button><div class="split detail"><span>Hull safe <b>8°/s</b></span><span>Impulse max <b>3°/s</b></span></div><small class="muted">Example ratings · no overdrive in this preview</small></section><section class="panel"><div class="sectiontitle">BRAKING & REVERSE</div><div class="actions"><button id="light">Light brake</button><button id="hard">Hard brake</button></div><button id="stop" class="stop">ALL STOP</button><label class="reverse"><input id="reverse" type="checkbox"> Reverse impulse <span>10% speed cap</span></label><button id="autoDock" class="stop" disabled>Auto dock</button><div class="dock-connection-row"><button id="umbilical" disabled>Connect umbilical</button><div class="dock-indicators"><span id="dockReady">Docked</span><span id="mooringsReady">Moorings</span><span id="clampsReady">Clamps</span><span id="umbilicalReady">Umbilical</span></div></div><div id="dockStatus" role="status">Undocked · Clamps open · Umbilical disconnected</div><p id="brakeNote">Braking requires impulse power. Demo timing only.</p></section></div><section class="panel route"><div class="sectiontitle">MANUAL NAVIGATION <span>HULL-SAFE ALIGNMENT</span></div><div class="tabs"><button class="active" data-entry="course">Course & distance</button><button data-entry="galactic">Galactic coordinates</button></div><div id="courseFields" class="fields"><label>Course · degrees<input id="course" type="number" min="0" max="359.9" value="47"></label><label>Distance<input id="distance" type="number" min="0" value="12"></label><label>Unit<select id="unit"><option>LR</option><option>BKM</option><option>KM</option></select></label></div><div id="galacticFields" class="fields" hidden><label>Galactic bearing · degrees<input id="gb" type="number" value="0" min="0" max="359.9"></label><label>System center · KLR<input id="gr" type="number" value="26.012" min="0"></label><label class="offset-toggle"><input id="useLocal" type="checkbox"> Add system coordinates</label><label>System bearing · degrees<input id="localBearing" type="number" value="136" min="0" max="359.99" disabled></label><label>Distance from system center<input id="localDistance" type="number" value="0.1521" min="0" step="any" disabled></label><label>System distance unit<select id="localUnit" disabled><option>BKM</option><option>MKM</option><option>KM</option></select></label></div><button id="manual">Calculate</button><div id="manualResult" class="manual-result" role="status">No manual course</div><progress id="manualProgress" aria-label="Coordinate calculation" max="100" value="0" hidden></progress><button id="manualAlign" disabled>Align to manual course</button><span id="routeNote" class="muted">A manual course is the helm’s own. The destination is set on Navigation Control. Automatic turns use hull rating only.</span></section></main><footer><a class="console-link" href="../Navigation/index.html">Navigation Control ↗</a><span id="navStatus" class="nav-status">Navigation computer: Online</span><button id="resetDemo">Reset demo</button><span>LOCAL DESIGN TEMPLATE · SAMPLE STATE · NO LIVE SHIP CONNECTION</span><span id="notice" role="status">Ready for helm review.</span></footer><dialog id="headingDialog"><form id="headingForm"><h2>Change Heading</h2><p>Relative turn · positive starboard, negative port</p><input id="headingEntry" aria-label="Relative heading" inputmode="decimal" placeholder="000.000"><div id="headingKeys" class="heading-keypad"></div><p id="headingError"></p><button type="button" id="headingCancel">Cancel</button><button type="submit">Align Heading</button></form></dialog><script src="../Shared/nav-world.js?v=1"></script><script src="../Shared/nav-computer.js?v=1"></script><script src="../Shared/selected-destination.js?v=1"></script><script src="safety.js?v=proximity-50-39?v=2"></script><script src="preview.js?v=navigation-split-45"></script><script src="settlements.js?v=navigation-split-35"></script></body></html>
+<div class="col left">
+<section class="panel propulsion" aria-label="Propulsion">
+  <div class="phead"><h2>PROPULSION</h2><b id="driveSetting" aria-live="off">0%</b></div>
+  <div class="seg" role="tablist" aria-label="Drive">
+    <button type="button" role="tab" id="impulseTab" aria-selected="true" aria-controls="impulsePane">IMPULSE</button>
+    <button type="button" role="tab" id="warpTab" aria-selected="false" aria-controls="warpPane">WARP</button>
+  </div>
+  <div id="impulsePane" class="pane" role="tabpanel" aria-labelledby="impulseTab">
+    <div id="impulse" class="vslider" aria-label="Impulse percent"></div>
+  </div>
+  <div id="warpPane" class="pane" role="tabpanel" aria-labelledby="warpTab" hidden>
+    <div id="warp" class="vslider" aria-label="Warp factor"></div>
+    <div class="coils"><small>COILS</small><div class="bar" role="progressbar" aria-label="Warp coil charge" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="chargeBar"><i id="chargeFill"></i></div><b id="chargeValue">0%</b></div>
+    <button type="button" id="chargeBtn">CHARGE COILS</button>
+    <button type="button" id="engage" class="primary">ENGAGE WARP</button>
+  </div>
+  <div class="speed"><b id="speed">0 km/s</b><small id="engineNote"></small></div>
+</section>
+
+<section class="panel heading octa" aria-label="Heading">
+  <h2>HEADING</h2>
+  <button type="button" id="headingValue" class="heading-value" title="Change heading by a set amount">000.0°</button>
+  <div class="joystick">
+    <button type="button" class="jarrow" id="portBtn" aria-label="Turn to port (hold)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button>
+    <div id="joystick" class="jbase" role="slider" tabindex="0" aria-label="Steering. Drag or hold the arrow keys to turn." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+      <div class="jring"></div><div class="jaxis"></div><div id="knob" class="jknob"></div>
+    </div>
+    <button type="button" class="jarrow" id="starboardBtn" aria-label="Turn to starboard (hold)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button>
+  </div>
+</section>
+</div>
+
+<div class="col right">
+<section id="target" class="panel target" aria-label="Selected target">
+  <div class="thead"><h2 id="targetTitle">SELECTED TARGET</h2><button type="button" id="targetCollapse" class="icon-btn small" aria-label="Hide target details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="tname"><i id="targetDot"></i><div><h3 id="targetName">Unset</h3><p id="targetKind"></p><p id="targetRange"></p></div></div>
+  <p id="targetNote" class="tnote" hidden></p>
+  <div id="targetCalc" class="tcalc" hidden><small>CALCULATING NAVIGATION</small><div class="bar"><i id="targetCalcFill"></i></div></div>
+  <dl id="targetRows">
+    <div><dt>BEARING</dt><dd id="tBearing">—</dd></div>
+    <div><dt>TURN</dt><dd id="tTurn">—</dd></div>
+    <div><dt>DISTANCE</dt><dd id="tDistance">—</dd></div>
+    <div><dt>ETA (CURRENT SPEED)</dt><dd id="tEtaNow">—</dd></div>
+    <div><dt id="tEtaSetLabel">ETA (WARP 1)</dt><dd id="tEtaSet">—</dd></div>
+    <div><dt id="tEtaMaxLabel">ETA (WARP 6)</dt><dd id="tEtaMax">—</dd></div>
+  </dl>
+  <div class="tactions">
+    <button type="button" id="alignBtn" class="primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 6 6 6-6 6M12 6l6 6-6 6"/></svg>Align To Course</button>
+    <button type="button" id="targetMore" class="icon-btn" aria-label="More target options" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+  </div>
+  <div id="targetMenu" class="popover" role="menu" hidden>
+    <button type="button" role="menuitem" id="returnToDestination">Return to navigation destination</button>
+    <button type="button" role="menuitem" id="discardCourse">Discard helm course</button>
+    <button type="button" role="menuitem" id="changeHeadingItem">Change heading…</button>
+  </div>
+</section>
+<button type="button" id="targetChip" class="target-chip" hidden><i></i><span></span></button>
+
+<section class="panel range" aria-label="Map range">
+  <h2>MAP RANGE</h2>
+  <div id="rangeSlider" class="vslider range-slider" aria-label="Map range"></div>
+</section>
+</div>
+
+<div id="contactChip" class="contact-chip" aria-live="polite" hidden></div>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Helm functions">
+  <button type="button" data-open="dockDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 7 15h10Z"/><path d="M9.5 9h5M4 19h16M6 15v4M18 15v4"/></svg></span>DOCKING</button>
+  <button type="button" data-open="courseDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></span>COURSE</button>
+  <button type="button" data-open="plotDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M7.7 16.4c3-3 1-6 4.3-7.4 2-.8 3.4-1 4.4-1.4"/></svg></span>PLOT</button>
+  <button type="button" data-open="rangeDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 4.5-9 4.5-9-4.5Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg></span>RANGE</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="reverse" class="brake toggle" aria-pressed="false" title="Reverse impulse · 10% speed cap"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M6.5 13.5 12 19l5.5-5.5"/><path d="M7 4h10"/></svg></span>REVERSE</button>
+  <button type="button" id="light" class="brake" title="Hold to brake lightly"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M6 7a7.5 7.5 0 0 0 0 10M18 7a7.5 7.5 0 0 1 0 10"/></svg></span>LIGHT BRAKE</button>
+  <button type="button" id="hard" class="brake hard" title="Hold to brake hard"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M7 8a6 6 0 0 0 0 8M17 8a6 6 0 0 1 0 8M3.8 5a10 10 0 0 0 0 14M20.2 5a10 10 0 0 1 0 14"/></svg></span>HARD BRAKE</button>
+  <button type="button" id="stop" class="brake stop" title="Bring the ship to a full stop"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z"/><path d="M8 12h8"/></svg></span>FULL STOP</button>
+</nav>
+
+<!-- Docking -->
+<dialog id="dockDialog" class="modal" aria-labelledby="dockTitle">
+  <div class="mhead"><h2 id="dockTitle">DOCKING</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="msection">
+    <h3>STATION DOCKING</h3>
+    <div class="dock-indicators"><span id="dockReady">Docked</span><span id="mooringsReady">Moorings</span><span id="clampsReady">Clamps</span><span id="umbilicalReady">Umbilical</span></div>
+    <div id="dockStatus" class="mstatus" role="status">Undocked · Clamps open · Umbilical disconnected</div>
+    <div class="mrow"><button type="button" id="autoDock" class="primary">AUTO DOCK</button><button type="button" id="umbilical">CONNECT UMBILICAL</button></div>
+    <p class="mnote">Auto Dock is available within 10 km of a station. The station takes over the final approach.</p>
+  </div>
+</dialog>
+
+<!-- Course & distance -->
+<dialog id="courseDialog" class="modal" aria-labelledby="courseTitle">
+  <div class="mhead"><h2 id="courseTitle">SET COURSE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="fields-view">
+    <div class="field" data-field="course"><div><small>COURSE · RELATIVE TO HEADING</small><b data-value></b></div><button type="button" data-edit>SET COURSE</button></div>
+    <div class="field" data-field="distance"><div><small>DISTANCE</small><b data-value></b></div><button type="button" data-edit>SET DISTANCE</button></div>
+    <div class="field unit"><small>DISTANCE UNIT</small><div class="seg" role="group" aria-label="Distance unit" id="courseUnit"><button type="button" data-unit="KM">KM</button><button type="button" data-unit="BKM">BKM</button><button type="button" data-unit="LY">LY</button></div></div>
+    <p class="mnote" data-error role="alert"></p>
+    <div class="mrow"><button type="button" class="primary" id="saveCourse">SAVE COURSE</button></div>
+  </div>
+</dialog>
+
+<!-- Galactic plot -->
+<dialog id="plotDialog" class="modal" aria-labelledby="plotTitle">
+  <div class="mhead"><h2 id="plotTitle">PLOT GALACTIC COURSE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="fields-view">
+    <div class="field" data-field="gb"><div><small>GALACTIC BEARING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+    <div class="field" data-field="gr"><div><small>GALACTIC RADIUS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+    <label class="switch"><input type="checkbox" id="useLocal"><span></span>Add system coordinates</label>
+    <div class="field" data-field="localBearing"><div><small>SYSTEM BEARING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+    <div class="field" data-field="localDistance"><div><small>DISTANCE FROM SYSTEM CENTER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+    <div class="field unit" id="localUnitField"><small>SYSTEM DISTANCE UNIT</small><div class="seg" role="group" aria-label="System distance unit" id="localUnit"><button type="button" data-unit="KM">KM</button><button type="button" data-unit="MKM">MKM</button><button type="button" data-unit="BKM">BKM</button></div></div>
+    <p class="mnote" data-error role="alert"></p>
+    <p class="mnote" id="plotNote">The navigation computer works out galactic coordinates. It must be online, and plotting takes its calculation time.</p>
+    <div class="mrow"><button type="button" class="primary" id="plotCourse">PLOT COURSE</button></div>
+  </div>
+</dialog>
+
+<!-- Range presets -->
+<dialog id="rangeDialog" class="modal" aria-labelledby="rangeTitle">
+  <div class="mhead"><h2 id="rangeTitle">MAP RANGE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote" id="rangeMode"></p>
+  <div id="rangePresets" class="preset-grid" role="group" aria-label="Range presets"></div>
+</dialog>
+
+<!-- Change heading -->
+<dialog id="headingDialog" class="modal narrow" aria-labelledby="headingTitle">
+  <div class="mhead"><h2 id="headingTitle">CHANGE HEADING</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">Relative turn · positive starboard, negative port. Puts the helm on a free course.</p>
+  <div id="headingPad"></div>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Ship rating, navigation computer, ship position and reset</span></button>
+    <a href="../Navigation/index.html" target="_blank" rel="noopener"><b>Navigation Control ↗</b><span>Set destinations in another tab; they appear here</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" class="demo-controls" hidden>
+    <div class="msection">
+      <h3>SHIP RATING</h3>
+      <div class="field unit"><small>MAXIMUM WARP</small><div class="seg" role="group" aria-label="Maximum warp" id="maxWarp"><button type="button" data-warp="6">WARP 6</button><button type="button" data-warp="8">WARP 8</button><button type="button" data-warp="9.9">WARP 9.9</button></div></div>
+    </div>
+    <div class="msection">
+      <h3>NAVIGATION COMPUTER</h3>
+      <div class="mrow"><span id="navStatus" class="nav-status">Online</span><button type="button" id="navPower">POWER OFF</button></div>
+      <div class="mrow"><select id="sendTarget" aria-label="Destination to send"></select><button type="button" id="sendDestination">SEND AS NAVIGATION</button></div>
+      <p class="mnote">Stands in for Navigation Control. The destination takes the computer's calculation time.</p>
+    </div>
+    <div class="msection">
+      <h3>SHIP POSITION</h3>
+      <div class="mrow"><button type="button" id="placeStation">NEAR EARTH ORBITAL STATION</button><button type="button" id="placeStart">START POSITION</button></div>
+    </div>
+    <div class="msection">
+      <h3>DEMO</h3>
+      <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+      <p class="mnote">Local design template · sample state · no live ship connection.</p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/nav-world.js?v=2"></script>
+<script src="../Shared/nav-computer.js?v=1"></script>
+<script src="safety.js?v=2"></script>
+<script src="helm.js?v=1"></script>
+</body>
+</html>

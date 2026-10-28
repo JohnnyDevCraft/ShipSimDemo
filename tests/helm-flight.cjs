@@ -95,6 +95,17 @@ run({
     await expect(reverse).toHaveAttribute('aria-pressed', 'false');
     assert.equal(await page.locator('#dockDialog #reverse').count(), 0); // no longer in the Docking window
   },
+  'holding a control does not select text or open a context menu': async ({ open }) => {
+    const page = await open('/Helm/');
+    const style = await page.locator('.dock #light').evaluate(button => {
+      const computed = getComputedStyle(button);
+      return { select: computed.webkitUserSelect || computed.userSelect, callout: computed.webkitTouchCallout };
+    });
+    assert.equal(style.select, 'none');
+    if (style.callout !== undefined) assert.equal(style.callout, 'none');
+    const opened = await page.locator('.dock #light').evaluate(button => button.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true })));
+    assert.equal(opened, false, 'the context menu is cancelled');
+  },
   'the brakes on the dock slow the ship, and Full Stop stops it': async ({ open }) => {
     const page = await open('/Helm/');
     await expect(page.locator('.dock #light')).toBeDisabled(); // nothing to brake yet

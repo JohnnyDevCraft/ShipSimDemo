@@ -33,6 +33,8 @@ node tests/helm-flight.cjs          # align, charge, engage and exit warp
 node tests/helm-layout.cjs          # Helm fits iPad portrait/landscape through 4K
 node tests/navigation-control.cjs   # Navigation Control
 node tests/navigation-layout.cjs    # Navigation fits iPad portrait/landscape through 4K
+node tests/reactor-control.cjs      # Reactor Control
+node tests/reactor-layout.cjs       # Reactor fits iPad landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

@@ -1,24 +1,123 @@
-main{display:grid;grid-template-columns:240px minmax(480px,1fr) 290px;gap:16px;padding:20px;max-width:1800px;margin:auto}.workspace{display:grid;gap:16px}.panel{padding:18px}aside{display:grid;gap:16px;align-content:start}.readout{text-align:center;margin:18px 0}.readout strong{display:block;font-size:36px;color:#6ee7df}small{display:block;color:#8ca4b5;font-size:11px;letter-spacing:1px}em{font-size:14px;font-style:normal}.vertical{display:block;height:235px;margin:15px auto}button{margin-top:10px}label{display:block;margin:14px 0;color:#adc0cb;font-size:12px}label input:not(.vertical),select{width:100%;margin-top:8px}.limits,.loadrow{display:flex;justify-content:space-between;font-size:12px;padding:10px 0}.metrics,.diagnostics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.metrics strong{display:block;color:#6ee7df;font-size:23px;margin-top:10px}.diagnostics{grid-template-columns:repeat(3,1fr)}.diagnostics strong{display:block;margin:10px 0}meter{width:100%;accent-color:#6ee7df}svg{width:100%;margin:20px 0;background:#091725;border:1px solid #234151}.lower{display:grid;grid-template-columns:1fr 1fr;gap:16px}.danger{border-color:#df6573;color:#ff9eaa}.emergency{border-color:#683644}dialog{background:#111c29;color:#d4e2ec;border:1px solid #df6573;padding:28px;max-width:420px}dialog::backdrop{background:#000b}footer button{margin:0}@media(max-width:1100px){main{grid-template-columns:200px minmax(0,1fr)}aside{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){main{display:block}.panel{margin-bottom:14px}aside,.lower{display:block}.metrics{grid-template-columns:1fr 1fr}}
-.gauges{display:grid;grid-template-columns:1fr 1fr;gap:14px;text-align:center}.dial{--value:0;position:relative;width:110px;height:110px;margin:14px auto;border-radius:50%;background:conic-gradient(from 225deg,#6ee7df calc(var(--value)*2.7deg),#203a49 0deg 270deg,transparent 270deg);display:grid;place-items:center}.dial:before{content:'';position:absolute;inset:9px;border-radius:50%;background:#111c29}.dial strong{position:relative;color:#6ee7df;font-size:22px}.collector-blade{transition:transform .25s ease-out}.gauges small{font-size:10px}
+/* Reactor Control. The shared console look is in ../Shared/console.css; this adds the reactor schematic,
+   the slider panels and the dialogs only this console has. The console is used in landscape. */
+:root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.6rem; }
 
-.damage-control{margin-top:18px;border:1px solid #683644;border-radius:5px;padding:12px 16px}.damage-control label{margin:0 0 8px;color:#ff9eaa}.damage-control input{width:100%;accent-color:#ed6371}.damage-control .muted{display:block;margin-top:6px;font-size:11px}
+/* Top bar title */
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.reactor-state[data-level="warn"] { color: var(--amber); }
+.reactor-state[data-level="bad"] { color: var(--red); }
+.reactor-state[data-level="off"] { color: var(--muted); }
 
-.coolant-controls{border-top:1px solid #294454;margin-top:22px;padding-top:18px}.coolant-controls .loadrow{gap:8px;flex-wrap:wrap}.coolant-controls .sectiontitle{line-height:1.5}
+/* A faint chart grid behind the schematic */
+body.reactor {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
 
-.sync-control{display:flex;align-items:center;gap:14px}.sync-light{width:20px;height:20px;border-radius:50%;background:#ed6371;box-shadow:0 0 8px #ffffff20;flex-shrink:0}
+/* ── Schematic ──────────────────────────────────────────────────────────────────────────────── */
+#schematic {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#schematic text { font-variant-numeric: tabular-nums; }
+.s-label { fill: var(--muted); font-size: 17px; font-weight: 600; letter-spacing: 2.4px; }
+.s-label.fault { fill: #ff6b78; }
+.s-value { fill: var(--text); font-size: 22px; font-weight: 600; }
+.s-value-sm { fill: #e8fff8; font-size: 16px; font-weight: 600; paint-order: stroke; stroke: rgba(2, 10, 20, 0.6); stroke-width: 3px; }
+.s-value.bad { fill: #ff8f9b; }
+.s-value.good { fill: #7ff0b4; }
+.s-caption { fill: var(--muted); font-size: 13.5px; letter-spacing: 1.4px; }
+.s-shell { fill: rgba(8, 24, 44, 0.88); stroke: var(--edge); stroke-width: 2; }
+.s-glass { fill: none; stroke: rgba(150, 210, 255, 0.35); stroke-width: 1.5; }
+.s-backing { fill: rgba(2, 8, 18, 0.84); }
+.s-divider { stroke: var(--edge-soft); stroke-width: 1.5; }
+.s-pipe { fill: url(#pipeShell); stroke: #4b86b8; stroke-width: 2; }
+.s-channel { fill: #020a14; }
+.s-stream { fill: none; stroke-width: 12; stroke-linecap: round; stroke-dasharray: 8 18; }
+.s-stream.fuel { stroke: #7cf0c9; filter: drop-shadow(0 0 4px #7cf0c9); }
+.s-stream.power { stroke: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); }
+.s-stream.coolant { stroke: #7bb4ff; stroke-width: 9; filter: drop-shadow(0 0 3px #7bb4ff); }
+.s-coolant-shell { fill: none; stroke: #2b5880; stroke-width: 28; stroke-linejoin: round; }
+.s-pump { fill: #0e2742; stroke: #4b86b8; stroke-width: 2; }
+.s-rotor { fill: #9cc8ff; }
+.s-ring-outer { fill: none; stroke: rgba(215, 170, 103, 0.3); stroke-width: 2; }
+.s-ring { fill: none; stroke: #d7aa67; stroke-width: 5; transition: stroke 0.3s; }
+.s-ring.weak { stroke: #ff6b78; stroke-dasharray: 14 10; }
+.s-core-value { fill: #fff; font-size: 34px; font-weight: 700; paint-order: stroke; stroke: rgba(2, 12, 24, 0.75); stroke-width: 5px; }
+.s-core-caption { fill: #eaf8ff; font-size: 13.5px; letter-spacing: 2px; paint-order: stroke; stroke: rgba(2, 12, 24, 0.75); stroke-width: 4px; }
+.s-core-out { fill: #ff6b78; font-size: 38px; font-weight: 700; letter-spacing: 3px; }
+.blade { fill: #6ee7df; stroke: #bffff1; stroke-width: 1.5; transition: transform 0.25s ease-out; }
+.g-track { fill: none; stroke: rgba(90, 140, 190, 0.25); stroke-width: 13; stroke-linecap: round; }
+.g-fill { fill: none; stroke: var(--cyan); stroke-width: 13; stroke-linecap: round; transition: stroke 0.3s; }
+.g-mark { stroke-width: 3; }
+.g-value { fill: var(--text); font-size: 28px; font-weight: 600; }
+.g-unit { fill: var(--muted); font-size: 13px; letter-spacing: 1.5px; }
+.g-label { fill: var(--muted); font-size: 14px; font-weight: 600; letter-spacing: 2px; }
 
-.metrics{grid-template-columns:repeat(5,minmax(0,1fr))}.damage-readout label{margin:0;color:#8ca4b5;font-size:11px;letter-spacing:1px}.damage-readout>div{display:flex;align-items:center;margin-top:10px;color:#ff9eaa;font-size:23px}.damage-readout input{width:66px;padding:0;border:0;border-bottom:1px solid #683644;background:transparent;color:inherit;font:inherit;margin:0}.damage-readout input:focus{outline:1px solid #6ee7df}@media(max-width:800px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* What the reactor is doing, under the schematic */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--green);
+}
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
+.advisory[data-level="off"] { color: var(--muted); }
 
-.temperature-gauge{height:12px;background:linear-gradient(to right,#203e48 0% 53.333%,#645127 53.333% 66.667%,#642f3a 66.667%);position:relative;margin-top:12px;border-radius:3px}.temperature-gauge>div{height:100%;border-radius:3px;transition:width .1s linear}.temp-marker{position:absolute;top:-4px;height:20px;width:2px}.danger-marker{left:53.333%;background:#efc574}.damage-marker{left:66.667%;background:#ed6371}.temp-legend{display:flex;justify-content:space-between;font-size:9px;margin-top:8px;color:#efc574}.temp-legend span:last-child{color:#ed6371}
+/* ── Slider panels ──────────────────────────────────────────────────────────────────────────── */
+.controls { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.8rem; padding: 0.9rem 1rem 1rem; }
+.controls .thead { flex: none; }
+.thead small { font-size: 0.6rem; letter-spacing: 0.12em; white-space: nowrap; color: var(--amber); }
+.thead h2 { white-space: nowrap; font-size: 0.85rem; }
+.slider-pair { flex: 1; min-height: 12rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.control { min-height: 0; display: grid; grid-template-rows: auto auto auto 1fr; justify-items: start; gap: 0.15rem; }
+.control small { font-size: 0.62rem; letter-spacing: 0.12em; white-space: nowrap; }
+.control b { font-size: 1.55rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.control em { font-style: normal; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.4rem; white-space: nowrap; }
+.control.fault small { color: #ff6b78; }
+.control .vslider { width: 100%; height: 100%; min-height: 8rem; }
+.controls .rows { flex: none; }
+.controls .rows dd.bad { color: #ff8f9b; }
+/* The amber mark on a slider is the value the reactor needs right now. */
+.vs-target { position: absolute; left: 0; width: 2.2rem; height: 2px; margin-bottom: -1px; pointer-events: none; }
+.vs-target::before { content: ''; position: absolute; left: -0.1rem; right: 0; top: 0; height: 2px; background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
+.vs-target::after { content: ''; position: absolute; right: -0.55rem; top: calc(1px - 0.35rem); border: 0.35rem solid transparent; border-right-color: var(--amber); }
 
-.umbilical-indicator{display:flex;align-items:center;gap:10px;margin-top:18px;font-size:11px;color:#adc6d4}.umbilical-indicator .sync-light{width:16px;height:16px}
+/* ── Dock ───────────────────────────────────────────────────────────────────────────────────── */
+.dock button:disabled { opacity: 0.4; cursor: not-allowed; }
+.dock .eject { color: #ffb4a8; }
+.dock .eject .ring { border-color: #a5513f; background: radial-gradient(circle, rgba(110, 30, 24, 0.7), rgba(30, 6, 6, 0.85)); box-shadow: 0 0 0.8rem rgba(255, 70, 50, 0.35), inset 0 0 0.8rem rgba(255, 70, 50, 0.25); }
+.dock .eject:hover:not(:disabled) .ring { border-color: #ff8a70; box-shadow: 0 0 1.1rem rgba(255, 90, 60, 0.6); }
+#maintenanceBtn[data-alert="true"] { color: #ff9eaa; }
+#maintenanceBtn[data-alert="true"] .ring { border-color: #ff6b78; box-shadow: 0 0 1rem rgba(255, 80, 90, 0.55); }
 
-.demo-actions{display:flex;gap:10px;flex-wrap:wrap}
-
-.component-repair{position:absolute;right:8px;top:4px}.component-repair button{width:28px;height:28px;padding:0;min-width:0;margin:0;font-size:18px}.panel>.sectiontitle,.coolant-controls>.sectiontitle{padding-right:28px}
-
-#refillFuel{display:block;margin:12px auto 0}#refillFuel[hidden]{display:none}#fuelTimeRemaining{font-variant-numeric:tabular-nums;font-size:15px;margin-top:8px}
-
-#fuelGauge>strong{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;font-variant-numeric:tabular-nums}#fuelGaugeUnits{display:block;text-align:center;font-family:monospace;font-variant-numeric:tabular-nums}#fuelTimeRemaining{width:100%;text-align:center;font-family:monospace;font-variant-numeric:tabular-nums}
-
-#effValue,#savingValue{display:block;width:100%;text-align:center;font-family:monospace;font-variant-numeric:tabular-nums}#flowValue{display:inline-block;min-width:5ch;text-align:center;font-family:monospace;font-variant-numeric:tabular-nums}
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+.mhead small { font-size: 0.65rem; color: #ff8f9b; }
+.damage-line { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.9rem; }
+.damage-line b { font-size: 1.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.damage-bar { height: 0.6rem; }
+.damage-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--amber), var(--red)); box-shadow: 0 0 0.6rem var(--red); }
+.components { display: grid; gap: 0.5rem; }
+.component { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.2rem 0.8rem; padding: 0.65rem 0.9rem; border: 1px solid var(--edge-soft); border-radius: 0.7rem; background: rgba(9, 28, 52, 0.45); }
+.component b { font-size: 0.9rem; font-weight: 600; }
+.component span { grid-column: 1; font-size: 0.75rem; color: var(--green); }
+.component[data-state="fault"] { border-color: rgba(255, 90, 100, 0.55); }
+.component[data-state="fault"] span { color: #ff8f9b; }
+.component[data-state="working"] span { color: var(--amber); }
+.component button { grid-row: 1 / 3; grid-column: 2; }
+.diag-rows div { padding: 0.5rem 0; }
+.eject-row { margin-top: 1rem; }
+.narrow .mnote { line-height: 1.6; }
+#diagnosticsDialog { width: min(50rem, 94vw); }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.diag-rows div:last-child { grid-column: 1 / -1; }
+.diag-rows dd { max-width: 60%; }

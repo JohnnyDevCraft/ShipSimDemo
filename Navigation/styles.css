@@ -1,41 +1,88 @@
-/* Navigation Control. Builds on the Helm theme (../Helm/styles.css) and replaces its page grid. */
-.navigation main{max-width:1900px;grid-template-columns:minmax(420px,1fr) 400px;grid-template-rows:auto;align-items:start;gap:20px}
-.navigation .workspace{grid-column:1;grid-row:1;min-width:0}
-.side{grid-column:2;grid-row:1;min-width:0;margin:0}
-.side-tabs{margin-bottom:20px}
-.side-tabs button{flex:1}
-.tab-panel>section+section{margin-top:20px;padding-top:20px;border-top:1px solid var(--edge)}
-.navigation .map{height:560px}
-.navigation #map{display:block;width:100%;height:100%;cursor:crosshair}
-.system-pick{flex:0 0 220px}
-.mapbottom button{padding:6px 10px;font-size:10px;letter-spacing:1px}
-.locator .fields{flex-wrap:wrap;margin-bottom:12px}
-.locator .fields label{min-width:96px}
-.locator #pinReference{color:var(--cyan);font-weight:600}
-.locator p{margin:0 0 14px;line-height:1.6}
-#locatorReading.set{color:var(--cyan);font-size:13px;font-variant-numeric:tabular-nums}
-.warning{color:#ffbe83;border-left:3px solid #ffbe83;padding-left:10px;font-size:12px}
-.warning[hidden]{display:none}
-.other-ship .selected-destination{padding:16px 0 8px}
-.side .selected-destination strong{font-size:17px}
-.side .selected-destination .actions{flex:1 1 100%}
-.readout{margin:8px 0 0;padding:12px;border:1px dashed var(--edge);border-radius:6px;color:var(--cyan);font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
-.readout:empty{display:none}
-#knownList{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow-y:auto}
-#knownList button{display:grid;grid-template-columns:1fr auto;gap:4px 10px;text-align:left;padding:9px 12px}
-#knownList button[aria-current='true']{border-color:var(--cyan);background:#17303c}
-.known-name{color:#e6edf6;font-weight:600}
-.known-sources{display:flex;gap:4px}
-.known-sources i{font-style:normal;font-size:9px;letter-spacing:1px;padding:2px 5px;border:1px solid var(--edge);border-radius:3px;color:var(--cyan)}
-.known-detail{grid-column:1 / 3;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.known-empty{color:var(--muted);font-size:12px;margin:0}
-.navigation footer label{display:flex;align-items:center;gap:8px;flex:0 0 auto}
-.navigation footer button{padding:7px 10px;font-size:11px}
-@media(max-width:1150px){.navigation main{grid-template-columns:minmax(0,1fr)}.side{grid-column:1;grid-row:2}.navigation .map{height:460px}}
-@media(max-width:650px){.navigation main{display:flex;flex-direction:column}.navigation .workspace{order:1}.side{order:2}.navigation .map{height:380px}.maphead{flex-wrap:wrap}.system-pick{flex:1 1 100%}}
-.system-pick,.other-ship>label{display:grid;gap:8px;font-size:11px;letter-spacing:1px;color:var(--muted)}
-.side .selected-destination{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;align-items:start}
-.side .selected-destination>[data-sd-field]:first-child,.side .selected-destination .sd-calculating,.side .selected-destination .actions{grid-column:1 / 3}
-.side .selected-destination .actions button{flex:1}
-#mapSelection{bottom:52px}
-@media(max-width:650px){.mapbottom>span{display:none}.navigation footer{gap:10px}}
+/* Navigation Control. The shared console look is in ../Shared/console.css; this adds what only the
+   navigation console has. */
+:root { --left-w: 18rem; --right-w: 19.5rem; }
+@media (orientation: portrait) {
+  :root { --left-w: 17rem; --right-w: 17.5rem; }
+  .system-pick { min-width: 11rem; letter-spacing: 0.08em; }
+  .caption-long { display: none; }
+}
+@media (orientation: landscape) {
+  .caption-short { display: none; }
+}
+
+#map { cursor: crosshair; }
+
+/* System picker in the top bar */
+.system-pick { display: flex; align-items: center; justify-content: center; gap: 0.6rem; min-width: 17rem; padding: 0.5rem 1.2rem; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); border-color: #63b4ff; box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.system-pick svg { width: 1.1rem; height: 1.1rem; stroke-width: 2.4; }
+
+/* Navigation computer state in the top bar */
+.nav-state[data-state="CALCULATING"] { color: var(--amber); }
+.nav-state[data-state="OFFLINE"] { color: var(--red); }
+
+/* Panels */
+#mapTarget, #ownDestination { flex: none; }
+#mapTarget { gap: 0.6rem; }
+
+/* Who the map target's course is plotted from: our ship, or whatever Plot For picked. */
+.plot-for { display: flex; align-items: center; gap: 0.6rem; min-height: 2rem; padding: 0.3rem 0.4rem 0.3rem 0.7rem; border: 1px solid var(--edge-soft); border-radius: 0.6rem; background: rgba(2, 10, 20, 0.6); }
+.plot-for small { font-size: 0.6rem; white-space: nowrap; }
+.plot-for b { flex: 1; min-width: 0; font-size: 0.85rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plot-for[data-other="true"] { border-color: var(--amber); background: rgba(60, 38, 8, 0.45); }
+.plot-for[data-other="true"] b { color: #ffd08a; }
+.plot-for .icon-btn { width: 1.6rem; height: 1.6rem; min-height: 0; }
+
+/* A course plotted for another ship or a body, read out to the communications officer. */
+.plotted { display: grid; gap: 0.45rem; padding-top: 0.6rem; border-top: 1px solid var(--edge-soft); }
+.plotted-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.plotted-head small { font-size: 0.6rem; }
+.small-btn { min-height: 0; padding: 0.3rem 0.7rem; font-size: 0.65rem; letter-spacing: 0.1em; }
+
+/* Plot For lights up while it is plotting from something other than our ship. */
+.dock .toggle[aria-pressed="true"] { color: #ffd08a; }
+.dock .toggle[aria-pressed="true"] .ring { background: radial-gradient(circle at 50% 40%, #ffe2a8, var(--amber) 70%); border-color: #ffe2a8; color: var(--panel-solid); box-shadow: 0 0 1.2rem rgba(255, 182, 72, 0.75), 0 0 2.4rem rgba(255, 182, 72, 0.35); }
+.dock .toggle[aria-pressed="true"] .ring svg { stroke-width: 2.4; }
+.dock button:disabled { opacity: 0.45; }
+.thead small { font-size: 0.6rem; letter-spacing: 0.12em; white-space: nowrap; }
+.thead h2 { white-space: nowrap; }
+#setOwn { display: flex; align-items: center; justify-content: center; gap: 0.55rem; font-size: 0.95rem; letter-spacing: 0.04em; }
+#setOwn svg { width: 1.2rem; height: 1.2rem; }
+#clearOwn { width: 100%; }
+.target[data-state="unset"] .tname h3 { color: var(--muted); }
+.readout { margin: 0; padding: 0.6rem 0.8rem; border: 1px dashed var(--edge); border-radius: 0.6rem; color: var(--cyan); font-size: 0.78rem; line-height: 1.45; font-variant-numeric: tabular-nums; }
+.readout:empty { display: none; }
+.warning { margin: 0; padding-left: 0.7rem; border-left: 3px solid var(--amber); color: var(--amber); font-size: 0.78rem; line-height: 1.45; }
+.field.static { grid-template-columns: 1fr; }
+.field.static b { color: var(--cyan); }
+
+/* Systems and Known Objects: the title and filter stay put and only the list scrolls, with no scroll bar. */
+.list-modal[open] { display: flex; flex-direction: column; height: min(42rem, 86dvh); overflow: hidden; }
+.list-modal > * { flex: none; }
+.list-modal > .search-keys { flex: 1 1 auto; }
+.list-search { width: 100%; margin: 0.8rem 0 0.6rem; padding: 0.65rem 0.9rem; border: 1px solid var(--edge); border-radius: 0.6rem; background: rgba(2, 10, 20, 0.8); font-size: 0.9rem; outline: none; }
+.list-search::placeholder { color: var(--muted); }
+.list-search:focus { border-color: var(--cyan); box-shadow: 0 0 0.6rem var(--glow); }
+.list-search::-webkit-search-cancel-button { filter: invert(0.7) sepia(1) hue-rotate(160deg); }
+.scroll-list { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0.45rem; padding: 0.2rem 0.2rem 1.6rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -webkit-mask-image: linear-gradient(#000 calc(100% - 1.6rem), transparent); mask-image: linear-gradient(#000 calc(100% - 1.6rem), transparent); }
+.scroll-list::-webkit-scrollbar { display: none; }
+.scroll-list[hidden] { display: none; }
+/* Cards grow to fit their text instead of keeping the standard button height. */
+.scroll-list > * { flex: none; }
+.list-empty { margin: 0.4rem 0 0; color: var(--muted); font-size: 0.85rem; }
+
+/* Systems dialog */
+.system-list button { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.3rem 0.7rem; text-align: left; padding: 0.75rem 0.9rem 0.95rem; letter-spacing: 0.04em; }
+.system-list button i { grid-row: span 2; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0.6rem var(--dot); }
+.system-list button b { font-size: 0.95rem; font-weight: 600; }
+.system-list button span { font-size: 0.72rem; color: var(--muted); }
+.system-list button[aria-pressed="true"] { border-color: var(--cyan); background: rgba(30, 90, 160, 0.45); }
+
+/* Known objects dialog */
+.wide-modal { width: min(44rem, 94vw); }
+#knownList button { display: grid; grid-template-columns: 1fr auto; gap: 0.3rem 0.8rem; text-align: left; padding: 0.7rem 0.9rem 0.85rem; letter-spacing: 0.02em; }
+#knownList button[aria-current="true"] { border-color: var(--cyan); background: rgba(30, 90, 160, 0.45); }
+.known-name { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+.known-sources { display: flex; gap: 0.3rem; }
+.known-sources i { font-style: normal; font-size: 0.6rem; letter-spacing: 0.1em; padding: 0.1rem 0.4rem; border: 1px solid var(--edge); border-radius: 0.3rem; color: var(--cyan); }
+.known-detail { grid-column: 1 / 3; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mhead small { font-size: 0.65rem; }

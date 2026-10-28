@@ -1,23 +1,25 @@
-# Navigation Control discovery preview
+# Navigation Control
 
-The navigation officer's console from the Version 3 navigation redesign. It sets destinations in the ship's navigation computer; Helm Control flies to them. Open it beside `../Helm/index.html` to see both share one computer.
+The navigation officer's console. It sets destinations in the ship's navigation computer; Helm Control flies to them. Open it beside `../Helm/index.html` to see both share one computer.
 
-Serve the whole demo folder through a local static server and open `Navigation/index.html`. `index.html` and `styles.css` are edited directly; `navigation.js` and the `../Shared/` scripts are minified from `demo-app/static-src/` by `node scripts/build-static.cjs`.
+## Full-screen layout (2026-10-28)
 
-Sample state only: no live API and no simulation. Layout beyond the parts below is provisional; Version 3 has not designed it.
+Same design principles as Helm Control: the system map fills the window and every control floats over it, the bottom bar opens dialogs, demo-only controls sit behind the menu, and the page scales as one piece from iPad (portrait or landscape) to 4K. `tests/navigation-layout.cjs` checks those sizes, with every panel filled.
 
-## What it shows
+Files: `index.html`, `styles.css` (what only this console has), `../Shared/console.css` (the shared console look) and `navigation.js`, minified with `../Shared/console-ui.js` (the shared controls: vertical slider, keypad, dialogs, star backdrop, map labels, clock) from `demo-app/static-src/` by `node scripts/build-static.cjs`. Helm Control does not load the shared console files; it keeps its own copy as shipped.
 
-- **System map.** Pick a system, drag to pan, wheel or pinch to zoom. Click an object to make it the map target; click it again to centre on it. Rings and boundaries can be selected as exact-edge targets. Map up is toward the galactic centre.
-- **Free locator.** Click empty space to drop a pin; drag it to refine. The panel reads the pin as distance and bearing from the nearest known body, and both numbers can be edited to move it. It warns when the pin is inside a body or inside its safety boundary. The pin can be set as a destination like an object.
-- **Selected Destination for our ship**, with Set destination and Clear. There is no Align here; that is Helm's.
-- **Plot for another ship.** Pick a known ship, set a destination for it, and read out the course, the turn from its current bearing and the jump distance. Nothing is sent to the other ship. Jump time assumes warp 1.
-- **Known objects.** What the navigation computer knows, with position and, for moving ships, course, bearing and speed.
-- **Demo controls** in the footer: navigation computer power, calculation seconds, Earth settlements camera preset, Reset demo.
+- **Top bar:** emblem, the system picker (opens the Systems dialog), the grid size, stardate and clock, the navigation computer's state (Online, Calculating, Offline) and the menu.
+- **System map:** map up is toward the galactic centre. Drag to pan; wheel or pinch to zoom. Tap an object to make it the map target; tap it again to centre on it. Rings and boundaries can be selected as exact-edge targets. Tap empty space to drop a pin; drag the pin to move it. The grid is fixed to the screen and centred on the middle of the map, so whatever you pan or centre there sits on the bright axes. Range circles share the grid step, and a compass rose in galactic bearings (000 up, toward the galactic centre) rings the centre. Our destination is a red reticle on a dashed line from our ship; a course plotted with Plot For is cyan, and its origin wears a dashed amber ring. The map target sits in cyan brackets.
+- **Map Target (top left):** who the course is plotted for (our ship unless Plot For picked something else), then the selected object, edge or pin with course, turn and distance, and **Set Destination**. For our ship the figures preview at once. For anyone else they appear only once the computer has finished plotting that destination; a body has no heading, so its turn is "—". A course held for someone else shows under the card as one line for the navigator to read to the communications officer (or, for a body, the course and distance), with **Clear**. Nothing is sent to another ship. The ⋯ menu centres the map on the target, makes the pin the map target, opens the pin in the locator, or removes the pin.
+- **Our Destination (top right):** what the computer holds for our ship, the calculation in progress, and **Clear Destination**. There is no Align here; that is Helm's.
+- **Map Range (bottom right):** a slider over presets from 30 LY to 1 KM.
+- **Bottom bar:** System (search the catalogue), Known (the objects the computer knows, with a filter; pick one to target and centre it), Plot For (lit amber while active: makes the map target the origin of the next course; with nothing new targeted it goes back to our ship), Locator (the pin as distance and bearing from the nearest known body, edited on the keypad, with warnings inside a body or its safety boundary, and Drop Pin at Map Centre), Our Ship (centre on it) and Range.
+- **Systems and Known Objects dialogs:** the title and search box stay put and only the list scrolls, with no scroll bar shown; flick or wheel through it. Tapping the search box swaps the cards for an in-app keyboard (the system keyboard is not asked for) that filters the list as you type and shows the match count; Done, or Enter on a physical keyboard, brings the cards back.
+- **Menu → Demo controls:** navigation computer power, calculation time (0, 2, 5, 10 or 30 seconds), the Earth Settlements camera preset, and Reset demo.
 
 ## Rules the stand-in follows
 
-- Destinations are held one per ship, keyed by registry number. Our ship's and a fighter's can be held together.
+- Destinations are held one per ship, keyed by registry number, and one per body plotted from with Plot For, keyed by the body. Our ship's and others' can be held together.
 - Every plot takes the calculation time (default 10 seconds). One calculation runs at a time; a new plot replaces it.
 - Unpowered, the computer keeps its destinations and refuses Set, Clear and plotting. The map and the known-objects list go dark.
 - Our ship's destination cannot be changed while Helm Control reports it at warp.

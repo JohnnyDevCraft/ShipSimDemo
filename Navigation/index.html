@@ -1,21 +1,159 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Navigation · Ship Sim</title><link rel="icon" type="image/x-icon" href="../favicon.ico"><link rel="stylesheet" href="../Helm/styles.css?v=navigation-split-32"><link rel="stylesheet" href="styles.css?v=2"><body class="navigation">
-<header><div class="brand"><a href="../index.html" aria-label="Back to demo selector" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px"><img src="../brand/xelseor-emblem.png" alt="" width="44" height="44" style="display:block"></a> <span title="Xelseor Mission Protocol Sim">XMPS</span><b>NAVIGATION CONTROL</b></div><div><span class="pill">DISCOVERY PREVIEW</span> <span id="state" class="status">ONLINE</span></div></header>
-<main>
-<section class="workspace">
-<div class="maphead"><div><small>NAVIGATION / SYSTEM MAP</small><h1 id="currentSystem">Sol System</h1></div><label class="system-pick">System <select id="system" aria-label="System shown on the map"></select></label></div>
-<div class="map"><canvas id="map" aria-label="Illustrative system map"></canvas><div class="maptag"><span id="mapTitle">SOL SYSTEM</span><small id="scale"></small><small id="gridScale"></small></div><div class="bearing"><span id="mapHeading">GAL-CENT</span><br><small>MAP UP</small></div><div id="blank" hidden>System map disabled · navigation computer offline</div><div id="mapSelection" class="muted" aria-live="polite">Select a target</div><div class="mapbottom"><span>◎ SYSTEM CENTERED</span><button id="centerShip" type="button">Centre on our ship</button><label>Zoom <input id="zoom" aria-label="Map zoom" step="any" type="range" min="0" max="100" value="0"></label></div></div>
-<div id="ownDestination" aria-label="Selected destination for our ship"></div>
-</section>
-<aside class="side panel">
-<div class="tabs side-tabs" role="tablist" aria-label="Navigation tools"><button id="tabCourse" type="button" role="tab" class="active" aria-selected="true" aria-controls="courseControl">Course Control</button><button id="tabKnown" type="button" role="tab" aria-selected="false" aria-controls="knownObjects" tabindex="-1">Known Objects</button></div>
-<div id="courseControl" class="tab-panel" role="tabpanel" aria-labelledby="tabCourse">
-<section class="locator"><div class="sectiontitle">FREE LOCATOR <span id="locatorState">NO PIN</span></div><p id="locatorReading" class="muted">Click empty space on the map to drop a pin, then drag it or edit the numbers.</p><div class="fields"><label>Distance from <b id="pinReference">—</b><input id="pinDistance" type="number" min="0" step="any" disabled></label><label>Unit<select id="pinUnit" disabled><option>KM</option><option>MKM</option><option>BKM</option></select></label><label>Bearing · degrees<input id="pinBearing" type="number" min="0" max="359.9" step="any" disabled></label></div><p id="locatorWarning" class="warning" role="alert" hidden></p><div class="actions"><button id="pinTarget" type="button" disabled>Use pin as map target</button><button id="pinClear" type="button" disabled>Remove pin</button></div></section>
-<section class="other-ship"><div class="sectiontitle">PLOT FOR ANOTHER SHIP <span>READ OUT · NOT TRANSMITTED</span></div><label>Known ship<select id="otherShip" aria-label="Ship to plot for"></select></label><div id="otherDestination" aria-label="Selected destination for another ship"></div><p id="readout" class="readout" role="status"></p></section>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Navigation Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=2">
+<link rel="stylesheet" href="styles.css?v=11">
+</head>
+<body class="navigation">
+<canvas id="map" aria-label="System map. Tap an object to target it, tap it again to centre on it, or tap empty space to drop a pin."></canvas>
+<div id="mapBlank" class="map-blank" hidden><b>SYSTEM MAP OFFLINE</b><span>The navigation computer is offline.</span></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <button type="button" id="systemBtn" class="system-pick" data-open="systemDialog" aria-haspopup="dialog"><span id="currentSystem">Sol System</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="scan-caption"><span class="caption-long">SYSTEM MAP · MAP UP GALACTIC CENTRE · </span><span class="caption-short">MAP UP GAL. CENTRE · </span><span id="gridScale">GRID</span></div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state nav-state" title="Navigation computer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m12 6.5 2.2 5.5L12 17.5 9.8 12Z"/></svg><span id="state">ONLINE</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<div class="col left">
+  <section id="mapTarget" class="panel target" aria-label="Map target">
+    <div class="thead"><h2>MAP TARGET</h2><button type="button" id="clearTarget" class="icon-btn small" aria-label="Clear the map target"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+    <div id="plotFor" class="plot-for" data-other="false"><small>PLOTTING FOR</small><b id="plotForName">TNS Vigilant</b><button type="button" id="plotForClear" class="icon-btn small" aria-label="Plot for our ship again" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+    <div class="tname"><i></i><div><h3 id="mtName">No target</h3><p id="mtKind"></p><p id="mtWhere"></p></div></div>
+    <p id="mtWarning" class="tnote" role="alert" hidden></p>
+    <dl class="rows">
+      <div><dt id="mtCourseLabel">COURSE FROM US</dt><dd id="mtCourse">—</dd></div>
+      <div><dt>TURN</dt><dd id="mtTurn">—</dd></div>
+      <div><dt>DISTANCE</dt><dd id="mtDistance">—</dd></div>
+    </dl>
+    <div class="tactions">
+      <button type="button" id="setOwn" class="primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>Set Destination</button>
+      <button type="button" id="mtMore" class="icon-btn" aria-label="More map target options" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>
+    </div>
+    <div id="plotted" class="plotted" hidden>
+      <div class="plotted-head"><small id="plottedTitle">PLOTTED · READ OUT TO COMMS</small><button type="button" id="plottedClear" class="small-btn">CLEAR</button></div>
+      <div id="plottedCalc" class="tcalc" hidden><small>CALCULATING NAVIGATION</small><div class="bar"><i id="plottedCalcFill"></i></div></div>
+      <p id="readout" class="readout" role="status"></p>
+    </div>
+    <div id="mtMenu" class="popover" role="menu" hidden>
+      <button type="button" role="menuitem" id="centreTarget">Centre the map here</button>
+      <button type="button" role="menuitem" id="usePin">Use the pin as map target</button>
+      <button type="button" role="menuitem" id="editPin">Edit the pin…</button>
+      <button type="button" role="menuitem" id="removePin">Remove the pin</button>
+    </div>
+  </section>
 </div>
-<div id="knownObjects" class="tab-panel" role="tabpanel" aria-labelledby="tabKnown" hidden>
-<section class="known"><div class="sectiontitle">KNOWN OBJECTS <span id="knownCount"></span></div><div id="knownList" role="list" aria-label="Objects the navigation computer knows"></div></section>
+
+<div class="col right">
+  <section id="ownDestination" class="panel target" aria-label="Our ship's destination">
+    <div class="thead"><h2>OUR DESTINATION</h2><small>TNS VIGILANT</small></div>
+    <div class="tname"><i></i><div><h3 id="odName">No destination</h3><p id="odKind"></p><p id="odNote"></p></div></div>
+    <div id="odCalc" class="tcalc" hidden><small>CALCULATING NAVIGATION</small><div class="bar"><i id="odCalcFill"></i></div></div>
+    <dl class="rows">
+      <div><dt>COURSE</dt><dd id="odCourse">—</dd></div>
+      <div><dt>TURN</dt><dd id="odTurn">—</dd></div>
+      <div><dt>DISTANCE</dt><dd id="odDistance">—</dd></div>
+      <div><dt>TIME AT CURRENT SPEED</dt><dd id="odEta">—</dd></div>
+    </dl>
+    <button type="button" id="clearOwn" class="danger">CLEAR DESTINATION</button>
+  </section>
+
+  <section class="panel range" aria-label="Map range">
+    <h2>MAP RANGE</h2>
+    <div id="rangeSlider" class="vslider range-slider" aria-label="Map range"></div>
+  </section>
 </div>
-</aside>
-</main>
-<footer><a class="console-link" href="../Helm/index.html">Helm Control ↗</a><button id="previewSettlements" type="button">Earth settlements</button><label>Calculation seconds <input id="calculationSeconds" type="number" min="0" max="3600" value="10" style="width:64px"></label><button id="demoNavigationPower" type="button">Navigation computer: Online</button><button id="resetDemo" type="button">Reset demo</button><span>LOCAL DESIGN TEMPLATE · SAMPLE STATE · NO LIVE SHIP CONNECTION</span><span id="notice" role="status">Ready for navigation review.</span></footer>
-<script src="../Shared/nav-world.js?v=1"></script><script src="../Shared/nav-computer.js?v=1"></script><script src="../Shared/selected-destination.js?v=1"></script><script src="navigation.js?v=2"></script></body></html>
+
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Navigation functions">
+  <button type="button" data-open="systemDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.6"/><ellipse cx="12" cy="12" rx="9.5" ry="4" transform="rotate(-20 12 12)"/><circle cx="19.6" cy="9.3" r="1.2"/></svg></span>SYSTEM</button>
+  <button type="button" data-open="knownDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></svg></span>KNOWN</button>
+  <button type="button" data-open="locatorDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg></span>LOCATOR</button>
+  <button type="button" id="plotForBtn" class="toggle" aria-pressed="false" title="Plot courses from the map target instead of our ship"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="18.5" r="2.5"/><path d="M8 16 16.5 7.5" stroke-dasharray="2.4 2"/><path d="M12.5 6.5h5v5"/></svg></span>PLOT FOR</button>
+  <button type="button" id="centerShip"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 7 18l5-3 5 3Z"/></svg></span>OUR SHIP</button>
+  <button type="button" data-open="rangeDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 4.5-9 4.5-9-4.5Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg></span>RANGE</button>
+</nav>
+
+<!-- Systems -->
+<dialog id="systemDialog" class="modal list-modal" aria-labelledby="systemTitle">
+  <div class="mhead"><h2 id="systemTitle">SYSTEMS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">Show a system on the map. Distances are from our ship.</p>
+  <input type="search" id="systemSearch" class="list-search" placeholder="Search the galactic catalogue" aria-label="Search systems" autocomplete="off" spellcheck="false">
+  <div id="systemList" class="system-list scroll-list" role="group" aria-label="Systems"></div>
+</dialog>
+
+<!-- Known objects -->
+<dialog id="knownDialog" class="modal wide-modal list-modal" aria-labelledby="knownTitle">
+  <div class="mhead"><h2 id="knownTitle">KNOWN OBJECTS</h2><small id="knownCount"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">What the navigation computer knows: SRS contacts, our ships in reach, and public catalogue objects. Pick one to target it on the map.</p>
+  <input type="search" id="knownSearch" class="list-search" placeholder="Filter by name, kind, system or registry" aria-label="Filter known objects" autocomplete="off" spellcheck="false">
+  <div id="knownList" class="scroll-list" role="list" aria-label="Objects the navigation computer knows"></div>
+</dialog>
+
+<!-- Free locator -->
+<dialog id="locatorDialog" class="modal" aria-labelledby="locatorTitle">
+  <div class="mhead"><h2 id="locatorTitle">FREE LOCATOR</h2><small id="locatorState">NO PIN</small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="fields-view">
+    <p id="locatorReading" class="mnote">Tap empty space on the map to drop a pin, or drop one at the map centre.</p>
+    <div class="field static"><div><small>MEASURED FROM</small><b id="pinReference">—</b></div></div>
+    <div class="field" data-field="distance"><div><small>DISTANCE</small><b data-value></b></div><button type="button" data-edit>SET DISTANCE</button></div>
+    <div class="field" data-field="bearing"><div><small>BEARING</small><b data-value></b></div><button type="button" data-edit>SET BEARING</button></div>
+    <div class="field unit"><small>DISTANCE UNIT</small><div class="seg" role="group" aria-label="Distance unit" id="pinUnit"><button type="button" data-unit="KM">KM</button><button type="button" data-unit="MKM">MKM</button><button type="button" data-unit="BKM">BKM</button></div></div>
+    <p class="mnote" data-error role="alert"></p>
+    <p id="locatorWarning" class="warning" role="alert" hidden></p>
+    <div class="mrow"><button type="button" id="dropPin">DROP PIN AT MAP CENTRE</button><button type="button" id="pinClear">REMOVE PIN</button></div>
+    <button type="button" id="pinTarget" class="primary">USE PIN AS MAP TARGET</button>
+  </div>
+</dialog>
+
+<!-- Range presets -->
+<dialog id="rangeDialog" class="modal" aria-labelledby="rangeTitle">
+  <div class="mhead"><h2 id="rangeTitle">MAP RANGE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">System map radius</p>
+  <div id="rangePresets" class="preset-grid" role="group" aria-label="Range presets"></div>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Navigation computer power, calculation time, camera presets and reset</span></button>
+    <a href="../Helm/index.html" target="_blank" rel="noopener"><b>Helm Control ↗</b><span>Fly to the destinations set here, in another tab</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" class="demo-controls" hidden>
+    <div class="msection">
+      <h3>NAVIGATION COMPUTER</h3>
+      <div class="mrow"><span id="navStatus" class="nav-status">Online</span><button type="button" id="demoNavigationPower">POWER OFF</button></div>
+      <div class="field unit"><small>CALCULATION TIME</small><div class="seg" role="group" aria-label="Calculation seconds" id="calcSeconds"><button type="button" data-seconds="0">0 s</button><button type="button" data-seconds="2">2 s</button><button type="button" data-seconds="5">5 s</button><button type="button" data-seconds="10">10 s</button><button type="button" data-seconds="30">30 s</button></div></div>
+    </div>
+    <div class="msection">
+      <h3>CAMERA</h3>
+      <div class="mrow"><button type="button" id="previewSettlements">EARTH SETTLEMENTS</button></div>
+      <p class="mnote">Centres Earth at a 10,000 km radius to review its surface settlements. It does not move the ship.</p>
+    </div>
+    <div class="msection">
+      <h3>DEMO</h3>
+      <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+      <p class="mnote">Local design template · sample state · no live ship connection.</p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/nav-world.js?v=2"></script>
+<script src="../Shared/nav-computer.js?v=1"></script>
+<script src="../Shared/console-ui.js?v=2"></script>
+<script src="navigation.js?v=6"></script>
+</body>
+</html>

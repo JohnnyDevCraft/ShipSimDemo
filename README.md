@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common. `Weapons/` contains the shared compiled assets for the six weapon and defense screens.
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation Control uses. `Weapons/` contains the shared compiled assets for the six weapon and defense screens.
 
 ## Local preview
 
@@ -32,6 +32,7 @@ node tests/helm-destination.cjs     # Helm's Selected Destination widget
 node tests/helm-flight.cjs          # align, charge, engage and exit warp
 node tests/helm-layout.cjs          # Helm fits iPad portrait/landscape through 4K
 node tests/navigation-control.cjs   # Navigation Control
+node tests/navigation-layout.cjs    # Navigation fits iPad portrait/landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

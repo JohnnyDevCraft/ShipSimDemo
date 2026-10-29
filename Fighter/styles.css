@@ -1,0 +1,159 @@
+/* Fighter Control. The console look is ../Shared/console.css and the scope's (layers, target panel, advisory,
+   dock, history) ../Shared/scope.css; this adds the heading tape, engines, the flight stick, shields and hull,
+   the weapons and the systems list. The console is used in landscape. */
+:root { --left-w: 17rem; --right-w: 18rem; }
+
+/* Panels share one padding; headings stay on one line. */
+.fighter .panel { width: 100%; padding: 0.85rem 1rem 0.95rem; }
+.thead small.warn, .thead small[data-level="bad"] { color: #ff8f9b; }
+
+/* ── Heading tape: compass labels slide past the nose mark ──────────────────────────────────────── */
+.heading-tape .tape { background: none; overflow: hidden; }
+.heading-tape .tape::before { content: ''; position: absolute; inset: 0 0 auto; height: 0.45rem; background: repeating-linear-gradient(90deg, rgba(150, 190, 220, 0.45) 0 1px, transparent 1px calc(100% / 24)); }
+.heading-tape .tape .mark { left: 50%; }
+.tape .course { top: -0.05rem; width: 0.9rem; height: 0.9rem; border: 2px solid var(--amber); border-radius: 50%; box-shadow: 0 0 0.4rem var(--amber); }
+.tape .course::before, .tape .course::after { content: ''; position: absolute; top: 50%; width: 0.35rem; height: 2px; background: var(--amber); }
+.tape .course::before { right: 100%; }
+.tape .course::after { left: 100%; }
+.tape .course.edge { border-style: dashed; }
+.heading-tape > b { min-width: 3.6rem; }
+
+/* ── Engines (pop-up) ───────────────────────────────────────────────────────────────────────────── */
+.defence-panel, .arms-panel { flex: none; display: grid; gap: 0.55rem; }
+#enginesDialog { width: min(44rem, 94vw); }
+#enginesDialog > .meter, #enginesDialog > .engine-rows { margin-top: 0.7rem; }
+.engine-top { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; align-items: center; }
+.engine-status { display: grid; gap: 0.1rem; }
+.engine-status small { font-size: 0.58rem; letter-spacing: 0.12em; }
+.engine-status b { font-size: 1.15rem; font-weight: 500; letter-spacing: 0.08em; }
+.engine-status b[data-level="ok"] { color: var(--green); }
+.engine-status b[data-level="busy"] { color: var(--amber); }
+.engine-status b[data-level="bad"] { color: #ff8f9b; }
+.engine-status em { font-style: normal; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.systems-title { margin: 1rem 0 0.5rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.16em; color: var(--muted); }
+.engine-btn { min-height: 3.2rem; font-weight: 600; letter-spacing: 0.14em; background: linear-gradient(180deg, #1d8a55, #0f5534); border-color: #5fe0a0; box-shadow: 0 0 0.9rem rgba(79, 224, 141, 0.35); }
+.engine-btn.running { background: linear-gradient(180deg, #6a2422, #3a1110); border-color: #ff8a8a; box-shadow: 0 0 0.9rem rgba(255, 90, 90, 0.3); }
+.meter { display: grid; gap: 0.3rem; }
+.meter > div:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.meter small { font-size: 0.58rem; letter-spacing: 0.12em; white-space: nowrap; }
+.meter b { font-size: 0.85rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.meter .bar { position: relative; }
+.meter .bar .ignition { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--amber) 0 0.4rem, transparent 0.4rem 0.6rem); box-shadow: none; }
+.battery-bar i { background: linear-gradient(90deg, #2bb37a, var(--green)); box-shadow: 0 0 0.6rem var(--green); }
+.battery-bar i.low, .hull-bar i.low { background: linear-gradient(90deg, #b8322e, var(--red)); box-shadow: 0 0 0.6rem var(--red); }
+.rows.compact div { padding: 0.25rem 0; }
+.rows.compact dt { font-size: 0.6rem; }
+.rows.compact dd { font-size: 0.75rem; }
+
+/* ── Left: flight stick ─────────────────────────────────────────────────────────────────────────── */
+.flight-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.flight-stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0.35rem; }
+.flight-stats div { min-width: 0; display: grid; gap: 0.05rem; padding: 0.3rem 0.45rem; border: 1px solid var(--edge-soft); border-radius: 0.5rem; background: rgba(9, 28, 52, 0.45); }
+.flight-stats small { font-size: 0.5rem; letter-spacing: 0.12em; }
+.flight-stats b { font-size: 0.82rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flight-stats b.warn { color: var(--amber); }
+.stick-wrap { position: relative; flex: 1; min-height: 8rem; display: grid; place-items: center; container-type: size; }
+.stick-cue { position: absolute; font-size: 0.52rem; letter-spacing: 0.12em; color: var(--dim); pointer-events: none; white-space: nowrap; }
+.stick-cue.up { top: 0; left: 50%; transform: translateX(-50%); }
+.stick-cue.down { bottom: 0; left: 50%; transform: translateX(-50%); }
+.stick-cue.left { left: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; rotate: 180deg; }
+.stick-cue.right { right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; }
+.joystick { --size: min(100cqw - 2.6rem, 100cqh - 2rem, 12.5rem); position: relative; width: var(--size); height: var(--size); touch-action: none; cursor: grab; }
+.stick-base { position: absolute; inset: 0; border: 1px solid var(--edge); border-radius: 50%; background: radial-gradient(circle, rgba(20, 60, 110, 0.55), rgba(3, 12, 24, 0.85) 70%); box-shadow: inset 0 0 1.2rem rgba(40, 140, 255, 0.2); }
+.stick-base::before, .stick-base::after { content: ''; position: absolute; background: rgba(120, 180, 230, 0.2); }
+.stick-base::before { left: 50%; top: 12%; bottom: 12%; width: 1px; }
+.stick-base::after { top: 50%; left: 12%; right: 12%; height: 1px; }
+.stick-knob { position: absolute; left: 50%; top: 50%; width: 38%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 50% 42%, #bff1ff 0 18%, #4cc3ff 40%, #1268d8 75%); border: 2px solid #c8f3ff; box-shadow: 0 0 0.8rem var(--cyan), 0 0 1.6rem rgba(47, 160, 255, 0.5); transition: transform 0.12s ease-out; }
+.joystick.active .stick-knob { transition: none; }
+.joystick.active .stick-base { border-color: var(--cyan); box-shadow: inset 0 0 1.4rem rgba(79, 214, 255, 0.35), 0 0 1rem var(--glow); }
+.joystick.disabled { cursor: not-allowed; opacity: 0.4; }
+.joystick.disabled .stick-knob { background: radial-gradient(circle at 50% 42%, #9db3c4 0 18%, #5d7a94 45%, #2a3f55 80%); border-color: #8aa2b6; box-shadow: none; }
+.stick-readout { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
+.stick-readout b { margin-left: 0.3rem; font-size: 0.72rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.manoeuvre-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 0.5rem; }
+.manoeuvre-row button { min-height: 2.9rem; padding: 0.4rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; line-height: 1.2; touch-action: none; user-select: none; -webkit-user-select: none; }
+.thrust.active { border-color: var(--amber); color: #fff1d6; background: linear-gradient(180deg, #b0701c, #6a3f0a); box-shadow: 0 0 1.1rem rgba(255, 182, 72, 0.6); }
+#stopBtn.active { border-color: #ff8a8a; color: #ffd0d0; background: rgba(90, 20, 20, 0.7); }
+
+/* ── Right: target, shields, weapons ────────────────────────────────────────────────────────────── */
+/* Our shield quadrants, drawn as on Tactical Officer Control */
+#ownShields { width: 100%; height: auto; max-height: 8.5rem; stroke: none; }
+#ownQuadrants path { stroke-width: 2; stroke-linejoin: miter; fill-opacity: 0.22; transition: fill-opacity 0.2s; }
+#ownQuadrants path.hit { fill-opacity: 0.75; }
+#ownQuadrants line { stroke: var(--panel-solid); stroke-width: 3; }
+#ownQuadrants path[data-level="ok"] { fill: #58aaff; stroke: #58aaff; }
+#ownQuadrants path[data-level="warn"] { fill: #f4ca59; stroke: #f4ca59; }
+#ownQuadrants path[data-level="bad"] { fill: #ff5968; stroke: #ff5968; }
+#ownQuadrants path[data-level="down"] { fill: #17212b; stroke: #455362; }
+#ownQuadrants text { fill: var(--muted); stroke: none; font-size: 17px; letter-spacing: 1.5px; }
+#ownQuadrants .qvalue { fill: var(--text); font-size: 19px; font-variant-numeric: tabular-nums; }
+#ownHullIcon { fill: #58de92; }
+#ownHullIcon[data-level="warn"] { fill: #ffe04b; }
+#ownHullIcon[data-level="bad"] { fill: #ff4655; }
+.thead small[data-level="ok"] { color: var(--green); }
+.thead small[data-level="warn"] { color: var(--amber); }
+.thead small[data-level="off"] { color: var(--muted); }
+.fighter .target-panel { gap: 0.5rem; }
+.fighter .target-panel .tname h3 { font-size: 1.05rem; }
+.shield-bar i { background: linear-gradient(90deg, #1a6fe6, #4fd6ff); }
+.shield-bar i.down { background: rgba(120, 160, 200, 0.45); box-shadow: none; }
+/* Bottom-bar commands: engines green when on, amber while starting; weapons red when hot */
+.dock #enginesBtn.active { color: var(--green); }
+.dock #enginesBtn.active .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 140, 80, 0.7), rgba(6, 30, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45); }
+.dock #enginesBtn.starting { color: var(--amber); }
+.dock #enginesBtn.starting .ring { border-color: var(--amber); animation: pulse-ring 1.4s ease-in-out infinite; }
+@keyframes pulse-ring { 50% { box-shadow: 0 0 1.3rem rgba(255, 182, 72, 0.6); } }
+.dock #autoDriftCmd.active { color: var(--cyan); }
+.dock #autoDriftCmd.active .ring { border-color: var(--cyan); background: radial-gradient(circle, rgba(40, 120, 230, 0.75), rgba(8, 30, 60, 0.85)); box-shadow: 0 0 1.1rem var(--glow); }
+.dock #weaponsCmd.active { color: #ff9a8f; }
+.dock #weaponsCmd.active .ring { border-color: #ff8a70; background: radial-gradient(circle, rgba(160, 40, 30, 0.7), rgba(40, 8, 6, 0.85)); box-shadow: 0 0 1.1rem rgba(255, 90, 70, 0.45); }
+.dock button span[id] { white-space: nowrap; }
+/* The capacitor, with a tick at every shot's worth of charge */
+.charge-bar { --shot: 25%; height: 0.6rem; }
+.charge-bar::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(var(--shot) - 2px), rgba(255, 255, 255, 0.75) calc(var(--shot) - 2px) var(--shot)); pointer-events: none; }
+.shot-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem; }
+.shot-row small { font-size: 0.58rem; letter-spacing: 0.12em; }
+.shot-row .seg button { padding: 0.35rem 0.2rem; font-size: 0.78rem; }
+.torp-line { display: flex; align-items: baseline; gap: 0.5rem; }
+.torp-line small { font-size: 0.58rem; letter-spacing: 0.12em; }
+.torp-line b { font-size: 0.85rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.torp-line em { margin-left: auto; font-style: normal; font-size: 0.6rem; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; }
+.torp-line em[data-level="ok"] { color: var(--green); }
+.torp-line em[data-level="bad"] { color: #ff8f9b; }
+.fighter .fire-row { grid-template-columns: 1.4fr 1fr; }
+.fighter .fire-row button { min-height: 2.9rem; font-size: 0.78rem; }
+.fighter button.blocked { opacity: 0.45; }
+.fighter .fire-row .fire.blocked { background: rgba(60, 20, 20, 0.55); border-color: rgba(255, 138, 112, 0.4); color: #e0b5ad; box-shadow: none; }
+
+/* On shorter screens the target's shield detail gives way to the weapons. */
+@media (max-height: 760px) { .fighter #shieldBlock { display: none; } }
+@media (max-height: 820px) { .fighter .target-panel .stats div:nth-child(n + 3) { display: none; } }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────────── */
+.systems { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 0.5rem; }
+.system-row { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0.1rem 0.6rem; padding: 0.35rem 0.7rem; border: 1px solid var(--edge-soft); border-left: 3px solid var(--tone, var(--muted)); border-radius: 0.55rem; background: rgba(9, 28, 52, 0.45); }
+.system-row b { font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+.system-row em { font-style: normal; font-size: 0.62rem; letter-spacing: 0.12em; color: var(--tone, var(--muted)); }
+.system-row span { grid-column: 1 / -1; font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.system-row[data-state="OK"], .system-row[data-state="ONLINE"], .system-row[data-state="CHARGING"] { --tone: var(--green); }
+.system-row[data-state="SHORT"], .system-row[data-state="IGNITION"], .system-row[data-state="SUPPLYING"] { --tone: var(--amber); }
+.system-row[data-state="NO POWER"], .system-row[data-state="FLAT"], .system-row[data-state="DESTROYED"] { --tone: #ff8f9b; }
+.diag-rows { max-height: 62dvh; overflow-y: auto; scrollbar-width: none; }
+.diag-rows::-webkit-scrollbar { display: none; }
+
+/* Multi-touch: the console's controls take every finger themselves (no page pan, pinch or double-tap zoom), and
+   show a press while a finger is on them. */
+.fighter .col, .fighter .col button, .fighter .dock, .fighter .dock button { touch-action: none; }
+.fighter .col button.pressed, .fighter .seg button.pressed { filter: brightness(1.35); transform: scale(0.97); }
+.fighter .dock button.pressed .ring { filter: brightness(1.4); transform: scale(0.94); }
+
+/* Key bindings (Menu → Controls) */
+.bindings { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1rem; max-height: 52dvh; overflow-y: auto; scrollbar-width: none; }
+.bindings::-webkit-scrollbar { display: none; }
+.bindings h3 { grid-column: 1 / -1; margin: 0.6rem 0 0.1rem; font-size: 0.68rem; letter-spacing: 0.16em; color: var(--muted); }
+.binding { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.25rem 0; border-bottom: 1px solid var(--edge-soft); }
+.binding span { font-size: 0.78rem; }
+.key-cap { min-width: 3.2rem; padding: 0.35rem 0.6rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+.key-cap.unbound { color: var(--dim); }
+.key-cap.listening { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
+.binding-note { min-height: 1.2em; color: var(--cyan); }

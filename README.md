@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all seventeen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Power Distribution, Communications, Transporter, Shields, Tractor Beam, Warp Field, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the compiled assets for the one remaining Angular screen (Tactical Officer).
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all twenty demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Power Distribution, Communications, Transporter, Shields, Tractor Beam, Warp Field, Fighter, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles and Fighter Control share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the compiled assets for the one remaining Angular screen (Tactical Officer).
 
 ## Local preview
 
@@ -55,6 +55,8 @@ node tests/tractor-beam.cjs         # Tractor Beam Control
 node tests/tractor-beam-layout.cjs  # Tractor Beam Control fits iPad landscape through 4K
 node tests/warp-field.cjs           # Warp Field Control
 node tests/warp-field-layout.cjs    # Warp Field Control fits iPad landscape through 4K
+node tests/fighter-control.cjs      # Fighter Control
+node tests/fighter-layout.cjs       # Fighter Control fits iPad landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fighter Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="../Shared/scope.css?v=1">
+<link rel="stylesheet" href="styles.css?v=5">
+</head>
+<body class="scope-page fighter">
+
+<!-- The forward scope fills the window and looks where the nose points: stars, the 3D ships, and the overlay. -->
+<canvas id="stars" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="scene3d" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="hud" class="scope-layer" role="img" aria-label="Forward view along the nose. Tap a ship to target it; pinch or scroll to zoom."></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">FIGHTER CONTROL</div>
+    <div class="scan-caption" id="caption">TSC FIGHTER MK1 · POCKET REACTOR 120 PU · PHASE CANNON · POCKET TORPEDOES</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state weapon-state" id="stateBox" title="Fighter state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 14.5 10l7 3.5-7 1.5L12 21.5 9.5 15l-7-1.5 7-3.5Z"/></svg><span id="state">ENGINES OFF</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Heading tape: the nose in the middle, where we are actually moving in amber, the intercept in yellow -->
+<div class="aim-tape heading-tape" id="aimTape">
+  <small id="aimMode">HEADING</small>
+  <div class="tape" id="headingTape" aria-hidden="true"><i id="courseMarker" class="course" hidden></i><i id="leadMarker" class="lead" hidden></i><i id="aimMarker" class="mark"></i></div>
+  <b id="aimValue">000°</b>
+</div>
+
+<!-- Left: our shields and hull, then the flight stick -->
+<div class="col left" id="weaponCol">
+  <section class="panel defence-panel" aria-label="Our shields and hull">
+    <div class="thead"><h2>SHIELDS</h2><small id="shieldState">OFFLINE</small></div>
+    <svg id="ownShields" viewBox="-240 -150 480 300" role="img" aria-label="Our shield quadrants, bow up">
+      <g id="ownQuadrants"></g>
+      <path id="ownHullIcon" d="M0 -38 L9 -14 L30 4 L30 14 L9 10 L7 30 L-7 30 L-9 10 L-30 14 L-30 4 L-9 -14 Z"/>
+    </svg>
+    <div class="meter"><div><small>HULL</small><b id="ownHullValue">100%</b></div><div class="bar hull-bar"><i id="ownHullBar"></i></div></div>
+  </section>
+  <section class="panel flight-panel" aria-label="Flight">
+    <div class="thead"><h2>FLIGHT</h2><small id="flightState">ENGINES OFF</small></div>
+    <div class="flight-stats">
+      <div><small>SPEED</small><b id="speedValue">0 m/s</b></div>
+      <div><small>COURSE</small><b id="courseValue">—</b></div>
+      <div><small>DRIFT</small><b id="driftValue">—</b></div>
+    </div>
+    <div class="stick-wrap">
+      <span class="stick-cue up">ACCELERATE</span><span class="stick-cue down">SLOW · REVERSE</span><span class="stick-cue left">◀ PORT</span><span class="stick-cue right">STBD ▶</span>
+      <div class="joystick" id="flightStick" role="group" aria-label="Flight stick: left and right turn the nose, up accelerates, down slows and reverses; let go to hold the speed"><div class="stick-base"></div><div class="stick-knob"></div></div>
+    </div>
+    <div class="stick-readout"><span>THROTTLE <b id="throttleValue">0%</b></span><span>TURN <b id="turnValue">0°/s</b></span></div>
+    <div class="manoeuvre-row">
+      <button type="button" id="thrustBtn" class="thrust" aria-pressed="false">FORWARD THRUST</button>
+      <button type="button" id="stopBtn" aria-pressed="false">ALL STOP</button>
+    </div>
+  </section>
+</div>
+
+<!-- Right: the target, then the weapons and their triggers -->
+<div class="col right" id="targetCol">
+  <section class="panel target-panel" id="targetPanel" aria-label="Selected target" hidden>
+    <div class="thead"><h2>TARGET</h2><small id="targetKind"></small></div>
+    <div class="tname"><i aria-hidden="true"></i><div><h3 id="targetName"></h3><p id="targetSub"></p></div></div>
+    <div class="stats">
+      <div><small>RANGE</small><b id="targetRange">—</b></div>
+      <div><small>BEARING</small><b id="targetBearing">—</b></div>
+      <div><small>INTERCEPT</small><b id="targetIntercept">—</b></div>
+      <div><small>SOLUTION</small><b id="targetSolution">—</b></div>
+    </div>
+    <div id="shieldBlock" class="shield-block">
+      <div class="shields" id="shieldDiagram" aria-label="Target shield SEO per quadrant">
+        <span class="qv f"><small>F</small><b id="q0">50</b></span>
+        <span class="qv p"><small>P</small><b id="q3">50</b></span>
+        <svg viewBox="-60 -60 120 120" aria-hidden="true">
+          <path data-q="0" d="M-32.1-38.3A50 50 0 0 1 32.1-38.3" class="q"/>
+          <path data-q="1" d="M38.3-32.1A50 50 0 0 1 38.3 32.1" class="q"/>
+          <path data-q="2" d="M32.1 38.3A50 50 0 0 1-32.1 38.3" class="q"/>
+          <path data-q="3" d="M-38.3 32.1A50 50 0 0 1-38.3-32.1" class="q"/>
+          <path d="M0-30C6-24 8-14 8-4V26H-8V-4C-8-14-6-24 0-30Z" class="hull-icon"/>
+        </svg>
+        <span class="qv s"><small>S</small><b id="q1">50</b></span>
+        <span class="qv a"><small>A</small><b id="q2">50</b></span>
+      </div>
+      <div class="hull-stack">
+        <small>TARGET SHIELDS · SEO EACH SIDE</small>
+        <div class="hull-line"><small>HULL</small><b id="hullValue">500 / 500</b></div>
+        <div class="bar hull-bar"><i id="hullBar"></i></div>
+        <p class="mnote" id="subsystemNote"></p>
+      </div>
+    </div>
+  </section>
+  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP</div>
+  <section class="panel arms-panel" aria-label="Weapons">
+    <div class="thead"><h2>WEAPONS</h2><small id="weaponState">OFFLINE</small></div>
+    <div class="meter"><div><small>CANNON CHARGE</small><b id="chargeValue">0 / 240 PU</b></div><div class="bar charge-bar" id="chargeBarWrap"><i id="chargeBar"></i></div></div>
+    <div class="shot-row"><small>SHOT</small><div class="seg" id="shotPower"><button type="button" data-shot="30">30</button><button type="button" data-shot="60">60</button><button type="button" data-shot="120">120</button></div><small>PU</small></div>
+    <div class="torp-line"><small>TORPEDOES</small><b id="torpedoValue">12 / 12</b><em id="torpedoState">OFFLINE</em></div>
+    <div class="fire-row"><button type="button" id="fireBtn" class="danger fire">FIRE CANNON</button><button type="button" id="torpedoBtn" class="danger fire">TORPEDO</button></div>
+  </section>
+  <!-- The scope's zoom: pinch, scroll or the Zoom button in the bottom bar -->
+  <div class="zoom-store" hidden><b id="zoomValue">1.0×</b><div id="zoomSlider" class="vslider range-slider" aria-label="Scope zoom"></div></div>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Fighter commands">
+  <button type="button" id="enginesBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></span><span id="enginesLabel">ENGINES</span></button>
+  <button type="button" id="shieldsCmd" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6Z"/></svg></span><span id="shieldsLabel">SHIELDS DOWN</span></button>
+  <button type="button" id="weaponsCmd" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6Z"/></svg></span><span id="weaponsLabel">WEAPONS OFF</span></button>
+  <button type="button" id="autoDriftCmd" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 15 9h-6Z"/><path d="M12 9v4"/><path d="M5 20c2.5-5 4.5-7 7-7s4.5 2 7 7"/></svg></span><span id="autoDriftLabel">AUTO-DRIFT OFF</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="nextTarget"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="12" r="6"/><circle cx="11" cy="12" r="1.2"/><path d="M19 8l3 4-3 4"/></svg></span>NEXT TARGET</button>
+  <button type="button" id="clearTarget"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="m9 9 6 6M15 9l-6 6"/></svg></span>CLEAR TARGET</button>
+  <button type="button" id="zoomBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M10.5 7.5v6M7.5 10.5h6"/></svg></span><span id="zoomLabel">ZOOM 1×</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="historyBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5V9H8"/><path d="M12 7.5V12l3 2"/></svg><em id="historyCount" class="badge" hidden></em></span>HISTORY</button>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Engines: the pocket reactor, the battery, and what every system asks of the bus and gets -->
+<dialog id="enginesDialog" class="modal" aria-labelledby="enginesTitle">
+  <div class="mhead"><h2 id="enginesTitle">ENGINES</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="engine-top">
+    <button type="button" id="engineBtn" class="engine-btn">START ENGINES</button>
+    <div class="engine-status"><small>POCKET REACTOR</small><b id="engineState">OFF</b><em id="ignitionNote">Cold start takes 1:30</em></div>
+  </div>
+  <div class="meter"><div><small>REACTOR OUTPUT</small><b id="reactorValue">0 / 120 PU</b></div><div class="bar"><i id="reactorBar"></i><i id="ignitionBar" class="ignition"></i></div></div>
+  <div class="meter"><div><small>BATTERY</small><b id="batteryValue">100%</b></div><div class="bar battery-bar"><i id="batteryBar"></i></div></div>
+  <dl class="rows compact engine-rows">
+    <div><dt>BUS LOAD</dt><dd id="loadValue">—</dd></div>
+    <div><dt>BATTERY FLOW</dt><dd id="batteryFlow">—</dd></div>
+  </dl>
+  <h3 class="systems-title">SYSTEMS</h3>
+  <div class="systems" id="systemsList"></div>
+  <p class="mnote">Power reaches the systems in this order. When the reactor and battery cannot cover them all, the last ones get less: the cannon charges slower, the torpedo loads slower, the shield recharges slower, and the engine pushes less hard. The dampener needs all of its power or the engine stops.</p>
+</dialog>
+
+<!-- History of shots fired -->
+<dialog id="historyDialog" class="modal" aria-labelledby="historyTitle">
+  <div class="mhead"><h2 id="historyTitle">SHOTS FIRED</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="history" id="historyList" role="log" aria-label="Shot results"></div>
+  <div class="mrow history-actions"><button type="button" id="clearHistory">CLEAR HISTORY</button></div>
+</dialog>
+
+<!-- Diagnostics: every reading in one place -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Discovery model: power, the cannon, the torpedoes and the shield come from the V3 catalog's TSC Fighter Mk1; the flight ratings are demo values.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Flight ratings, power, ships, enemy fire, rearm and repair</span></button>
+    <button type="button" id="openControls"><b>Controls</b><span>Key bindings and joystick: <span id="padName">no joystick connected</span></span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Engines off and cold, full battery, full rack, one training ship</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="controlsHelp" hidden>
+    <p class="mnote">Tap a key to change it, then press the new key. Escape cancels; Backspace leaves the command without a key. Keys are kept in this browser.</p>
+    <div class="bindings" id="bindingList"></div>
+    <p class="mnote binding-note" id="bindingNote" role="status" aria-live="polite"></p>
+    <div class="mrow"><button type="button" id="resetBindings">RESET TO DEFAULTS</button></div>
+    <p class="mnote">Space also fires the cannon, and + and − zoom, unless those keys are bound here. Joystick (first pass, standard mapping): stick turns and throttles; trigger or button 1 fires the cannon, button 2 launches a torpedo, button 3 (hold) is forward thrust, button 4 is all stop.</p>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>FLIGHT</h3>
+        <div class="field-grid">
+          <div class="field" data-field="maxSpeed"><div><small>MAX SPEED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="reverseSpeed"><div><small>MAX REVERSE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="accel"><div><small>ACCELERATION</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="turnRate"><div><small>TURN RATE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">The catalog's Mark I impulse engine is rated 20 km/s, 100 g and 3°/s, which suits an escort better than a fighter; these are demo values until the fighter has its own engine.</p>
+      </div>
+      <div class="msection">
+        <h3>POWER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="reactorRated"><div><small>REACTOR RATING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="ignitionSeconds"><div><small>IGNITION TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="batteryOutput"><div><small>BATTERY MAX OUTPUT</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="chargeRate"><div><small>CANNON CHARGE RATE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>SHIPS</h3>
+        <div class="mrow"><button type="button" id="addShip">ADD SHIP</button><button type="button" id="moveShips">PAUSE SHIPS</button></div>
+        <div class="mrow"><button type="button" id="enemyFire" aria-pressed="false">ENEMY FIRE: OFF</button><button type="button" id="takeHit" class="danger">TAKE A HIT</button></div>
+        <p class="mnote">With enemy fire on, an enemy within 60 km hits us every 4 seconds: 150 SEO on the shield quadrant facing it, or 25% of the hull when that quadrant is down or the shields are off.</p>
+      </div>
+      <div class="msection">
+        <h3>FIGHTER</h3>
+        <div class="mrow"><button type="button" id="rearm">REARM</button><button type="button" id="repair">REPAIR</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/scene.js?v=1"></script>
+<script src="../Shared/scope.js?v=2"></script>
+<script src="fighter.js?v=5"></script>
+</body>
+</html>

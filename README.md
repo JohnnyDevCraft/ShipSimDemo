@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all fourteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Communications, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the shared compiled assets for the two other weapon and defense screens (Tactical Officer and Shields).
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all fourteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Power Distribution, Communications, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the shared compiled assets for the two other weapon and defense screens (Tactical Officer and Shields).
 
 ## Local preview
 
@@ -37,6 +37,8 @@ node tests/reactor-control.cjs      # Reactor Control
 node tests/reactor-layout.cjs       # Reactor fits iPad landscape through 4K
 node tests/battery-control.cjs      # Battery Control
 node tests/battery-layout.cjs       # Battery fits iPad landscape through 4K
+node tests/power-distribution.cjs   # Power Distribution
+node tests/power-distribution-layout.cjs  # Power Distribution fits iPad landscape through 4K
 node tests/torpedo-assembly.cjs     # Torpedo Assembly Control
 node tests/torpedo-assembly-layout.cjs  # Torpedo Assembly fits iPad landscape through 4K
 node tests/torpedo-launch.cjs       # Torpedo Launch Control

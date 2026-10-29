@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Warp Field Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body class="warpfield">
+
+<!-- The field fills the space between the side panels: our ship, the normal and largest fields, the field as set,
+     and the ships around us, from above and to scale. -->
+<svg id="field" viewBox="-500 -500 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The warp field around our ship and the ships near us, from above">
+  <defs>
+    <radialGradient id="bubble"><stop offset="0.55" stop-color="#3b97ff" stop-opacity="0.04"/><stop offset="0.92" stop-color="#4fd6ff" stop-opacity="0.18"/><stop offset="1" stop-color="#bff1ff" stop-opacity="0.32"/></radialGradient>
+    <filter id="tintIn" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.2 0 0 0 0.05  0 0.85 0 0 0.25  0 0 0.45 0 0.1  0 0 0 1 0"/></filter>
+    <filter id="tintCut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.95 0 0 0 0.25  0 0.6 0 0 0.12  0 0 0.2 0 0  0 0 0 1 0"/></filter>
+    <filter id="tintOut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.42 0 0 0 0  0 0.48 0 0 0  0 0 0.55 0 0  0 0 0 0.85 0"/></filter>
+  </defs>
+  <g id="streaks"></g>
+  <g id="grid"></g>
+  <g id="rings"></g>
+  <g id="ships"></g>
+  <g id="ownShip"><image id="ownHull" href="../Helm/assets/terran-escort-top.png" preserveAspectRatio="xMidYMid meet"/></g>
+  <g id="labels"></g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">WARP FIELD CONTROL</div>
+    <div class="scan-caption" id="caption">WARP DRIVE · MARK I · 140 PU · MAX WARP 6 · DISTANCES IN M</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state warp-state" id="stateBox" title="Warp state"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9.5" ry="5"/><path d="M12 7.5v9M8 12h8"/></svg><span id="state">STANDBY</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: how far the field reaches -->
+<div class="col left">
+  <section class="panel controls" aria-label="Warp field">
+    <div class="thead"><h2>WARP FIELD</h2><small id="fieldNote">NORMAL</small></div>
+    <div class="pair">
+      <div><small>RADIUS</small><b id="radiusValue">80 m</b></div>
+      <div><small>EXTENSION</small><b id="extensionValue">+0 m</b></div>
+    </div>
+    <div class="control" id="extensionControl">
+      <small>FIELD EXTENSION</small><em id="extensionNote">of 500 m · width 160 m</em>
+      <div id="extensionSlider" class="vslider range-slider" aria-label="Warp field extension in metres"></div>
+    </div>
+    <dl class="rows">
+      <div><dt>NORMAL FIELD</dt><dd id="normalReading">—</dd></div>
+      <div><dt>STRETCH</dt><dd id="stretchReading">—</dd></div>
+      <div><dt>FIELD LOAD</dt><dd id="loadReading">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: how fast the drive can push this field, and what it costs -->
+<div class="col right">
+  <section class="panel controls" aria-label="Warp drive">
+    <div class="thead"><h2>WARP DRIVE</h2><small id="driveNote">STANDBY</small></div>
+    <div class="drive-row">
+      <div class="limit" id="limitGauge" role="meter" aria-label="Warp limit: the most warp this field allows">
+        <small>WARP LIMIT</small><b id="capValue">6.0</b><em id="capNote">of 6 · no limit</em>
+        <div class="limit-bar" id="limitBar"><div class="limit-scale" id="limitScale"></div><i class="avail" id="availFill"></i><i class="lost" id="lostFill"></i><span class="helm-mark" id="helmMark"><em>HELM</em></span></div>
+      </div>
+      <div class="core" aria-label="Warp core load">
+        <small>CORE LOAD</small><b id="coreValue">0%</b><em id="corePu">0 of 140 PU</em>
+        <div class="core-bar" id="coreBar"><i class="base" id="baseFill"></i><i class="stretch" id="stretchFill"></i><span class="supply" id="supplyMark"></span></div>
+        <div class="core-key"><span class="base">DRIVE</span><span class="stretch">FIELD</span></div>
+      </div>
+    </div>
+    <dl class="rows">
+      <div><dt>HELM WARP</dt><dd id="helmReading">—</dd></div>
+      <div><dt>SPEED</dt><dd id="speedReading">—</dd></div>
+      <div><dt>SUPPLY</dt><dd id="supplyReading">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Warp field functions">
+  <button type="button" id="fitBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg></span>FIT TO SHIPS</button>
+  <button type="button" id="normalBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg></span>NORMAL FIELD</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" data-open="shipsDialog" id="shipsBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><rect x="10.5" y="6.5" width="3" height="11" rx="1"/><rect x="16" y="9" width="2" height="5" rx="0.8"/></svg></span>SHIPS</button>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Ships: which are inside the field, cut by it, or outside -->
+<dialog id="shipsDialog" class="modal" aria-labelledby="shipsTitle">
+  <div class="mhead"><h2 id="shipsTitle">SHIPS NEAR US</h2><small id="shipsCount"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="shipsList" class="ship-list"></div>
+  <p class="mnote">A ship goes to warp with us only when all of its hull is inside the field. One cut by the field's edge blocks the jump; ships outside are left behind.</p>
+</dialog>
+
+<!-- Diagnostics: every reading, and the field rule -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote rule">Every drive: power = max power × warp ÷ max warp × (1 + (max warp − 1) × stretch²), where stretch is the extension over the most the drive can add (3.57 m per PU of max power). At full stretch even warp 1 takes all of the drive's power.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Warp drive, supply, the Helm's warp factor and engage, the universal stretch rate, ships and reset</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>WARP DRIVE</h3>
+        <div class="seg" role="group" aria-label="Drive"><button type="button" data-drive="courier">COURIER</button><button type="button" data-drive="mark1">MARK I</button><button type="button" data-drive="mark2">MARK II</button></div>
+        <div class="field-grid">
+          <div class="field" data-field="maxPower"><div><small>MAX POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxWarp"><div><small>MAX WARP</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="hullLength"><div><small>OUR HULL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="supply"><div><small>SUPPLY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">The normal field is half the hull plus 20 m. Supply is what the bus gives the drive; less than its max power lowers the warp it can reach.</p>
+      </div>
+      <div class="msection">
+        <h3>HELM</h3>
+        <div class="field" data-field="helmWarp"><div><small>HELM WARP FACTOR</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="mrow"><button type="button" id="engageBtn" class="primary">ENGAGE WARP</button></div>
+        <p class="mnote">Stand-ins for the Helm, which sets the warp factor and goes to warp. This console only shows the limit its field puts on the drive, and which ships the field will carry.</p>
+      </div>
+      <div class="msection">
+        <h3>UNIVERSAL RULE</h3>
+        <div class="field-grid">
+          <div class="field" data-field="stretchPerPu"><div><small>STRETCH PER PU</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">The same for every warp drive: how many metres of extension each PU of max power buys. 3.57 m gives the 140 PU Mark I its 500 m.</p>
+      </div>
+      <div class="msection">
+        <h3>SHIPS</h3>
+        <div class="mrow"><button type="button" id="addShip">ADD SHIP NEARBY</button><button type="button" id="clearShips">CLEAR SHIPS</button></div>
+        <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="warpfield.js?v=4"></script>
+</body>
+</html>

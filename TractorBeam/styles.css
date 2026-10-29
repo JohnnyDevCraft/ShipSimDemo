@@ -1,0 +1,106 @@
+/* Tractor Beam Control. The console look is ../Shared/console.css and the scope's (aim tape, layers, target
+   panel, advisory, dock) ../Shared/scope.css; this adds the emitter, the joysticks, the tractor plot and the
+   reticle readout. The console is used in landscape. */
+:root { --left-w: 17rem; --right-w: 17rem; }
+
+/* Top bar state */
+.beam-state[data-level="off"] { color: var(--muted); }
+.beam-state[data-level="busy"] { color: var(--cyan); }
+.beam-state[data-level="ok"] { color: var(--green); }
+.beam-state[data-level="bad"] { color: var(--red); }
+
+/* Aim tape: the held ship's bearing in green; the aim follows it. */
+.tape .held { top: -0.15rem; width: 0.7rem; height: 0.7rem; border: 2px solid var(--green); border-radius: 50%; box-shadow: 0 0 0.4rem var(--green); }
+.aim-tape.following small { color: var(--green); }
+
+/* What is under the reticle, just below it */
+.reticle-chip {
+  position: fixed; z-index: 2; left: 50%; top: calc(50% + 2.4rem); transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: 0.6rem; padding: 0.35rem 0.8rem; white-space: nowrap; pointer-events: none;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: rgba(4, 14, 28, 0.82); font-size: 0.75rem;
+}
+.reticle-chip b { font-weight: 600; }
+.reticle-chip span { color: var(--cyan); font-variant-numeric: tabular-nums; }
+.reticle-chip em { font-style: normal; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em; color: var(--green); }
+.reticle-chip[data-level="warn"] em { color: var(--amber); }
+
+/* ── Left: emitter and position stick ───────────────────────────────────────────────────────── */
+.emitter-panel { width: 100%; flex: none; display: grid; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
+.thead small[data-level="ok"] { color: var(--green); }
+.thead small[data-level="busy"] { color: var(--cyan); }
+.thead small[data-level="bad"] { color: #ff8f9b; }
+.thead small[data-level="off"] { color: var(--muted); }
+.beam-meter { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.beam-meter div { display: grid; grid-template-columns: auto auto; justify-content: start; align-items: baseline; column-gap: 0.25rem; }
+.beam-meter small { grid-column: 1 / -1; font-size: 0.58rem; }
+.beam-meter b { font-size: 1.45rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.beam-meter b.bad { color: #ff8f9b; }
+.beam-meter em { font-style: normal; font-size: 0.7rem; color: var(--muted); }
+.load-bar i { background: linear-gradient(90deg, #2bb37a, var(--green)); box-shadow: 0 0 0.6rem var(--green); }
+.emitter-panel .rows div { padding: 0.35rem 0; }
+
+.stick-panel { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.9rem 1rem 1rem; }
+.heading-panel { flex: none; }
+.stick-wrap { position: relative; flex: 1; min-height: 9rem; display: grid; place-items: center; }
+.stick-wrap.wide { flex: none; min-height: 0; height: 6.4rem; }
+.stick-cue { position: absolute; font-size: 0.55rem; letter-spacing: 0.12em; color: var(--dim); pointer-events: none; }
+.stick-cue.up { top: 0; left: 50%; transform: translateX(-50%); }
+.stick-cue.down { bottom: 0; left: 50%; transform: translateX(-50%); }
+.stick-cue.left { left: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; rotate: 180deg; }
+.stick-cue.right { right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; }
+.wide .stick-cue.left, .wide .stick-cue.right { writing-mode: horizontal-tb; rotate: none; top: auto; bottom: 0; transform: none; }
+.joystick { position: relative; width: min(100% - 2.6rem, 100cqh, 12.5rem); aspect-ratio: 1; touch-action: none; cursor: grab; container-type: size; }
+.stick-wrap:not(.wide) .joystick { width: min(calc(100% - 2.6rem), 12.5rem); max-height: calc(100% - 2rem); }
+.joystick.horizontal { width: calc(100% - 0.4rem); aspect-ratio: auto; height: 4.4rem; }
+.stick-base { position: absolute; inset: 0; border: 1px solid var(--edge); border-radius: 50%; background: radial-gradient(circle, rgba(20, 60, 110, 0.55), rgba(3, 12, 24, 0.85) 70%); box-shadow: inset 0 0 1.2rem rgba(40, 140, 255, 0.2); }
+.stick-base::before, .stick-base::after { content: ''; position: absolute; background: rgba(120, 180, 230, 0.2); }
+.stick-base::before { left: 50%; top: 12%; bottom: 12%; width: 1px; }
+.stick-base::after { top: 50%; left: 12%; right: 12%; height: 1px; }
+.horizontal .stick-base { border-radius: 2.2rem; }
+.horizontal .stick-base::before { top: 18%; bottom: 18%; }
+.stick-knob { position: absolute; left: 50%; top: 50%; width: 38%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 50% 42%, #bff1ff 0 18%, #4cc3ff 40%, #1268d8 75%); border: 2px solid #c8f3ff; box-shadow: 0 0 0.8rem var(--cyan), 0 0 1.6rem rgba(47, 160, 255, 0.5); transition: transform 0.12s ease-out; }
+.horizontal .stick-knob { width: auto; height: 82%; }
+.joystick.active .stick-knob { transition: none; }
+.joystick.active .stick-base { border-color: var(--cyan); box-shadow: inset 0 0 1.4rem rgba(79, 214, 255, 0.35), 0 0 1rem var(--glow); }
+.joystick.disabled { cursor: not-allowed; opacity: 0.4; }
+.joystick.disabled .stick-knob { background: radial-gradient(circle at 50% 42%, #9db3c4 0 18%, #5d7a94 45%, #2a3f55 80%); border-color: #8aa2b6; box-shadow: none; }
+.stick-readout { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); }
+.stick-readout b { margin-left: 0.3rem; font-size: 0.75rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+
+/* ── Right: target, plot and heading stick ──────────────────────────────────────────────────── */
+.target-panel[data-affiliation="ready"] .tname i { --dot: var(--cyan); }
+.target-panel[data-affiliation="far"] .tname i { --dot: #7f95a8; }
+.target-panel[data-affiliation="none"] .tname i { --dot: #3b5168; box-shadow: none; }
+.target-panel .tname h3 { font-size: 1.1rem; }
+.stats b[data-level="ok"] { color: var(--green); }
+.stats b[data-level="warn"] { color: var(--amber); }
+.plot-panel { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.4rem; padding: 0.8rem 1rem 0.9rem; }
+.plot-panel small { color: var(--muted); }
+#plot { flex: 1; min-height: 6rem; width: 100%; stroke: none; }
+.p-bg { fill: rgba(2, 10, 20, 0.6); stroke: var(--edge-soft); stroke-width: 1; }
+.p-range { fill: none; stroke: rgba(79, 214, 255, 0.6); stroke-width: 1; stroke-dasharray: 3 3; }
+.p-warp { fill: rgba(255, 182, 72, 0.08); stroke: rgba(255, 182, 72, 0.7); stroke-width: 1; stroke-dasharray: 2 2; }
+.p-warp.ready { fill: rgba(79, 224, 141, 0.12); stroke: var(--green); }
+.p-aim { stroke: rgba(117, 239, 208, 0.45); stroke-width: 0.8; stroke-dasharray: 2 3; }
+.p-own { opacity: 0.95; }
+.p-shield { fill: rgba(120, 190, 255, 0.12); stroke: rgba(150, 210, 255, 0.7); stroke-width: 0.8; }
+.p-beam { stroke: rgba(120, 255, 190, 0.7); stroke-width: 1.4; stroke-dasharray: 3 2; }
+.p-label { fill: #d9ffe9; font-size: 7px; font-weight: 600; paint-order: stroke; stroke: rgba(2, 10, 20, 0.9); stroke-width: 2px; }
+
+/* ── Advisory and dock ──────────────────────────────────────────────────────────────────────── */
+.advisory[data-level="busy"] { color: var(--cyan); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); }
+#engageBtn:not(.blocked) { color: var(--green); }
+#engageBtn:not(.blocked) .ring { border-color: var(--green); box-shadow: 0 0 1rem rgba(79, 224, 141, 0.45); }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.field-grid .field { padding: 0.55rem 0.8rem; }
+.field-grid .field b { font-size: 1.1rem; }
+.field-grid .field button { min-height: 2.4rem; padding: 0.4rem 0.7rem; }
+#menuDialog { width: min(42rem, 94vw); }
+#diagnosticsDialog { width: min(50rem, 94vw); }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.diag-rows div { padding: 0.4rem 0; }
+.diag-rows dd { max-width: 65%; }
+.ship-shields { display: grid; gap: 0.1rem; }

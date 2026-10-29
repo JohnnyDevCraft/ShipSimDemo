@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tractor Beam Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="../Shared/scope.css?v=1">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="scope-page tractor">
+
+<!-- The scope fills the window: stars, the 3D ships, and the tractor overlay on top. -->
+<canvas id="stars" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="scene3d" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="hud" class="scope-layer" role="img" aria-label="Tractor scope. Drag left or right to aim; tap a ship to line up on it."></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">TRACTOR BEAM CONTROL</div>
+    <div class="scan-caption" id="caption">TRACTOR EMITTER · UNSHIELDED SHIPS ONLY · RANGE 5 KM · ALL-ROUND COVERAGE</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state beam-state" id="stateBox" title="Beam state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V12"/><path d="M8 6l4 6 4-6"/><path d="M5 3h14"/><circle cx="12" cy="21" r="1.5"/></svg><span id="state">STANDBY</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Aim all round the ship, with the held ship's bearing in green -->
+<div class="aim-tape" id="aimTape">
+  <small id="aimMode">MANUAL AIM</small>
+  <div class="tape" aria-hidden="true"><i id="heldMarker" class="held" hidden></i><i id="aimMarker" class="mark"></i></div>
+  <b id="aimValue">0.0°</b>
+</div>
+
+<!-- Under the reticle: what the beam is pointing at and how far away it is -->
+<div class="reticle-chip" id="reticleChip" hidden><b id="reticleName"></b><span id="reticleRange"></span><em id="reticleStatus"></em></div>
+
+<!-- Left: the emitter and the position joystick -->
+<div class="col left" id="leftCol">
+  <section class="panel emitter-panel" aria-label="Tractor emitter">
+    <div class="thead"><h2>TRACTOR EMITTER</h2><small id="emitterState">STANDBY</small></div>
+    <div class="beam-meter">
+      <div><small>POWER DRAW</small><b id="powerDraw">1.0</b><em>PU</em></div>
+      <div><small>AVAILABLE</small><b id="powerAvailable">12.0</b><em>PU</em></div>
+    </div>
+    <div class="bar load-bar"><i id="loadBar"></i></div>
+    <dl class="rows">
+      <div><dt>BEAM RANGE</dt><dd id="rangeLimit">5.0 km</dd></div>
+      <div><dt>REACH ON POWER</dt><dd id="reachReading">full range</dd></div>
+      <div><dt>MOVE SPEED</dt><dd id="moveReading">—</dd></div>
+      <div><dt>TURN RATE</dt><dd id="turnReading">—</dd></div>
+    </dl>
+  </section>
+  <section class="panel stick-panel" aria-label="Position joystick">
+    <div class="thead"><h2>POSITION</h2><small id="positionNote">NO LOCK</small></div>
+    <div class="stick-wrap">
+      <span class="stick-cue up">PUSH AWAY</span><span class="stick-cue down">PULL IN</span><span class="stick-cue left">ORBIT ◀</span><span class="stick-cue right">▶ ORBIT</span>
+      <div class="joystick" id="positionStick" role="group" aria-label="Position: up pushes the held ship away, down pulls it in, left and right orbit it around us"><div class="stick-base"></div><div class="stick-knob"></div></div>
+    </div>
+    <div class="stick-readout"><span>RANGE RATE <b id="radialRate">0 m/s</b></span><span>ORBIT <b id="orbitRate">0.0°/s</b></span></div>
+  </section>
+</div>
+
+<!-- Right: the target, the tractor plot and the heading joystick -->
+<div class="col right" id="rightCol">
+  <section class="panel target-panel" id="targetPanel" aria-label="Target">
+    <div class="thead"><h2 id="targetTitle">TARGET</h2><small id="targetKind">NONE</small></div>
+    <div class="tname"><i aria-hidden="true"></i><div><h3 id="targetName">Nothing under the reticle</h3><p id="targetSub">Drag to aim, or tap a ship</p></div></div>
+    <div class="stats">
+      <div><small>RANGE</small><b id="targetRange">—</b></div>
+      <div><small>BEARING</small><b id="targetBearing">—</b></div>
+      <div><small>HEADING</small><b id="targetHeading">—</b></div>
+      <div><small>WARP FIELD</small><b id="targetWarp">—</b></div>
+    </div>
+  </section>
+  <section class="panel plot-panel" aria-label="Tractor plot">
+    <div class="thead"><h2>TRACTOR PLOT</h2><small id="plotScale">—</small></div>
+    <svg id="plot" viewBox="-110 -110 220 220" role="img" aria-label="Top-down plot: our ship at the centre, the beam range, the warp field and nearby ships"></svg>
+  </section>
+  <section class="panel stick-panel heading-panel" aria-label="Target bearing joystick">
+    <div class="thead"><h2>TARGET BEARING</h2><small id="headingNote">NO LOCK</small></div>
+    <div class="stick-wrap wide">
+      <span class="stick-cue left">◀ PORT</span><span class="stick-cue right">STARBOARD ▶</span>
+      <div class="joystick horizontal" id="headingStick" role="group" aria-label="Target bearing: left and right turn the held ship"><div class="stick-base"></div><div class="stick-knob"></div></div>
+    </div>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Tractor functions">
+  <button type="button" id="engageBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V11"/><path d="M7 4l5 7 5-7"/><circle cx="12" cy="20" r="1.6"/></svg></span>ENGAGE BEAM</button>
+  <button type="button" id="releaseBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20v-5M12 9V4"/><path d="M8 12h8"/><circle cx="12" cy="20" r="1.6"/></svg></span>RELEASE</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="nextBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="12" r="6"/><circle cx="11" cy="12" r="1.2"/><path d="M19 8l3 4-3 4"/></svg></span>NEXT SHIP</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Diagnostics: every reading in one place -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Discovery model: the tractor emitter's ratings and power are provisional. Mass is not modelled yet; the beam holds ships only, and only with their shields down.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Emitter ratings, power, warp field, ships and their shields, and reset</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>TRACTOR EMITTER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="beamRange"><div><small>BEAM RANGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxSpeed"><div><small>MAX MOVE SPEED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="turnRate"><div><small>MAX TURN RATE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="clearance"><div><small>MINIMUM CLEARANCE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>POWER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="available"><div><small>AVAILABLE POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="idlePower"><div><small>IDLE POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxPower"><div><small>MAX POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Holding a ship draws power by its distance: the idle power alongside, rising evenly to the max power at the beam range. The beam cannot lock, or push a ship, further out than the available power can hold, and a held ship is let go if the power falls below what its distance needs.</p>
+      </div>
+      <div class="msection">
+        <h3>WARP FIELD</h3>
+        <div class="field-grid">
+          <div class="field" data-field="warpRadius"><div><small>FIELD RADIUS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="alignTolerance"><div><small>HEADING TOLERANCE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">A held ship is ready to go to warp with us when all of its hull is inside the field radius and its heading is within the tolerance of ours.</p>
+      </div>
+      <div class="msection">
+        <h3>SHIPS</h3>
+        <div id="shipShields" class="ship-shields"></div>
+        <p class="mnote">The beam cannot lock on a ship with its shields up; a held ship that raises them breaks free.</p>
+        <div class="mrow"><button type="button" id="addShip">ADD SHIP NEARBY</button><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/scene.js?v=1"></script>
+<script src="tractor.js?v=5"></script>
+</body>
+</html>

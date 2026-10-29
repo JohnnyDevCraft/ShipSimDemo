@@ -5,4 +5,5 @@ const build=path.join(app,'dist/ng-app/browser'),out=path.join(root,'Weapons');
 for(const file of fs.existsSync(out)?fs.readdirSync(out):[])if(/^(main|chunk|polyfills)-[A-Z0-9]+\.js$|^styles-[A-Z0-9]+\.css$/.test(file))fs.rmSync(path.join(out,file));
 fs.cpSync(build,out,{recursive:true});
 const html=fs.readFileSync(path.join(build,'index.html'),'utf8');
-for(const [folder,code] of Object.entries({TacticalOfficer:'toc',Shields:'ssc'}))fs.writeFileSync(path.join(root,folder,'index.html'),html.replace('<head>',`<head><script>if(!location.hash)location.hash='/demo/${code}';</script>`));
+// Shield System Control is now a plain console page (Shields/), so only Tactical Officer still opens the Angular build.
+for(const [folder,code] of Object.entries({TacticalOfficer:'toc'}))fs.writeFileSync(path.join(root,folder,'index.html'),html.replace('<head>',`<head><script>if(!location.hash)location.hash='/demo/${code}';</script>`));

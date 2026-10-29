@@ -1,0 +1,149 @@
+/* Shield System Control. The shared console look is in ../Shared/console.css; this adds the shield envelope,
+   the emitter and facing panels and the dialogs only this console has. The console is used in landscape. */
+:root { --left-w: 17rem; --right-w: 20rem; --advisory-h: 2.6rem; }
+
+/* Top bar */
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.ship-state { white-space: nowrap; }
+.ship-state[data-level="warn"] { color: var(--amber); }
+.ship-state[data-level="bad"] { color: var(--red); }
+
+body.shields {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
+
+/* ── Envelope ───────────────────────────────────────────────────────────────────────────────── */
+#envelope {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  stroke: none; /* the console's default SVG stroke is for icons */
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#envelope text { font-variant-numeric: tabular-nums; paint-order: stroke; stroke: rgba(2, 8, 18, 0.85); stroke-width: 4px; stroke-linejoin: round; }
+.g-ring { fill: none; stroke: rgba(79, 214, 255, 0.16); stroke-width: 1.5; stroke-dasharray: 6 8; }
+.g-ring-label { fill: var(--dim); font-size: 15px; letter-spacing: 1.2px; }
+.g-axis { stroke: rgba(79, 214, 255, 0.14); stroke-width: 1.5; }
+.g-boundary { stroke: rgba(79, 214, 255, 0.08); stroke-width: 1.5; stroke-dasharray: 3 9; }
+.f-wedge { opacity: 0.13; transition: opacity 0.2s; }
+.f-arc { fill: none; stroke-width: 10; stroke-linecap: round; filter: drop-shadow(0 0 6px currentColor); }
+.f-arc.down { stroke-width: 3; stroke-dasharray: 6 9; opacity: 0.7; filter: none; }
+.facing.flash .f-wedge { opacity: 0.45; }
+.facing.flash .f-arc { stroke: #ffffff !important; }
+.f-offline { fill: none; stroke: #5c7b97; stroke-width: 3; stroke-dasharray: 10 10; }
+.hull-hit { fill: #ff5968; }
+.hit-ripple { fill: none; stroke: #e8f6ff; stroke-width: 4; }
+.hit-ripple.bypass { stroke: #ff5968; }
+.l-name { fill: var(--muted); font-size: 16px; font-weight: 600; letter-spacing: 2.4px; }
+.l-value { font-size: 19px; font-weight: 600; }
+.ship image { opacity: 0.9; }
+.s-box { fill: none; stroke-width: 2; }
+.ship.safe .s-box { stroke: rgba(79, 224, 141, 0.8); }
+.ship.exposed .s-box { stroke: rgba(255, 182, 72, 0.9); stroke-dasharray: 6 5; }
+.s-name { fill: var(--text); font-size: 16px; font-weight: 600; }
+.s-detail { font-size: 13px; letter-spacing: 1.2px; }
+.ship.safe .s-detail { fill: var(--green); }
+.ship.exposed .s-detail { fill: var(--amber); }
+
+/* What the shields need, under the envelope */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--cyan);
+}
+.advisory[data-level="good"] { color: var(--green); }
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
+
+/* ── Panels ─────────────────────────────────────────────────────────────────────────────────── */
+.controls { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.8rem; padding: 0.9rem 1rem 1rem; }
+.thead { flex: none; }
+.thead small { font-size: 0.6rem; letter-spacing: 0.12em; white-space: nowrap; color: var(--cyan); }
+.thead small[data-level="warn"] { color: var(--amber); }
+.thead small[data-level="bad"] { color: #ff8f9b; }
+.thead h2 { white-space: nowrap; font-size: 0.85rem; }
+.controls .rows { flex: none; }
+.rows dd.warn { color: var(--amber); }
+.rows dd.bad { color: #ff8f9b; }
+.seo-pair { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.seo-pair div { display: grid; gap: 0.1rem; }
+.seo-pair small { font-size: 0.6rem; }
+.seo-pair b { font-size: 1.55rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.control { min-height: 0; display: grid; grid-template-rows: auto auto auto 1fr; justify-items: start; gap: 0.15rem; }
+.control small { font-size: 0.62rem; letter-spacing: 0.12em; white-space: nowrap; }
+.control b { font-size: 1.55rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.control em { font-style: normal; font-size: 0.7rem; color: var(--muted); margin-bottom: 0.4rem; white-space: nowrap; }
+.extension { flex: 1; }
+.extension .vslider { width: 100%; height: 100%; min-height: 8rem; }
+
+/* Facing sliders: four narrow columns */
+.facing-sliders { flex: 1; min-height: 11rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; }
+.facing-control { min-height: 0; display: grid; grid-template-rows: auto auto 1fr; justify-items: center; gap: 0.15rem; --tone: var(--cyan); }
+.facing-control small { display: flex; align-items: center; gap: 0.3rem; font-size: 0.6rem; letter-spacing: 0.1em; }
+.facing-control small i, .facing-table th i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0.4rem var(--tone); }
+.facing-control b { font-size: 0.95rem; font-weight: 500; color: var(--text); font-variant-numeric: tabular-nums; }
+.facing-slider { width: 2.6rem; height: 100%; min-height: 7rem; }
+.facing-slider .vs-tick { left: 2.1rem; }
+[data-level="good"] { --tone: #58aaff; }
+[data-level="warn"] { --tone: #f4ca59; }
+[data-level="bad"], [data-level="down"] { --tone: #ff5968; }
+[data-level="off"] { --tone: #5c7b97; }
+.facing-table { flex: none; width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.facing-table th, .facing-table td { padding: 0.32rem 0.2rem; border-bottom: 1px solid var(--edge-soft); text-align: right; font-size: 0.75rem; font-weight: 400; }
+.facing-table thead th { font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted); }
+.facing-table th:first-child { text-align: left; }
+.facing-table tbody th { display: flex; align-items: center; gap: 0.4rem; font-size: 0.66rem; letter-spacing: 0.08em; color: var(--muted); }
+.facing-table td:last-child { color: var(--tone); font-weight: 600; }
+.panel-note { flex: none; margin: 0; font-size: 0.66rem; line-height: 1.45; color: var(--muted); }
+
+/* ── Dock ───────────────────────────────────────────────────────────────────────────────────── */
+.dock button.blocked { opacity: 0.4; cursor: not-allowed; }
+.dock button.blocked:hover .ring { border-color: var(--edge); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
+#shieldToggle[data-state="down"]:not(.blocked) { color: var(--amber); }
+#shieldToggle[data-state="down"]:not(.blocked) .ring { border-color: var(--amber); box-shadow: 0 0 1rem rgba(255, 182, 72, 0.45); }
+#coverageBtn[data-alert="true"] { color: var(--amber); }
+#coverageBtn[data-alert="true"] .ring { border-color: var(--amber); }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+.mhead small { font-size: 0.65rem; color: var(--cyan); }
+.coverage-list { display: grid; gap: 0.45rem; margin-bottom: 0.8rem; }
+.coverage-row { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.8rem; padding: 0.6rem 0.8rem; border: 1px solid var(--edge-soft); border-radius: 0.6rem; background: rgba(9, 28, 52, 0.45); }
+.coverage-row b { font-size: 0.9rem; font-weight: 500; }
+.coverage-row small { grid-column: 1; font-size: 0.68rem; }
+.coverage-row em { grid-row: 1 / 3; grid-column: 2; align-self: center; font-style: normal; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em; }
+.coverage-row.safe em { color: var(--green); }
+.coverage-row.exposed { border-color: rgba(255, 182, 72, 0.45); }
+.coverage-row.exposed em { color: var(--amber); }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.field-grid .field { padding: 0.55rem 0.8rem; }
+.field-grid .field b { font-size: 1.1rem; }
+.field-grid .field button { min-height: 2.4rem; padding: 0.4rem 0.7rem; }
+.hit-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+.hit-grid button { font-size: 0.7rem; letter-spacing: 0.06em; padding: 0.5rem 0.3rem; }
+#menuDialog { width: min(42rem, 94vw); }
+#diagnosticsDialog { width: min(50rem, 94vw); }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.diag-rows div { padding: 0.4rem 0; }
+.diag-rows dd { max-width: 70%; }
+
+/* Compass rose and enemies */
+.c-ring { fill: none; stroke: rgba(79, 214, 255, 0.45); stroke-width: 2; }
+.c-tick { stroke: rgba(79, 214, 255, 0.4); stroke-width: 1.5; }
+.c-tick.major { stroke: rgba(150, 220, 255, 0.85); stroke-width: 2.5; }
+.c-num { fill: var(--muted); font-size: 14px; letter-spacing: 1px; }
+.e-dot { fill: #ff4f5e; stroke: #ffd6da; stroke-width: 2; filter: drop-shadow(0 0 6px #ff4f5e); transition: r 0.15s; }
+.enemy.firing .e-dot { fill: #fff; }
+.e-name { fill: #ff8f9b; font-size: 14px; font-weight: 600; letter-spacing: 1.4px; }
+.e-detail { fill: #c98a92; font-size: 12px; letter-spacing: 1px; }
+.f-threat { fill: none; stroke: #ff4f5e; stroke-width: 4; stroke-dasharray: 2 6; stroke-linecap: round; }
+.shot-trace { stroke: #ff7a85; stroke-width: 3; stroke-dasharray: 10 6; }
+.facing-table .threat { margin-left: 0.35rem; font-style: normal; font-size: 0.6rem; color: #ff6b78; letter-spacing: 0.04em; }
+.ruler { visibility: hidden; }

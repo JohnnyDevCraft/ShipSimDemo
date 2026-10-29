@@ -1,13 +1,164 @@
 <!doctype html>
-<html lang="en" data-beasties-container>
-<head><script>if(!location.hash)location.hash='/demo/ssc';</script>
-  <meta charset="utf-8">
-  <title>Admin</title>
-  <base href="../Weapons/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<style>*{box-sizing:border-box}body{margin:0;background:#17212b;color:#e0e8ee;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;line-height:1.5}</style><link rel="stylesheet" href="styles-IXDVMELG.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-IXDVMELG.css"></noscript></head>
-<body>
-  <app-root></app-root>
-<link rel="modulepreload" href="chunk-T6JYABCD.js"><script src="main-HNGCEZAO.js" type="module"></script></body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shield System Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=2">
+</head>
+<body class="shields">
+
+<!-- The shield envelope fills the space between the side panels: our ship, the four facings and nearby ships to scale. -->
+<svg id="envelope" viewBox="-500 -500 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Shield facings around our ship and nearby ships, to scale">
+  <defs>
+    <filter id="tintBlue" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.25 0 0 0 0.05  0 0.45 0 0 0.25  0 0 0.7 0 0.45  0 0 0 1 0"/></filter>
+    <radialGradient id="hullGlow"><stop offset="0" stop-color="#4fd6ff" stop-opacity="0.25"/><stop offset="1" stop-color="#4fd6ff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g id="compass"></g>
+  <g id="grid"></g>
+  <g id="facings"></g>
+  <g id="ships"></g>
+  <g id="ownShip">
+    <circle id="hullHalo" r="60" fill="url(#hullGlow)"/>
+    <image id="ownHull" href="../Helm/assets/terran-escort-top.png" width="124.8" height="124.8" x="-62.4" y="-62.4" transform="rotate(90)" preserveAspectRatio="xMidYMid meet"/>
+    <circle id="hullHit" r="40" class="hull-hit" opacity="0"/>
+  </g>
+  <g id="labels"></g>
+  <g id="enemies"></g>
+  <g id="hits"></g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">SHIELD SYSTEM CONTROL</div>
+    <div class="scan-caption" id="caption">SHIELD GENERATOR · ALL FACINGS · OUTPUT IN SEO · DISTANCES IN M · BEARINGS FROM THE BOW</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state shield-state" id="stateBox" title="Shield state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6Z"/></svg><span id="state">SHIELDS UP</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: what the emitter puts out, and how far the shield reaches -->
+<div class="col left">
+  <section class="panel controls" aria-label="Shield emitter output">
+    <div class="thead"><h2>EMITTER OUTPUT</h2><small id="emitterState">ONLINE</small></div>
+    <div class="seo-pair">
+      <div><small>MAX SEO</small><b id="maxSeo">400</b></div>
+      <div><small>AVAILABLE</small><b id="availableSeo">400.0</b></div>
+    </div>
+    <div class="control extension" id="extensionControl">
+      <small>SHIELD EXTENSION</small><b id="extensionValue">20 m</b><em id="radiusNote">radius 80 m</em>
+      <div id="extensionSlider" class="vslider range-slider" aria-label="Shield extension in metres"></div>
+    </div>
+    <dl class="rows">
+      <div><dt>ENVELOPE RADIUS</dt><dd id="radiusReading">—</dd></div>
+      <div><dt>TOTAL REMAINING</dt><dd id="totalReading">—</dd></div>
+      <div><dt>MODULE INTEGRITY</dt><dd id="integrityReading">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: how the output is split between the four facings -->
+<div class="col right">
+  <section class="panel controls" aria-label="Facing allocation">
+    <div class="thead"><h2>FACINGS</h2><small id="allocationNote">ALLOCATED 100%</small></div>
+    <div class="facing-sliders" id="facingSliders"></div>
+    <table class="facing-table" aria-label="Shield emitter output per facing">
+      <thead><tr><th>FACING</th><th>SEO</th><th>DRAIN</th><th>LEFT</th></tr></thead>
+      <tbody id="facingRows"></tbody>
+    </table>
+    <p id="recoveryNote" class="panel-note"></p>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Shield functions">
+  <button type="button" id="shieldToggle"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6Z"/><path d="M12 8v6M9 11l3-3 3 3"/></svg></span><span id="toggleLabel">LOWER SHIELDS</span></button>
+  <button type="button" id="balance"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v16M4 12h16"/></svg></span>BALANCE FACINGS</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" data-open="coverageDialog" id="coverageBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><rect x="10.5" y="7" width="3" height="10" rx="1"/><rect x="16" y="4" width="2" height="5" rx="0.8"/></svg></span>COVERAGE</button>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Coverage: whether each nearby ship is inside the active envelope -->
+<dialog id="coverageDialog" class="modal" aria-labelledby="coverageTitle">
+  <div class="mhead"><h2 id="coverageTitle">COVERAGE</h2><small id="coverageCount"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="coverageList" class="coverage-list"></div>
+  <p class="mnote">A ship is protected when every corner of its hull, at its own heading, is inside the envelope and the facing over that corner still holds. Add ships in the demo controls.</p>
+</dialog>
+
+<!-- Diagnostics: every reading in one place -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Demo tuning: a linear extension penalty; the final formula is still to be defined. Hull and subsystem damage are not simulated here.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Enemies and their fire, hits on each facing, recovery, emitter output and integrity, nearby ships and reset</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>INCOMING FIRE</h3>
+        <div class="field-grid">
+          <div class="field" data-field="damageAmount"><div><small>HIT STRENGTH</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <div class="hit-grid"><button type="button" data-hit="0">HIT FORWARD</button><button type="button" data-hit="1">HIT STARBOARD</button><button type="button" data-hit="2">HIT AFT</button><button type="button" data-hit="3">HIT PORT</button></div>
+        <p class="mnote">A hit drains its facing by the hit strength. A hit on a facing that is down passes through to the hull and adds no drain.</p>
+      </div>
+      <div class="msection">
+        <h3>ENEMIES</h3>
+        <div class="mrow"><button type="button" id="addEnemy">ADD ENEMY</button><button type="button" id="clearEnemies">CLEAR ENEMIES</button></div>
+        <label class="switch"><input type="checkbox" id="enemyFire" checked><span></span>Enemies fire on the facing they are over</label>
+        <label class="switch"><input type="checkbox" id="enemyDrift" checked><span></span>Enemies circle the ship</label>
+        <div class="field-grid">
+          <div class="field" data-field="enemyFireSeconds"><div><small>FIRE INTERVAL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Enemies appear as red dots on the compass rose. Each fires at the hit strength above.</p>
+      </div>
+      <div class="msection">
+        <h3>RECOVERY</h3>
+        <label class="switch"><input type="checkbox" id="recover" checked><span></span>Recovery enabled</label>
+        <div class="field-grid">
+          <div class="field" data-field="recoveryMs"><div><small>INTERVAL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="recoveryValue"><div><small>SEO PER FACING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>EMITTER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="maxSeo"><div><small>MAX SEO</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="extensionRetention"><div><small>SEO KEPT AT 500 M</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="integrity"><div><small>MODULE INTEGRITY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="minimumIntegrity"><div><small>MINIMUM INTEGRITY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>NEARBY SHIPS</h3>
+        <div class="mrow"><button type="button" id="addShip">ADD SHIP IN RANGE</button><button type="button" id="clearShips">CLEAR SHIPS</button></div>
+      </div>
+      <div class="msection">
+        <h3>DEMO</h3>
+        <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=4"></script>
+<script src="shields.js?v=3"></script>
+</body>
 </html>

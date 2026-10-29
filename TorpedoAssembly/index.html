@@ -1,13 +1,307 @@
 <!doctype html>
-<html lang="en" data-beasties-container>
-<head><script>if(!location.hash)location.hash='/demo/tac';</script>
-  <meta charset="utf-8">
-  <title>Admin</title>
-  <base href="../Weapons/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<style>*{box-sizing:border-box}body{margin:0;background:#17212b;color:#e0e8ee;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;line-height:1.5}</style><link rel="stylesheet" href="styles-IXDVMELG.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-IXDVMELG.css"></noscript></head>
-<body>
-  <app-root></app-root>
-<link rel="modulepreload" href="chunk-T6JYABCD.js"><script src="main-HNGCEZAO.js" type="module"></script></body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Torpedo Assembly Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body class="assembly">
+
+<!-- Paint shared by every torpedo drawing on the page -->
+<svg class="art-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="hullMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#14283d"/><stop offset=".3" stop-color="#4d769c"/><stop offset=".5" stop-color="#a8cdea"/><stop offset=".68" stop-color="#4a7399"/><stop offset="1" stop-color="#0f2134"/></linearGradient>
+    <linearGradient id="finMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b6488"/><stop offset="1" stop-color="#132a42"/></linearGradient>
+    <linearGradient id="warheadShell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a0b10"/><stop offset=".32" stop-color="#b23a2c"/><stop offset=".5" stop-color="#ff9a62"/><stop offset=".7" stop-color="#9c2f22"/><stop offset="1" stop-color="#2e080c"/></linearGradient>
+    <linearGradient id="probeShell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0c2238"/><stop offset=".34" stop-color="#2f78ad"/><stop offset=".5" stop-color="#a6e6ff"/><stop offset=".68" stop-color="#2a6a99"/><stop offset="1" stop-color="#0a1c2f"/></linearGradient>
+    <linearGradient id="beaconShell" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0a281f"/><stop offset=".34" stop-color="#25876a"/><stop offset=".5" stop-color="#a2f6d4"/><stop offset=".68" stop-color="#1f7357"/><stop offset="1" stop-color="#08221a"/></linearGradient>
+    <radialGradient id="nozzleGlow"><stop offset="0" stop-color="#e8fbff"/><stop offset=".45" stop-color="#4fd6ff"/><stop offset="1" stop-color="#1a6fe6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="lampGlow"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <pattern id="hazard" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="12" height="12" fill="#1a0c06"/><rect width="6" height="12" fill="#ffb648"/></pattern>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">TORPEDO ASSEMBLY</div>
+    <div class="scan-caption">ORDNANCE ASSEMBLY BAY · ONE ASSEMBLY PER CYCLE · POWER IN PU</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state bay-state" id="stateBox" title="Assembly bay state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c2.2 1.8 3 4 3 6.5v9H9V9c0-2.5.8-4.7 3-6.5Z"/><path d="M9 14l-3 4v2h3M15 14l3 4v2h-3M10.5 20.5h3"/></svg><span id="state">BAY READY</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: what the magazine holds and how fast the bay can work -->
+<div class="col left">
+  <section class="panel magazine" aria-label="Magazine">
+    <div class="thead"><h2>MAGAZINE</h2><small>IN STOCK</small></div>
+    <div id="stock" class="stock"></div>
+  </section>
+  <section class="panel bay" aria-label="Assembly bay power">
+    <div class="thead"><h2>ASSEMBLY BAY</h2><small id="bayNote"></small></div>
+    <div class="speed"><small>ASSEMBLY SPEED</small><b id="speedValue">—</b></div>
+    <div class="bar"><i id="speedBar"></i></div>
+    <dl class="rows">
+      <div><dt>AVAILABLE POWER</dt><dd id="availablePower">—</dd></div>
+      <div><dt>ASSEMBLY</dt><dd id="assemblyPower">—</dd></div>
+      <div><dt>LOADING</dt><dd id="loadingPower">—</dd></div>
+      <div><dt>CYCLE TIME</dt><dd id="cycleTime">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Centre: the head gallery and, one slide over, the head's configuration -->
+<main id="stage" aria-label="Assembly stage">
+  <div class="track" id="track">
+    <section class="page gallery" id="galleryPage" aria-label="Choose a head">
+      <div class="page-title"><small>CHOOSE A HEAD</small><span>Swipe or tap to fit a head to the hull</span></div>
+      <div class="carousel" id="carousel" tabindex="0" role="group" aria-roledescription="carousel" aria-label="Torpedo heads">
+        <button type="button" class="turn prev" id="prevHead" aria-label="Previous head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button>
+        <div class="heads" id="heads"></div>
+        <button type="button" class="turn next" id="nextHead" aria-label="Next head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button>
+      </div>
+      <div class="mount">
+        <div class="info head-info">
+          <small>HEAD</small>
+          <h3 id="headName">WARHEAD</h3>
+          <p id="headBlurb"></p>
+          <div class="count"><b id="headStock">0</b><span id="headStockLabel">HEADS IN MAGAZINE</span></div>
+        </div>
+        <svg class="hull" id="hullArt" viewBox="-40 0 180 300" aria-hidden="true"></svg>
+        <div class="info config-info">
+          <small>CONFIGURATION</small>
+          <dl class="rows" id="configSummary"></dl>
+          <button type="button" class="primary" id="configureHead">CONFIGURE ›</button>
+        </div>
+      </div>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+    </section>
+
+    <section class="page configure" id="configPage" aria-label="Configure the head" inert>
+      <div class="config-head">
+        <button type="button" id="backToHeads" class="back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg>HEADS</button>
+        <h2 id="configTitle">CONFIGURE WARHEAD</h2>
+        <small id="configStock"></small>
+      </div>
+      <div class="config-body">
+        <figure class="preview" id="preview">
+          <svg id="previewArt" viewBox="-40 -24 180 454" role="img" aria-label="The torpedo as configured"></svg>
+          <dl class="rows stacked" id="previewRows"></dl>
+        </figure>
+
+        <!-- Warhead -->
+        <div class="form warhead" data-form="Warhead">
+          <div class="control yield-control">
+            <small>YIELD</small><b id="yieldValue">50%</b><em>of maximum</em>
+            <div id="yieldSlider" class="vslider range-slider" aria-label="Warhead yield"></div>
+          </div>
+          <div class="form-col">
+            <div class="readouts">
+              <div class="readout"><small>WED · ENERGY</small><b id="wedValue">—</b><em id="wedMax"></em></div>
+              <div class="readout"><small>WKD · KINETIC</small><b id="wkdValue">—</b><em id="wkdMax"></em></div>
+            </div>
+            <div class="cgroup"><small>DETONATION</small>
+              <div class="seg" data-seg="warhead.trigger"><button type="button" data-val="Impact">IMPACT</button><button type="button" data-val="Proximity">PROXIMITY</button></div>
+            </div>
+            <button type="button" class="cfield" data-num="warhead.proximity" data-when="warhead.proximityTrigger"><small>DETONATION PROXIMITY</small><b data-show="warhead.proximity"></b></button>
+            <p class="mnote" id="triggerNote"></p>
+          </div>
+        </div>
+
+        <!-- Probe -->
+        <div class="form probe" data-form="Probe" hidden>
+          <div class="form-col">
+            <div class="cgroup"><small>SENSORS · <span id="sensorCount">0</span> / 3</small><div class="chips" id="sensorChips"></div></div>
+            <div class="cgroup"><small>TRANSMITTER</small>
+              <div class="pair">
+                <button type="button" class="cfield" data-num="probe.frequency"><small>FREQUENCY</small><b data-show="probe.frequency"></b></button>
+                <div class="seg" data-seg="probe.medium"><button type="button" data-val="RF">RF</button><button type="button" data-val="SSC">SSC</button></div>
+              </div>
+            </div>
+            <div class="cgroup"><small>BATTERY · PU</small>
+              <div class="seg" data-seg="probe.battery"><button type="button" data-val="10000">10,000</button><button type="button" data-val="20000">20,000</button><button type="button" data-val="30000">30,000</button></div>
+            </div>
+          </div>
+          <div class="form-col">
+            <label class="switch"><input type="checkbox" data-check="probe.warpEnabled"><span></span>Warp field generator</label>
+            <div class="option" data-when="probe.warpEnabled">
+              <div class="pair even">
+                <button type="button" class="cfield" data-num="probe.warpFactor"><small>WARP FACTOR</small><b data-show="probe.warpFactor"></b></button>
+                <button type="button" class="cfield" data-num="probe.warpDistance"><small>DISTANCE</small><b data-show="probe.warpDistance"></b></button>
+              </div>
+              <div class="seg units" data-seg="probe.warpDistanceUnit"><button type="button" data-val="M">M</button><button type="button" data-val="KM">KM</button><button type="button" data-val="MKM">MKM</button><button type="button" data-val="BKM">BKM</button><button type="button" data-val="LY">LY</button></div>
+              <p class="mnote">Engages warp 30 seconds after launch on the current course; exits after this distance.</p>
+            </div>
+            <label class="switch"><input type="checkbox" data-check="probe.selfDestructEnabled"><span></span>Self-destruct timer</label>
+            <div class="option" data-when="probe.selfDestructEnabled">
+              <button type="button" class="cfield" data-num="probe.selfDestruct"><small>DESTRUCT AFTER LAUNCH</small><b data-show="probe.selfDestruct"></b></button>
+              <div class="seg" data-seg="probe.selfDestructUnit"><button type="button" data-val="seconds">SEC</button><button type="button" data-val="minutes">MIN</button><button type="button" data-val="hours">HR</button></div>
+            </div>
+            <p class="mnote">A self-destruct timer destroys the probe to prevent capture. Battery life is shown separately.</p>
+          </div>
+        </div>
+
+        <!-- Beacon -->
+        <div class="form beacon" data-form="Beacon" hidden>
+          <div class="form-col">
+            <div class="cgroup"><small>BEACON TYPE</small>
+              <div class="seg" data-seg="beacon.kind"><button type="button" data-val="Warning">WARNING</button><button type="button" data-val="Comms">COMMS RELAY</button></div>
+            </div>
+            <div class="cgroup" data-when="beacon.warning"><small>TRANSMISSION MEDIUM</small>
+              <div class="seg" data-seg="beacon.medium"><button type="button" data-val="RF">RF</button><button type="button" data-val="SSC">SSC</button></div>
+            </div>
+            <button type="button" class="cfield message" data-when="beacon.warning" id="messageField"><small>WARNING MESSAGE</small><b id="messageValue"></b></button>
+            <div class="cgroup" data-when="beacon.comms"><small>RECEIVE</small>
+              <div class="pair">
+                <button type="button" class="cfield" data-num="beacon.receiveFrequency"><small>FREQUENCY</small><b data-show="beacon.receiveFrequency"></b></button>
+                <div class="seg" data-seg="beacon.receiveMedium"><button type="button" data-val="RF">RF</button><button type="button" data-val="SSC">SSC</button></div>
+              </div>
+            </div>
+            <div class="cgroup" data-when="beacon.comms"><small>SEND</small>
+              <div class="pair">
+                <button type="button" class="cfield" data-num="beacon.sendFrequency"><small>FREQUENCY</small><b data-show="beacon.sendFrequency"></b></button>
+                <div class="seg" data-seg="beacon.sendMedium"><button type="button" data-val="RF">RF</button><button type="button" data-val="SSC">SSC</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-col">
+            <p class="mnote" data-when="beacon.warning">Unicast warning buoy: it repeats the message to passing ships. SSC means subspace channel.</p>
+            <div class="cgroup" data-when="beacon.comms"><small>DESTINATION · GALACTIC LY</small>
+              <div class="pair even">
+                <button type="button" class="cfield" data-num="beacon.x"><small>X</small><b data-show="beacon.x"></b></button>
+                <button type="button" class="cfield" data-num="beacon.y"><small>Y</small><b data-show="beacon.y"></b></button>
+              </div>
+            </div>
+            <p class="mnote" data-when="beacon.comms" id="relayNote"></p>
+            <div class="cgroup"><small>BATTERY · PU</small>
+              <div class="seg" data-seg="beacon.battery"><button type="button" data-val="10000">10,000</button><button type="button" data-val="20000">20,000</button><button type="button" data-val="30000">30,000</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<!-- Right: torpedoes waiting for the launcher -->
+<div class="col right">
+  <section class="panel rack" aria-label="Ready for launch">
+    <div class="thead"><h2>READY FOR LAUNCH</h2><small id="rackCount">0 / 6</small></div>
+    <div id="rack" class="rack-list" aria-live="polite"></div>
+    <p class="mnote">Tap a torpedo for its details. Tube loading is controlled by Torpedo Launch Control.</p>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Assembly functions">
+  <button type="button" data-type="Warhead"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21v-8c0-4 2-7.5 5-10.5 3 3 5 6.5 5 10.5v8Z"/><path d="M7 16h10"/></svg></span>WARHEAD</button>
+  <button type="button" data-type="Probe"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21v-8a6 6 0 0 1 12 0v8Z"/><path d="M9 7.5 6.5 3M15 7.5 17.5 3"/><circle cx="12" cy="13" r="1.6"/></svg></span>PROBE</button>
+  <button type="button" data-type="Beacon"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21v-9h12v9Z"/><path d="M8.5 12a3.5 3.5 0 0 1 7 0"/><path d="M12 6V3M6.5 6.5 5 5M17.5 6.5 19 5"/></svg></span>BEACON</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="configureBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true" data-icon="configure"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" data-icon="heads" hidden><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><span id="configureLabel">CONFIGURE</span></button>
+  <button type="button" id="assembleBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="M12 8.5v7M8.5 12h7"/></svg></span>ASSEMBLE</button>
+</nav>
+
+<!-- Details of a torpedo in the ready rack -->
+<dialog id="detailsDialog" class="modal" aria-labelledby="detailsTitle">
+  <div class="mhead"><h2 id="detailsTitle">TORPEDO</h2><small class="ready-tag">READY FOR LAUNCH</small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="details">
+    <svg id="detailsArt" viewBox="-40 -24 180 454" aria-hidden="true"></svg>
+    <dl class="rows" id="detailsRows"></dl>
+  </div>
+  <p class="mnote" id="detailsNote"></p>
+</dialog>
+
+<!-- Keypad for a number in the configuration -->
+<dialog id="keypadDialog" class="modal narrow" aria-label="Enter a value"><div id="keypadHost"></div></dialog>
+
+<!-- Keyboard for the warning beacon's message -->
+<dialog id="messageDialog" class="modal message-dialog" aria-labelledby="messageTitle">
+  <div class="mhead"><h2 id="messageTitle">WARNING MESSAGE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <textarea id="messageInput" rows="3" maxlength="240" aria-label="Warning message" placeholder="DESCRIBE THE HAZARD FOR PASSING SHIPS"></textarea>
+  <p class="mnote" id="messageHint">The beacon repeats this message to every ship that passes.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" data-menu="magazine"><b>Magazine and rack</b><span>Stock, station resupply, ready capacity and handing a torpedo to the launcher</span></button>
+    <button type="button" data-menu="power"><b>Bay power and damage</b><span>Available power, the bay's power range, cycle times and warhead damage maxima</span></button>
+    <button type="button" data-menu="rates"><b>Power draw rates</b><span>Probe warp, sensors and transmitters, beacons</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Empty rack, full magazine and the default settings</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection" data-view="magazine">
+        <h3>MAGAZINE</h3>
+        <div class="field-grid">
+          <div class="field" data-field="Hulls"><div><small>TORPEDO HULLS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="Warhead"><div><small>WARHEAD HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="Probe"><div><small>PROBE HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="Beacon"><div><small>BEACON HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <button type="button" id="refill" class="wide">REFILL AT STATION</button>
+      </div>
+      <div class="msection" data-view="magazine">
+        <h3>READY RACK</h3>
+        <div class="field" data-field="rtlMax"><div><small>READY CAPACITY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <button type="button" id="takeNext" class="wide">TAKE NEXT FOR LAUNCHER</button>
+        <p class="mnote">Stands in for Torpedo Launch Control taking the oldest ready torpedo into a tube.</p>
+      </div>
+      <div class="msection" data-view="power">
+        <h3>BAY POWER</h3>
+        <div class="field" data-field="availablePower"><div><small>AVAILABLE POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="field-grid">
+          <div class="field" data-field="minPower"><div><small>MINIMUM POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxPower"><div><small>MAXIMUM POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="slowMs"><div><small>MINIMUM-SPEED TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="fastMs"><div><small>FULL-SPEED TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Power is split evenly between assembly and loading. The cycle runs from the minimum-speed time at minimum power to the full-speed time at maximum power; below minimum power, assembly pauses.</p>
+      </div>
+      <div class="msection" data-view="power">
+        <h3>WARHEAD DAMAGE</h3>
+        <div class="field-grid">
+          <div class="field" data-field="maxWed"><div><small>MAX WED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxWkd"><div><small>MAX WKD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Damage maxima apply to torpedoes assembled from now on.</p>
+      </div>
+      <div class="msection" data-view="rates">
+        <h3>PROBE WARP</h3>
+        <div class="field-grid">
+          <div class="field" data-field="minWarpDraw"><div><small>DRAW AT WARP 1</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxWarpDraw"><div><small>DRAW AT WARP 6</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection" data-view="rates">
+        <h3>PROBE SENSORS</h3>
+        <div class="field-grid" id="sensorDrawFields"></div>
+      </div>
+      <div class="msection" data-view="rates">
+        <h3>TRANSMITTERS</h3>
+        <div class="field-grid">
+          <div class="field" data-field="sscDraw"><div><small>SSC DRAW</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="rfDraw"><div><small>RF DRAW</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Probe transmitters and beacons draw at these rates; a beacon uses its warning medium or its send medium. Rates are saved into each torpedo when assembly starts.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=5"></script>
+<script src="assembly.js?v=1"></script>
+</body>
 </html>

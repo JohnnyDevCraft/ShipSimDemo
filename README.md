@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation Control uses. `Weapons/` contains the shared compiled assets for the six weapon and defense screens.
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor and Torpedo Assembly Control use. `Weapons/` contains the shared compiled assets for the five other weapon and defense screens.
 
 ## Local preview
 
@@ -35,6 +35,8 @@ node tests/navigation-control.cjs   # Navigation Control
 node tests/navigation-layout.cjs    # Navigation fits iPad portrait/landscape through 4K
 node tests/reactor-control.cjs      # Reactor Control
 node tests/reactor-layout.cjs       # Reactor fits iPad landscape through 4K
+node tests/torpedo-assembly.cjs     # Torpedo Assembly Control
+node tests/torpedo-assembly-layout.cjs  # Torpedo Assembly fits iPad landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

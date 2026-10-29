@@ -33,6 +33,24 @@ run({
     await expect(page.locator('#transmissions .tx')).toHaveCount(4);
     await expect(page.locator('#gridScale')).toHaveText(/^GRID \d/);
   },
+  'a point-to-point transmission is drawn between the origin and destination its card names': async ({ open }) => {
+    const page = await open('/Communications/');
+    const rows = (await state(page)).rows, find = origin => rows.find(r => r.origin === origin);
+    // Ross Orbital Station to TNS Discovery: from the station itself to our ship.
+    const traffic = find('Ross Orbital Station');
+    const ends = await page.evaluate(id => CommsControl.ends(id), traffic.id);
+    assert.deepEqual(ends.a, await page.evaluate(() => CommsControl.place('Ross Orbital Station')), 'the origin is the station');
+    assert.deepEqual(ends.b, await page.evaluate(() => CommsControl.place('TNS Discovery')), 'the destination is our ship');
+    // A named ship off the chart sits in the system its detection gives; an unresolved destination is not drawn.
+    const fleet = await page.evaluate(id => CommsControl.ends(id), find('Space Command').id);
+    const centauri = await page.evaluate(() => CommsControl.place('Alpha Centauri Orbital Station'));
+    assert.ok(Math.hypot(fleet.b.x - centauri.x, fleet.b.y - centauri.y) < 1e8, 'Patrol ship Resolute is at Alpha Centauri');
+    assert.equal((await page.evaluate(id => CommsControl.ends(id), find('Unidentified vessel').id)).b, null);
+    // On the map, the selection names the end that was tapped.
+    await page.locator('#transmissions .tx', { hasText: 'Ross Orbital Station' }).click();
+    await expect(page.locator('#advisory')).toHaveText(/^Ross Orbital Station · /);
+    await expect(page.locator('#transmissions .tx.selected small').first()).toHaveText('Ross · 18.0 SSC · to TNS Discovery');
+  },
   'selecting a transmission shows it on the right; encrypted content stays hidden': async ({ open }) => {
     const page = await open('/Communications/');
     await expect(page.locator('#sigTitle')).toHaveText('Civil distress call');

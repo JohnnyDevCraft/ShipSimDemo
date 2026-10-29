@@ -26,6 +26,11 @@ for (const [width, height] of sizes)
     assert.ok(titles, 'panel headings fit on one line');
     const stick = await page.locator('#positionStick').evaluate(el => el.getBoundingClientRect());
     assert.ok(stick.width >= height * 0.15 && Math.abs(stick.width - stick.height) < 1, `the Position stick is round and big enough (${Math.round(stick.width)}px)`);
+    // Both sticks sit whole inside their panels (WebKit once pushed the Position stick out to the right).
+    for (const [id, panel] of [['#positionStick', '#leftCol .stick-panel'], ['#headingStick', '.heading-panel']]) {
+      const inside = await page.evaluate(([s, p]) => { const a = document.querySelector(s).getBoundingClientRect(), b = document.querySelector(p).getBoundingClientRect(); return a.left >= b.left - 0.5 && a.right <= b.right + 0.5 && a.top >= b.top - 0.5 && a.bottom <= b.bottom + 0.5; }, [id, panel]);
+      assert.ok(inside, `${id} stays inside its panel`);
+    }
     const heading = await page.locator('#headingStick').evaluate(el => el.getBoundingClientRect());
     assert.ok(heading.width >= height * 0.15, `the Heading stick is wide enough (${Math.round(heading.width)}px)`);
     const plot = await page.locator('#plot').evaluate(el => el.getBoundingClientRect());

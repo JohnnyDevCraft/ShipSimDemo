@@ -41,7 +41,8 @@
 
 .stick-panel { width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.9rem 1rem 1rem; }
 .heading-panel { flex: none; }
-.stick-wrap { position: relative; flex: 1; min-height: 9rem; display: grid; place-items: center; }
+/* The wrap is a size container, so the round stick can be sized from its width and height at once. */
+.stick-wrap { position: relative; flex: 1; min-height: 9rem; display: grid; place-items: center; container-type: size; }
 .stick-wrap.wide { flex: none; min-height: 0; height: 6.4rem; }
 .stick-cue { position: absolute; font-size: 0.55rem; letter-spacing: 0.12em; color: var(--dim); pointer-events: none; }
 .stick-cue.up { top: 0; left: 50%; transform: translateX(-50%); }
@@ -50,7 +51,9 @@
 .stick-cue.right { right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; }
 .wide .stick-cue.left, .wide .stick-cue.right { writing-mode: horizontal-tb; rotate: none; top: auto; bottom: 0; transform: none; }
 .joystick { position: relative; width: min(100% - 2.6rem, 100cqh, 12.5rem); aspect-ratio: 1; touch-action: none; cursor: grab; container-type: size; }
-.stick-wrap:not(.wide) .joystick { width: min(calc(100% - 2.6rem), 12.5rem); max-height: calc(100% - 2rem); }
+/* Sized from both sides directly: WebKit centres a square shrunk by max-height at its unshrunk width, which
+   pushed the stick out of its panel. */
+.stick-wrap:not(.wide) .joystick { --size: min(100cqw - 2.6rem, 100cqh - 2rem, 12.5rem); width: var(--size); height: var(--size); aspect-ratio: auto; }
 .joystick.horizontal { width: calc(100% - 0.4rem); aspect-ratio: auto; height: 4.4rem; }
 .stick-base { position: absolute; inset: 0; border: 1px solid var(--edge); border-radius: 50%; background: radial-gradient(circle, rgba(20, 60, 110, 0.55), rgba(3, 12, 24, 0.85) 70%); box-shadow: inset 0 0 1.2rem rgba(40, 140, 255, 0.2); }
 .stick-base::before, .stick-base::after { content: ''; position: absolute; background: rgba(120, 180, 230, 0.2); }

@@ -9,12 +9,12 @@ Files: `index.html`, `styles.css`, `../Shared/console.css` (the shared console l
   - **Warhead:** yield slider (0–100%), with the energy (WED) and kinetic (WKD) damage it gives; detonation on impact or within a proximity distance.
   - **Probe:** up to three sensors; transmitter frequency and medium (RF or SSC); battery (10,000, 20,000 or 30,000 PU); optional warp field generator (warp factor 1–6 and travel distance, in M, KM, MKM, BKM or LY); optional self-destruct timer (seconds, minutes or hours). Readouts: power draw, time to empty and, with warp, the maximum distance.
   - **Beacon:** a warning buoy (medium and message) or a silent comms relay (receive and send frequency and medium, and a galactic destination); battery. Readouts: draw and lifetime.
-- **Magazine (left):** hulls and the three kinds of head in stock.
+- **Magazine (left):** hulls and the three kinds of head in stock. During a refill, the next slot of each kind fills as it loads.
 - **Assembly bay (left):** assembly speed, available power, the assembly and loading shares, and the cycle time.
 - **Ready for launch (right):** one slot per torpedo the rack can hold. A torpedo being assembled shows its progress; tap a ready one for its details.
 - **Advisory line:** what stops an assembly, what is being assembled, or that the bay is ready.
-- **Bottom bar:** the three head types, Configure (Heads when the configuration is showing) and Assemble. Assemble works from either page with the configuration as set; when it cannot be used it is dimmed, and a tap says why.
-- **Menu:** demo controls for the magazine and rack (stock, station resupply, ready capacity, handing the next torpedo to the launcher), bay power and warhead damage maxima, and the power draw rates; reset.
+- **Bottom bar:** the three head types, Refill, Configure (Heads when the configuration is showing) and Assemble. Assemble works from either page with the configuration as set. Refill is dark until the ship is docked at a station with the umbilical attached; it lights while refilling, and a second tap halts the refill. A dimmed button says why when tapped.
+- **Menu:** demo controls for the magazine and rack (stock, Dock and Undock, ready capacity, handing the next torpedo to the launcher), bay power and warhead damage maxima, and the power draw rates; reset.
 
 ## Rules (from the Angular TAC demo)
 
@@ -26,4 +26,5 @@ Files: `index.html`, `styles.css`, `../Shared/console.css` (the shared console l
 - A beacon draws at its warning medium's or send medium's transmitter rate. Transmitters may not draw more than 2 PU/s.
 - The draw rates are saved into each torpedo when its assembly starts; later changes apply to the next torpedo.
 - Configuration stays selected after each assembly, so another of the same is one press.
+- A station refill needs the ship docked with the umbilical attached (the demo's Dock does both). It brings aboard one hull every 30 seconds and one warhead, probe and beacon head every 15 seconds each, all at once, up to the magazine's capacity (12 hulls, 8 warheads, 3 probes, 3 beacons), and stops when the magazine is full. Halting it, or undocking, drops the items part-way aboard.
 - Reset demo reloads the page with an empty rack, a full magazine and the default settings.

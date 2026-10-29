@@ -6,7 +6,7 @@
 <title>Torpedo Assembly Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body class="assembly">
 
@@ -40,7 +40,7 @@
 <!-- Left: what the magazine holds and how fast the bay can work -->
 <div class="col left">
   <section class="panel magazine" aria-label="Magazine">
-    <div class="thead"><h2>MAGAZINE</h2><small>IN STOCK</small></div>
+    <div class="thead"><h2>MAGAZINE</h2><small id="magazineNote">IN STOCK</small></div>
     <div id="stock" class="stock"></div>
   </section>
   <section class="panel bay" aria-label="Assembly bay power">
@@ -206,6 +206,7 @@
   <button type="button" data-type="Probe"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21v-8a6 6 0 0 1 12 0v8Z"/><path d="M9 7.5 6.5 3M15 7.5 17.5 3"/><circle cx="12" cy="13" r="1.6"/></svg></span>PROBE</button>
   <button type="button" data-type="Beacon"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21v-9h12v9Z"/><path d="M8.5 12a3.5 3.5 0 0 1 7 0"/><path d="M12 6V3M6.5 6.5 5 5M17.5 6.5 19 5"/></svg></span>BEACON</button>
   <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="refillBtn" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v10"/><path d="m8 9 4 4 4-4"/><path d="M4 14v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span><span id="refillLabel">REFILL</span></button>
   <button type="button" id="configureBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true" data-icon="configure"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><svg viewBox="0 0 24 24" aria-hidden="true" data-icon="heads" hidden><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span><span id="configureLabel">CONFIGURE</span></button>
   <button type="button" id="assembleBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20 7.4v9.2L12 21.2 4 16.6V7.4Z"/><path d="M12 8.5v7M8.5 12h7"/></svg></span>ASSEMBLE</button>
 </nav>
@@ -234,7 +235,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" data-menu="magazine"><b>Magazine and rack</b><span>Stock, station resupply, ready capacity and handing a torpedo to the launcher</span></button>
+    <button type="button" data-menu="magazine"><b>Magazine and rack</b><span>Stock, docking at a station, ready capacity and handing a torpedo to the launcher</span></button>
     <button type="button" data-menu="power"><b>Bay power and damage</b><span>Available power, the bay's power range, cycle times and warhead damage maxima</span></button>
     <button type="button" data-menu="rates"><b>Power draw rates</b><span>Probe warp, sensors and transmitters, beacons</span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>Empty rack, full magazine and the default settings</span></button>
@@ -250,7 +251,12 @@
           <div class="field" data-field="Probe"><div><small>PROBE HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
           <div class="field" data-field="Beacon"><div><small>BEACON HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
         </div>
-        <button type="button" id="refill" class="wide">REFILL AT STATION</button>
+      </div>
+      <div class="msection" data-view="magazine">
+        <h3>STATION</h3>
+        <p class="mstatus" id="dockStatus">Not docked</p>
+        <div class="mrow"><button type="button" id="dock">DOCK</button><button type="button" id="undock">UNDOCK</button></div>
+        <p class="mnote">Docking attaches the station umbilical, which the Refill command needs. Undocking detaches it and halts a refill.</p>
       </div>
       <div class="msection" data-view="magazine">
         <h3>READY RACK</h3>
@@ -302,6 +308,6 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=5"></script>
-<script src="assembly.js?v=1"></script>
+<script src="assembly.js?v=2"></script>
 </body>
 </html>

@@ -32,6 +32,9 @@ textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select
 .pips { display: grid; grid-template-columns: repeat(12, 1fr); gap: 0.22rem; }
 .pips i { height: 0.7rem; border-radius: 0.2rem; border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent); }
 .pips i.full { background: var(--tone); border-color: var(--tone); box-shadow: 0 0 0.4rem color-mix(in srgb, var(--tone) 60%, transparent); }
+.pips i.loading { background: linear-gradient(90deg, var(--tone) var(--p, 0%), transparent var(--p, 0%)); border-color: var(--tone); animation: loading 0.9s ease-in-out infinite alternate; }
+@keyframes loading { to { box-shadow: 0 0 0.5rem var(--tone); } }
+#magazineNote.live { color: var(--cyan); }
 .bay { width: 100%; flex: none; display: grid; gap: 0.55rem; padding: 0.9rem 1rem 1rem; }
 .speed { display: flex; justify-content: space-between; align-items: baseline; }
 .speed b { font-size: 1.35rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; }
@@ -217,6 +220,8 @@ textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select
 .dock button.active .ring { border-color: var(--cyan); background: radial-gradient(circle, rgba(40, 120, 230, 0.75), rgba(8, 30, 60, 0.85)); box-shadow: 0 0 1.1rem var(--glow), inset 0 0 0.8rem rgba(79, 214, 255, 0.35); }
 .dock button.blocked { opacity: 0.4; cursor: not-allowed; }
 .dock button.blocked:hover .ring { border-color: var(--edge); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
+#refillBtn.refilling { color: var(--cyan); }
+#refillBtn.refilling .ring { border-color: var(--cyan); background: radial-gradient(circle, rgba(40, 120, 230, 0.75), rgba(8, 30, 60, 0.85)); animation: ready 1.2s ease-in-out infinite; }
 #assembleBtn.ready { color: var(--cyan); }
 #assembleBtn.ready .ring { border-color: var(--cyan); background: radial-gradient(circle, rgba(40, 120, 230, 0.75), rgba(8, 30, 60, 0.85)); animation: ready 1.8s ease-in-out infinite; }
 @keyframes ready { 50% { box-shadow: 0 0 1.6rem rgba(79, 214, 255, 0.75), inset 0 0 0.8rem rgba(79, 214, 255, 0.35); } }

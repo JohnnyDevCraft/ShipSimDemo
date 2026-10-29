@@ -182,7 +182,7 @@ run({
     await expect(page.locator('.slot.ready')).toHaveCount(1);
     await expect(page.locator('#state')).toHaveText('BAY READY');
   },
-  'an empty magazine stops assembly until the station resupplies it': async ({ open }) => {
+  'an empty magazine stops assembly until a station refill brings stock aboard': async ({ open }) => {
     const page = await open('/TorpedoAssembly/');
     await demoView(page, 'magazine', () => setField(page, 'Probe', '0'));
     await page.locator('.dock [data-type="Probe"]').click();
@@ -190,10 +190,65 @@ run({
     await expect(page.locator('.stock-row[data-key="Probe"]')).toHaveClass(/out/);
     await demoView(page, 'magazine', () => setField(page, 'Hulls', '0'));
     await expect(page.locator('#state')).toHaveText('NO HULLS');
-    await demoView(page, 'magazine', () => page.locator('#refill').click());
-    await expect(page.locator('.stock-row[data-key="Hulls"] b')).toHaveText('12');
-    await expect(page.locator('.stock-row[data-key="Probe"] b')).toHaveText('3');
+    await demoView(page, 'magazine', () => page.locator('#dock').click());
+    await page.locator('#refillBtn').click();
+    await page.evaluate(() => TorpedoAssembly.advance(30000));
+    await expect(page.locator('.stock-row[data-key="Hulls"] b')).toHaveText('1');
+    await expect(page.locator('.stock-row[data-key="Probe"] b')).toHaveText('2');
     await expect(page.locator('#assembleBtn')).toHaveAttribute('aria-disabled', 'false');
+  },
+  'Refill is dark until docked, brings each kind aboard at its own pace, and a second tap halts it': async ({ open }) => {
+    const page = await open('/TorpedoAssembly/');
+    const refill = page.locator('#refillBtn');
+    await expect(page.locator('.dock button').nth(3)).toHaveId('refillBtn');
+    await expect(page.locator('.dock button').nth(4)).toHaveId('configureBtn');
+    await expect(page.locator('#menuDialog #refill')).toHaveCount(0);
+    await expect(refill).toHaveAttribute('aria-disabled', 'true');
+    await refill.click({ force: true });
+    await expect(page.locator('#notice')).toHaveText('Refill needs the ship docked at a station with the umbilical attached.');
+    assert.equal((await state(page)).refilling, false);
+    await demoView(page, 'magazine', async () => {
+      await expect(page.locator('#undock')).toBeDisabled();
+      await page.locator('#dock').click();
+      await expect(page.locator('#dockStatus')).toHaveText('Docked · umbilical attached');
+      await expect(page.locator('#dock')).toBeDisabled();
+    });
+    // Docked with a full magazine there is nothing to refill.
+    await expect(refill).toHaveAttribute('aria-disabled', 'true');
+    await refill.click({ force: true });
+    await expect(page.locator('#notice')).toHaveText('The magazine is full.');
+    for (const [key, value] of [['Hulls', '9'], ['Warhead', '6'], ['Probe', '1'], ['Beacon', '2']]) await demoView(page, 'magazine', () => setField(page, key, value));
+    await expect(refill).toHaveAttribute('aria-disabled', 'false');
+    await refill.click();
+    await expect(refill).toHaveClass(/refilling/);
+    await expect(page.locator('#refillLabel')).toHaveText('REFILLING');
+    await expect(page.locator('#magazineNote')).toHaveText('REFILLING');
+    const stock = async () => (await state(page)).stock;
+    await page.evaluate(() => TorpedoAssembly.advance(15000));
+    assert.deepEqual(await stock(), { Hulls: 9, Warhead: 7, Probe: 2, Beacon: 3 }, 'heads every 15 s, no hull yet');
+    await page.evaluate(() => TorpedoAssembly.advance(15000));
+    assert.deepEqual(await stock(), { Hulls: 10, Warhead: 8, Probe: 3, Beacon: 3 }, 'a hull every 30 s; full kinds stop');
+    await expect(page.locator('.stock-row[data-key="Hulls"] .pips i.loading')).toHaveCount(1);
+    // A second tap halts the refill; the clock no longer brings anything aboard.
+    await refill.click();
+    await expect(page.locator('#notice')).toHaveText('Refill halted.');
+    await expect(refill).not.toHaveClass(/refilling/);
+    await page.evaluate(() => TorpedoAssembly.advance(60000));
+    assert.equal((await stock()).Hulls, 10, 'halted');
+    // Resumed, it runs until the magazine is full, then the button goes dark.
+    await refill.click();
+    await page.evaluate(() => TorpedoAssembly.advance(60000));
+    assert.equal((await stock()).Hulls, 12);
+    await expect(page.locator('#notice')).toHaveText('Refill complete: the magazine is full.');
+    await expect(refill).not.toHaveClass(/refilling/);
+    await expect(refill).toHaveAttribute('aria-disabled', 'true');
+    // Undocking halts a refill and darkens the button.
+    await demoView(page, 'magazine', () => setField(page, 'Hulls', '5'));
+    await refill.click();
+    await demoView(page, 'magazine', () => page.locator('#undock').click());
+    await expect(page.locator('#notice')).toHaveText('Umbilical detached and undocked. Refill halted.');
+    await expect(refill).toHaveAttribute('aria-disabled', 'true');
+    assert.equal((await state(page)).refilling, false);
   },
   'power draw rates set in the demo controls are saved into each torpedo': async ({ open }) => {
     const page = await open('/TorpedoAssembly/');

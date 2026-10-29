@@ -4,7 +4,7 @@
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
-const CONSOLES = ['Helm', 'Navigation', 'Reactor', 'Battery', 'PowerDistribution', 'Docking', 'LifeSupport', 'Communications', 'Transporter', 'TractorBeam', 'ViewScreen', 'TacticalOfficer', 'TorpedoAssembly', 'TorpedoLaunch', 'PhaseCannon', 'PhaserArray', 'Shields', 'WarpField'];
+const CONSOLES = ['Helm', 'Navigation', 'Reactor', 'Battery', 'PowerDistribution', 'Docking', 'LifeSupport', 'Communications', 'Transporter', 'TractorBeam', 'ViewScreen', 'TacticalOfficer', 'TorpedoAssembly', 'TorpedoLaunch', 'PhaseCannon', 'PhaserArray', 'Shields', 'WarpField', 'DotBay'];
 const lose = page => page.evaluate(() => localStorage.setItem('xmps-demo-habitability', JSON.stringify({ habitable: false, cause: 'Oxygen exhausted', at: Date.now() })));
 
 run({

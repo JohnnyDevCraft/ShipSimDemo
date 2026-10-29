@@ -8,6 +8,14 @@ run({
     await expect(page).toHaveTitle(/Navigation Control/);
     await expect(page.locator('#odName')).toHaveText('Gliese 1061');
   },
+  'the demo index lists DOT Bay Control after Life Support Control and opens it': async ({ open }) => {
+    const page = await open('/');
+    const cards = page.locator('nav[aria-label="Bridge demos"] a strong');
+    await expect(cards.nth(7)).toHaveText(/^DOT Bay Control/);
+    await page.getByRole('link', { name: /DOT Bay Control/ }).click();
+    await expect(page).toHaveTitle(/DOT Bay Control/);
+    await expect(page.locator('.cradle')).toHaveCount(4);
+  },
   'the demo index lists Life Support Control after Docking Control and opens it': async ({ open }) => {
     const page = await open('/');
     const cards = page.locator('nav[aria-label="Bridge demos"] a strong');

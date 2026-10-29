@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DOT Bay Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="dotbay">
+
+<!-- The bay: four charging cradles on the bay's power bus. Each holds a DOT (Diagnostic and Operational
+     Technician) charging or ready, or stands empty while its DOT is out repairing. Tap a cradle to pick its DOT. -->
+<svg id="schematic" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" role="group" aria-label="The DOT bay: four charging cradles on the bay power bus. Select a cradle to pick its DOT.">
+  <defs>
+    <linearGradient id="padGlow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(79,214,255,0)"/><stop offset="1" stop-color="rgba(79,214,255,0.45)"/></linearGradient>
+    <linearGradient id="beamGlow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(200,240,255,0)"/><stop offset=".5" stop-color="rgba(200,240,255,0.55)"/><stop offset="1" stop-color="rgba(120,210,255,0.15)"/></linearGradient>
+  </defs>
+  <text class="s-label" x="500" y="40" text-anchor="middle">DOT BAY · BAY POWER BUS</text>
+  <rect x="40" y="58" width="920" height="40" rx="10" class="s-pipe"/>
+  <rect x="40" y="68" width="920" height="20" class="s-channel"/>
+  <path id="busStream" d="M44 78H956" class="s-stream power idle"/>
+  <g id="cradles"></g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">DOT BAY CONTROL</div>
+    <div class="scan-caption" id="caption">DIAGNOSTIC AND OPERATIONAL TECHNICIANS · REPAIRS</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state bay-state" id="stateBox" title="Bay state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 7.5v9L12 21 4 16.5v-9Z"/><circle cx="12" cy="12" r="2.5"/></svg><span id="state">—</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: the bay -->
+<div class="col left">
+  <section class="panel bay" aria-label="DOT bay">
+    <div class="thead"><h2>BAY</h2><small id="bayChip" class="chip">—</small></div>
+    <div class="group"><div class="ghead"><small>POWER DRAW</small><b id="powerValue">—</b></div><div class="meter"><i id="powerFill"></i><span class="mark" id="idleMark"></span></div><small class="sub" id="powerNote">—</small></div>
+    <dl class="rows">
+      <div><dt>READY</dt><dd id="readyCount">—</dd></div>
+      <div><dt>CHARGING</dt><dd id="chargingCount">—</dd></div>
+      <div><dt>DEPLOYED</dt><dd id="deployedCount">—</dd></div>
+      <div><dt>TRANSPORTER</dt><dd id="transporterRow">—</dd></div>
+    </dl>
+  </section>
+  <section class="panel selected-dot" id="dotPanel" aria-label="Selected DOT">
+    <div class="thead"><h2 id="dotTitle">DOT 1</h2><small id="dotState" class="chip">—</small></div>
+    <div class="group"><div class="ghead"><small>BATTERY</small><b id="dotBattery">—</b></div><div class="bar battery-bar"><i id="dotBatteryFill"></i></div><small class="sub" id="dotBatteryNote">—</small></div>
+    <dl class="rows">
+      <div><dt>ASSIGNED TO</dt><dd id="dotAssignment">—</dd></div>
+      <div><dt>LOCATION</dt><dd id="dotLocation">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: the ship's components -->
+<div class="col right">
+  <section class="panel components" aria-label="Ship components">
+    <div class="thead"><h2>COMPONENTS</h2><small id="componentsChip" class="chip">—</small></div>
+    <ul class="component-list" id="componentList"></ul>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="DOT bay functions">
+  <button type="button" id="assignBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5l3 3 5.8-5.8a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.2-.8-.8-2.2Z"/></svg></span><span id="assignLabel">ASSIGN DOT</span></button>
+  <button type="button" id="sendBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6"/><path d="M20 5v14"/></svg></span><span id="sendLabel">SEND NOW</span></button>
+  <button type="button" id="recallBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg></span>RECALL DOT</button>
+  <button type="button" id="recallAllBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/><path d="M14 4h6M17 1v6"/></svg></span>RECALL ALL</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="bayBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9"/><path d="M6.3 7.2a8 8 0 1 0 11.4 0"/></svg></span><span id="bayLabel">BAY ONLINE</span></button>
+  <button type="button" id="diagnosticsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Assign the selected DOT to a component -->
+<dialog id="assignDialog" class="modal wide-modal" aria-labelledby="assignTitle">
+  <div class="mhead"><h2 id="assignTitle">ASSIGN DOT</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mstatus" id="assignStatus"></p>
+  <div class="assign-grid" id="assignGrid"></div>
+  <p class="mnote">Repair time is the component's time for one DOT, divided by the DOTs working on it. A DOT repairs for about five minutes on a battery, then beams home to recharge and beams back on its own.</p>
+</dialog>
+
+<!-- Diagnostics -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <table class="dot-table"><thead><tr><th>DOT</th><th>STATE</th><th>BATTERY</th><th>ASSIGNED</th></tr></thead><tbody id="dotRows"></tbody></table>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Fictional model; times and power are provisional gameplay values.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Damage a component, and the demo clock</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Four DOTs charged in the bay, four components damaged</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>DAMAGE</h3>
+        <label class="field-select"><small>COMPONENT</small><select id="demoComponent" aria-label="Component"></select></label>
+        <div class="field" data-field="integrity"><div><small>INTEGRITY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <button type="button" id="demoRandom" class="wide">DAMAGE AT RANDOM</button>
+        <p class="mnote">Stands in for combat damage, faults and wear.</p>
+      </div>
+      <div class="msection">
+        <h3>DEMO CLOCK</h3>
+        <div class="seg" role="group" aria-label="Demo clock"><button type="button" data-speed="1">×1</button><button type="button" data-speed="10">×10</button><button type="button" data-speed="60">×60</button></div>
+        <p class="mnote">Repairs take minutes; speed the clock to watch DOTs run down, beam home, recharge and go back.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
+<script src="dotbay.js?v=3"></script>
+</body>
+</html>

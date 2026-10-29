@@ -1,0 +1,142 @@
+/* DOT Bay Control. The shared console look is in ../Shared/console.css; this adds the bay schematic (in the
+   drawing style of Battery and Docking Control), the bay, DOT and components panels, and the dialogs. Landscape. */
+:root { --left-w: 17rem; --right-w: 18rem; --advisory-h: 2.4rem; }
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.thead h2, .thead small { white-space: nowrap; }
+.thead { gap: 0.6rem; }
+.bay-state span { white-space: nowrap; }
+[data-level="ok"]:is(.bay-state, .chip) { color: var(--green); }
+[data-level="off"]:is(.bay-state, .chip), [data-level="bad"]:is(.bay-state, .chip) { color: #ff8f9b; }
+[data-level="warn"].chip { color: var(--amber); }
+[data-level="busy"].chip { color: var(--cyan); }
+
+body.dotbay {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
+
+/* ── Bay schematic ──────────────────────────────────────────────────────────────────────────── */
+#schematic {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#schematic text { font-variant-numeric: tabular-nums; }
+.s-label { fill: var(--muted); font-size: 17px; font-weight: 600; letter-spacing: 2.4px; }
+.s-caption { fill: var(--muted); font-size: 13.5px; letter-spacing: 1.4px; }
+.s-shell { fill: rgba(8, 24, 44, 0.88); stroke: var(--edge); stroke-width: 2; transition: stroke 0.3s; }
+.s-pipe { fill: #11304f; stroke: #4b86b8; stroke-width: 2; }
+.s-channel { fill: #020a14; }
+.s-stream { fill: none; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 8 16; transition: opacity 0.3s; }
+.s-stream.power { stroke: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); }
+.s-stream.idle { opacity: 0; }
+.feed { fill: none; stroke: #20476d; stroke-width: 14; }
+.cradle { cursor: pointer; outline: none; }
+/* Only the cradle takes the tap: WebKit lets a hidden label in one cradle cover its neighbour. */
+.cradle text, .cradle .dot, .cradle .pad, .cradle .battery-track, .cradle .battery-fill { pointer-events: none; }
+.cradle:focus-visible .cradle-shell { stroke: var(--cyan); stroke-width: 3; }
+.cradle[data-selected="true"] .cradle-shell { stroke: var(--cyan); stroke-width: 3; filter: drop-shadow(0 0 8px rgba(79, 214, 255, 0.5)); }
+.cradle[data-selected="true"] .s-label { fill: var(--cyan); }
+.pad { fill: url(#padGlow); stroke: rgba(79, 214, 255, 0.5); stroke-width: 1.5; }
+.beam { fill: url(#beamGlow); opacity: 0; pointer-events: none; }
+.dot { transition: opacity 0.2s; }
+.dot-body { fill: #1a4a78; stroke: #7cc8ff; stroke-width: 3; }
+.visor { fill: #7ff0ff; filter: drop-shadow(0 0 4px #4fd6ff); }
+.arms { stroke: #7cc8ff; stroke-width: 6; stroke-linecap: round; }
+.dot-lamp { fill: var(--green); filter: drop-shadow(0 0 4px var(--green)); }
+.cradle[data-state="charging"] .dot-lamp { fill: var(--amber); filter: drop-shadow(0 0 4px var(--amber)); }
+.empty-label { fill: var(--cyan); font-size: 16px; font-weight: 700; letter-spacing: 2.4px; opacity: 0; }
+.cradle[data-state="stranded"] .empty-label { fill: #ff8f9b; }
+.battery-track { fill: rgba(90, 140, 190, 0.22); }
+.battery-fill { fill: var(--green); transition: width 0.3s; }
+.battery-fill[data-level="low"] { fill: var(--red); }
+.cradle[data-state="charging"] .battery-fill { fill: var(--amber); }
+.state-text { fill: var(--text); font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+.cradle[data-state="repairing"] .state-text, .cradle[data-state="beaming"] .state-text { fill: var(--cyan); }
+.cradle[data-state="charging"] .state-text { fill: var(--amber); }
+.cradle[data-state="ready"] .state-text { fill: var(--green); }
+.cradle[data-state="stranded"] .state-text { fill: #ff8f9b; }
+
+/* ── Panels ─────────────────────────────────────────────────────────────────────────────────── */
+.bay, .selected-dot, .components { width: 100%; min-width: 0; flex: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.65rem; padding: 0.9rem 1rem 1rem; }
+.components { flex: 0 1 auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.rows div { padding: 0.36rem 0; }
+.rows dt { flex: none; }
+.rows dd { min-width: 0; overflow-wrap: anywhere; text-align: right; font-size: 0.8rem; }
+.group { display: grid; gap: 0.4rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--edge-soft); }
+.ghead { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+.ghead b { font-size: 1rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sub { font-size: 0.64rem; color: var(--muted); letter-spacing: 0.03em; }
+.meter { position: relative; height: 0.55rem; border-radius: 1rem; background: rgba(90, 140, 190, 0.22); }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 1rem; background: linear-gradient(90deg, var(--blue-hi), var(--cyan)); box-shadow: 0 0 0.5rem var(--cyan); transition: width 0.3s; }
+.meter .mark { position: absolute; top: -0.25rem; bottom: -0.25rem; width: 2px; background: var(--muted); }
+.battery-bar i { background: var(--green); box-shadow: 0 0 0.5rem var(--green); }
+.battery-bar i[data-level="low"] { background: var(--red); box-shadow: 0 0 0.5rem var(--red); }
+/* Damaged components get a detail line (DOTs on it, time left); repaired ones are a single compact row. */
+.component-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.42rem; min-height: 0; overflow: auto; scrollbar-width: none; align-content: start; }
+.component-list::-webkit-scrollbar { display: none; }
+.component-list li { display: grid; gap: 0.2rem; }
+.component-list li[data-level="ok"] .crow.sub { display: none; }
+.crow { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.76rem; }
+.crow b { font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.crow.sub { font-size: 0.6rem; }
+.cname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.component-list .bar { height: 0.32rem; }
+.component-list li[data-level="ok"] { opacity: 0.6; }
+.component-list li[data-level="ok"] .bar i { background: var(--green); box-shadow: none; }
+.component-list li[data-level="warn"] b { color: var(--amber); }
+.component-list li[data-level="warn"] .bar i { background: var(--amber); box-shadow: 0 0 0.4rem var(--amber); }
+.component-list li[data-level="bad"] b { color: #ff8f9b; }
+.component-list li[data-level="bad"] .bar i { background: var(--red); box-shadow: 0 0 0.4rem var(--red); }
+.cdots { display: flex; gap: 0.25rem; align-items: center; }
+.cdots i { display: inline-grid; place-items: center; width: 1rem; height: 1rem; border-radius: 0.25rem; font-style: normal; font-size: 0.56rem; font-weight: 700; color: #02101c; background: var(--cyan); }
+.cdots i[data-state="charging"], .cdots i[data-state="ready"] { background: var(--amber); }
+.cdots i[data-state="beaming"] { background: #9fd0ff; }
+.cdots i[data-state="stranded"] { background: var(--red); }
+
+/* ── Advisory and bottom bar ────────────────────────────────────────────────────────────────── */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--green);
+}
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
+.advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
+.dock { padding: 0.75rem 2.1rem 0; }
+.dock button { min-width: 5.4rem; }
+.col.left, .col.right { bottom: calc(var(--dock-h) + 0.5rem); }
+.dock button[data-level="on"] { color: var(--green); }
+.dock button[data-level="on"] .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
+.dock button[data-level="ready"] { color: var(--cyan); }
+.dock button[data-level="ready"] .ring { border-color: var(--cyan); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 1.1rem var(--glow); } 50% { box-shadow: 0 0 0.3rem var(--glow); } }
+.dock button[data-level="off"] { color: #ff8f9b; }
+.dock button[data-level="off"] .ring { border-color: rgba(255, 90, 90, 0.7); background: radial-gradient(circle, rgba(110, 24, 30, 0.7), rgba(28, 6, 8, 0.85)); box-shadow: 0 0 1rem rgba(255, 70, 85, 0.35); }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+#assignDialog { width: min(50rem, 94vw); }
+.assign-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; padding: 0.4rem 0 1rem; }
+.assign { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.6rem; align-items: baseline; padding: 0.7rem 0.8rem; text-align: left; }
+.assign span { font-size: 0.85rem; }
+.assign b { font-size: 1.1rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.assign small { grid-column: 1 / -1; font-size: 0.64rem; color: var(--muted); letter-spacing: 0.03em; }
+.assign[data-level="warn"] b { color: var(--amber); }
+.assign[data-level="bad"] b { color: #ff8f9b; }
+.assign[aria-pressed="true"] { border-color: var(--cyan); background: rgba(14, 60, 96, 0.9); box-shadow: 0 0 1rem var(--glow); }
+.placeholder { grid-column: 1 / -1; margin: 0; padding: 2rem; text-align: center; border: 1px dashed var(--edge-soft); border-radius: 0.7rem; color: var(--muted); }
+#diagnosticsDialog { width: min(44rem, 94vw); }
+.dot-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.82rem; }
+.dot-table th { text-align: left; font-size: 0.66rem; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--edge-soft); }
+.dot-table td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--edge-soft); font-variant-numeric: tabular-nums; }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.field-select { display: grid; gap: 0.3rem; }
+.seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.5); }

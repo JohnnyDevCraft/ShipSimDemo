@@ -1,21 +1,152 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>View Screen · Ship Sim</title><link rel="icon" type="image/x-icon" href="../favicon.ico"><link rel="stylesheet" href="../Reactor/helm-theme.css"><link rel="stylesheet" href="styles.css"></head>
-<body>
-<header><div class="brand"><a href="../index.html" aria-label="Back to demo selector" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px"><img src="../brand/xelseor-emblem.png" alt="" width="44" height="44" style="display:block"></a> <span title="Xelseor Mission Protocol Sim">XMPS</span><b>VIEW SCREEN</b></div><div class="identity">TNS Discovery <span>|</span> NCC-1031</div><span class="pill" id="modeBadge">SRS</span></header>
-<main>
-<div id="scanners" class="scanners">
-<section class="panel scanner" id="lrsPanel"><div class="sectiontitle"><span>LONG-RANGE SCANNERS</span><span class="range" id="lrsRange"></span></div><div class="radar"><canvas id="lrs" aria-label="Long-range scanner centered on TNS Discovery"></canvas><span class="scan-caption">GALACTIC CONTACTS</span></div><div class="scan-bottom"><span>SHIP-CENTERED · PASSIVE MONITORING</span><span>SIGNAL NOMINAL</span></div></section>
-<section class="panel scanner" id="srsPanel"><div class="sectiontitle"><span>SHORT-RANGE SCANNERS</span><span class="range" id="srsRange"></span></div><div class="radar"><canvas id="srs" aria-label="Short-range scanner centered on TNS Discovery"></canvas><span class="scan-caption">LOCAL CONTACTS</span></div><div class="scan-bottom"><span>SHIP-CENTERED · PASSIVE MONITORING</span><span>SCAN NOMINAL</span></div><div class="tactical-caption" id="selectedName"></div></section>
-<aside class="panel details" id="details"></aside>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>View Screen · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body class="view-screen">
+
+<!-- The forward view fills the window: stars, the 3D models and the overlay. Nothing on the screen takes input;
+     Communications Control sets it up. -->
+<canvas id="stars" class="layer" aria-hidden="true"></canvas>
+<canvas id="scene3d" class="layer" aria-hidden="true"></canvas>
+<canvas id="hud" class="layer" role="img" aria-label="Forward view from the bridge"></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">VIEW SCREEN</div>
+    <div class="scan-caption" id="caption">FORWARD VIEW</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state" id="stateBox" title="Propulsion"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 20l7-4 7 4Z"/></svg><span id="state">—</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: the tactical target and the station connections, over the short-range scanners -->
+<div class="col left">
+  <section class="panel info" id="targetPanel" aria-label="Tactical target" hidden>
+    <div class="thead"><h2>TACTICAL TARGET</h2><small id="targetKind" class="chip">—</small></div>
+    <div class="tname"><i id="targetDot" aria-hidden="true"></i><div><h3 id="targetName">—</h3><p id="targetSub">—</p></div></div>
+    <dl class="rows">
+      <div><dt>RANGE</dt><dd id="targetRange">—</dd></div>
+      <div><dt>BEARING</dt><dd id="targetBearing">—</dd></div>
+      <div><dt>ON SCREEN</dt><dd id="targetView">—</dd></div>
+    </dl>
+  </section>
+  <section class="panel info quiet" id="noTarget" aria-label="No tactical target">
+    <div class="thead"><h2>TACTICAL TARGET</h2><small>NONE</small></div>
+    <p class="mnote">No target selected at the tactical station.</p>
+  </section>
+  <section class="panel info" id="dockPanel" aria-label="Docking and connections">
+    <div class="thead"><h2>DOCKING</h2><small id="dockState" class="chip">—</small></div>
+    <div class="lights" id="lights"></div>
+  </section>
+  <section class="panel scanner" id="srsPanel" aria-label="Short-range scanners">
+    <div class="thead"><h2>SHORT-RANGE SCANNERS</h2><small id="srsRange" class="chip">—</small></div>
+    <div class="radar"><canvas id="srs" aria-label="Short-range scanners centred on our ship"></canvas></div>
+  </section>
 </div>
-<div class="telemetry">
-<section class="panel metric"><div class="sectiontitle">SYSTEM BUS LOAD</div><div class="gauge" id="busGauge"></div><div class="metric-foot">MAX BUS RATING <b>150 PU</b></div></section>
-<section class="panel metric reactor"><div class="sectiontitle">REACTOR PERFORMANCE</div><dl><div><dt>Reactor output</dt><dd>118.0 <em>PU</em></dd></div><div><dt>Requested load</dt><dd>112.0 <em>PU</em></dd></div><div><dt>Operating efficiency</dt><dd>94.9 <em>%</em></dd></div></dl></section>
-<section class="panel metric"><div class="sectiontitle">REACTOR TEMPERATURE</div><div class="gauge" id="tempGauge"></div><div class="metric-foot" id="temperatureStatus">NORMAL <b>BREACH · 530 K</b></div></section>
-<section class="panel metric destination"><div class="sectiontitle">NAV DESTINATION</div><h2>Gliese Orbital Station</h2><small>GALACTIC COORDINATES</small><p>0.021° <span>·</span> 26,012.4 LY</p><small>SYSTEM COORDINATES</small><p>137.420° <span>·</span> 148.2 MKM</p><div class="drive-indicators"><div class="light-row" id="warpIndicator"><i></i><span>Warp Drive</span><small>OFF</small></div><div class="light-row" id="impulseIndicator"><i></i><span>Impulse</span><small>OFF</small></div></div></section>
-<section class="panel metric connections"><div class="sectiontitle">DOCKING & CONNECTIONS</div><div class="lights" id="lights"></div></section>
+
+<!-- Right: where we are going, over the long-range scanners -->
+<div class="col right">
+  <section class="panel info" id="navPanel" aria-label="Navigation">
+    <div class="thead"><h2>NAVIGATION</h2><small id="navSource" class="chip">—</small></div>
+    <h3 class="dest" id="destName">—</h3>
+    <dl class="rows">
+      <div><dt>DISTANCE</dt><dd id="destDistance">—</dd></div>
+      <div><dt>COURSE</dt><dd id="destCourse">—</dd></div>
+      <div><dt>ARRIVAL</dt><dd id="destEta">—</dd></div>
+      <div><dt>HEADING</dt><dd id="heading">—</dd></div>
+    </dl>
+    <div class="drives">
+      <div class="drive" id="warpDrive"><i class="light" aria-hidden="true"></i><span>WARP DRIVE</span><small>OFF</small></div>
+      <div class="drive" id="impulseDrive"><i class="light" aria-hidden="true"></i><span>IMPULSE</span><small>OFF</small></div>
+    </div>
+  </section>
+  <section class="panel scanner" id="lrsPanel" aria-label="Long-range scanners">
+    <div class="thead"><h2>LONG-RANGE SCANNERS</h2><small id="lrsRange" class="chip">—</small></div>
+    <div class="radar"><canvas id="lrs" aria-label="Long-range scanners centred on our ship"></canvas></div>
+  </section>
 </div>
-</main>
-<footer><span>DISCOVERY PREVIEW · SAMPLE STATE</span><label>View type <select id="viewScreenType" aria-label="View Type"><option value="srs">SRS</option><option value="lrs">LRS</option><option value="dual">Dual</option></select></label><label>SRS range <select id="viewScreenSrsRange" aria-label="SRS Range"><option value="1-bkm">1 BKM</option><option value="0.1-bkm">0.1 BKM</option><option value="0.01-bkm">0.01 BKM</option><option value="1-mkm">1 MKM</option><option value="0.1-mkm">0.1 MKM</option><option value="0.01-mkm">0.01 MKM</option><option value="10000-km">10,000 km</option><option value="1000-km">1,000 km</option><option value="100-km">100 km</option></select></label><label>LRS range <select id="viewScreenLrsRange" aria-label="LRS Range"><option value="30-ly">30 LY</option><option value="20-ly">20 LY</option><option value="10-ly">10 LY</option><option value="5-ly">5 LY</option><option value="1-ly">1 LY</option><option value="1-bkm">1 BKM</option></select></label><label>Tactical target <select id="tacticalTarget" aria-label="Demo tactical target"><option value="meridian">Cargo Ship Meridian</option><option value="anomaly">Subspace Anomaly A-17</option><option value="station">Earth Orbital Station</option><option value="none">No target selected</option></select></label><label>Ship speed · km/s <input id="shipSpeed" aria-label="Demo ship speed in kilometers per second" type="number" min="0" max="1000" value="80" step="10"></label><button id="resetMotion">Reset ship motion</button><label>Temperature <select id="temperature" aria-label="Demo reactor temperature"><option value="220">Normal · 220 K</option><option value="330">Caution · 330 K</option><option value="490">Critical · 490 K</option></select></label><label>Propulsion <select id="propulsion" aria-label="Demo active propulsion"><option value="off">Both off</option><option value="warp">Warp drive</option><option value="impulse">Impulse</option></select></label><label>Docking <select id="dockState" aria-label="Demo docking state"><option value="flight">In flight</option><option value="secured">Secured</option><option value="connected">Umbilical connected</option><option value="synced">Power synchronized</option></select></label></footer>
-<script src="settings.js"></script><script src="preview.js"></script>
-</body></html>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<!-- The gauges sit where the other consoles keep their commands: the view screen has none. -->
+<div class="dock gauges" id="gauges" role="group" aria-label="Ship gauges">
+  <div class="gauge" id="busGauge"></div>
+  <div class="gauge" id="outputGauge"></div>
+  <div class="gauge" id="tempGauge"></div>
+  <div class="gauge" id="speedGauge"></div>
+</div>
+
+<!-- Menu and demo controls: stand-ins for the ship's systems, kept off the screen itself -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>A stand-in flight when the Helm is closed, the tactical target, the reactor and docking</span></button>
+    <a href="../Communications/index.html" target="_blank" rel="noopener"><b>Communications Control</b><span>Sets up this screen: SRS, LRS, both or neither, their ranges, labels and the scope zoom</span></a>
+    <a href="../Helm/index.html" target="_blank" rel="noopener"><b>Helm Control</b><span>Flies the ship this screen follows</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="demo-grid">
+      <div class="demo-col">
+      <div class="msection">
+        <h3>FLIGHT</h3>
+        <p class="mstatus" id="demoSource"></p>
+        <label class="field-select"><small>FLY TOWARD</small><select id="demoToward" aria-label="Fly toward"></select></label>
+        <div class="field-grid">
+          <div class="field" data-field="warpFactor"><div><small>WARP FACTOR</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="startMkm"><div><small>WARP IN FROM</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <div class="field" data-field="impulse"><div><small>IMPULSE SPEED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="demo-buttons"><button type="button" id="demoWarp" class="primary">WARP IN</button><button type="button" id="demoImpulse">IMPULSE</button><button type="button" id="demoStop">ALL STOP</button><button type="button" id="demoReset">RESET</button></div>
+        <p class="mnote">With the Helm open, this screen follows the ship it flies. Without it, a stand-in flies here. Warp in starts the set distance out, facing the object, and drops out of warp at its safe distance.</p>
+      </div>
+      <div class="msection">
+        <h3>TACTICAL TARGET</h3>
+        <select id="demoTarget" aria-label="Tactical target" class="wide"></select>
+        <p class="mnote">Stands in for the tactical station's selection.</p>
+      </div>
+      </div>
+      <div class="demo-col">
+      <div class="msection">
+        <h3>REACTOR AND BUS</h3>
+        <div class="field-stack">
+          <div class="field" data-field="busLoad"><div><small>BUS LOAD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="reactorOutput"><div><small>REACTOR OUTPUT</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="temperature"><div><small>TEMPERATURE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>DOCKING</h3>
+        <select id="demoDock" aria-label="Docking" class="wide">
+          <option value="undocked">Undocked</option><option value="docked">Docked</option><option value="moorings">Moorings engaged</option><option value="clamps">Clamps engaged</option><option value="connected">Umbilical attached</option>
+        </select>
+        <label class="switch"><input type="checkbox" id="demoSync"><span></span>Power sync</label>
+        <p class="mnote" id="dockNote"></p>
+      </div>
+      </div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/nav-world.js?v=2"></script>
+<script src="../Shared/nav-computer.js?v=1"></script>
+<script src="../Shared/view-screen-settings.js?v=1"></script>
+<script src="../Shared/scene.js?v=1"></script>
+<script src="view.js?v=1"></script>
+</body>
+</html>

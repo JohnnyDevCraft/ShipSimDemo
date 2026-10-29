@@ -171,3 +171,6 @@ body.comms { background: radial-gradient(ellipse at 50% 50%, rgba(20, 60, 110, 0
 .view-grid .msection { padding-top: 0; border: 0; align-content: start; }
 .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.45rem; }
 .toggle-grid .toggle { min-height: 2.5rem; padding: 0.4rem 0.7rem; }
+.toggle-grid.zooms { grid-template-columns: repeat(6, 1fr); }
+.toggle-grid.zooms .toggle { padding: 0.4rem 0.2rem; }
+.toggle-grid.unused { opacity: 0.45; }

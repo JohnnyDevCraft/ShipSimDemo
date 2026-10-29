@@ -6,7 +6,7 @@
 <title>Communications Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body class="comms">
 
@@ -129,11 +129,13 @@
 <!-- View screen settings -->
 <dialog id="viewScreenDialog" class="modal wide-modal" aria-labelledby="viewScreenTitle">
   <div class="mhead"><h2 id="viewScreenTitle">VIEW SCREEN SETTINGS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
-  <p class="mnote">The communications officer sets up the bridge view screen. These settings last for this session and describe the future view screen.</p>
+  <p class="mnote">The communications officer sets up the bridge view screen. The forward scope is always shown; the scanners appear over it. Changes reach the view screen at once.</p>
   <div class="view-grid">
     <div class="msection">
       <h3>VIEW TYPE</h3>
-      <div class="seg" role="group" aria-label="View Screen mode"><button type="button" data-view-mode="srs">SRS</button><button type="button" data-view-mode="lrs">LRS</button><button type="button" data-view-mode="dual">DUAL</button></div>
+      <div class="seg" role="group" aria-label="View Screen mode"><button type="button" data-view-mode="srs">SRS</button><button type="button" data-view-mode="lrs">LRS</button><button type="button" data-view-mode="dual">DUAL</button><button type="button" data-view-mode="none">NONE</button></div>
+      <h3>SCOPE ZOOM</h3>
+      <div class="toggle-grid zooms" id="scopeZooms" role="group" aria-label="Scope zoom"></div>
       <h3>SRS RANGE</h3>
       <div class="toggle-grid" id="srsRanges" role="group" aria-label="SRS Range"></div>
       <h3>LRS RANGE</h3>
@@ -168,7 +170,8 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/view-screen-settings.js?v=1"></script>
 <script src="gto-data.js"></script>
-<script src="comms.js?v=2"></script>
+<script src="comms.js?v=3"></script>
 </body>
 </html>

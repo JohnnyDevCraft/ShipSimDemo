@@ -239,7 +239,7 @@ run({
     const comm = (await state(page)).communications[0];
     assert.equal(comm.messages[0].text, 'Civil distress. Propulsion offline. Requesting assistance from nearby vessels.');
   },
-  'contact settings set our channel and broadcast; view screen settings are kept for the session': async ({ open }) => {
+  'contact settings set our channel and broadcast; view screen settings are saved for the View Screen': async ({ open }) => {
     const page = await open('/Communications/');
     await expect(page.locator('#state')).toHaveText('BROADCAST 42.7 SSC');
     await page.locator('#contactSettingsBtn').click();
@@ -251,13 +251,33 @@ run({
     await expect(page.locator('#state')).toHaveText('LISTENING');
     await page.locator('#contactDialog [data-close]').click();
     await page.locator('#viewScreenBtn').click();
-    await page.locator('[data-view-mode="dual"]').click();
+    // Four view types, NONE leaving the forward scope alone; DUAL is the default.
+    await expect(page.locator('[data-view-mode]')).toHaveText(['SRS', 'LRS', 'DUAL', 'NONE']);
+    await expect(page.locator('[data-view-mode="dual"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-view-mode="none"]').click();
+    await expect(page.locator('#srsRanges')).toHaveClass(/unused/);
+    await expect(page.locator('#lrsRanges')).toHaveClass(/unused/);
+    await page.locator('[data-view-mode="srs"]').click();
+    await expect(page.locator('#srsRanges')).not.toHaveClass(/unused/);
+    await expect(page.locator('#lrsRanges')).toHaveClass(/unused/);
     await page.locator('#srsRanges button', { hasText: '100 km' }).click();
     await page.locator('#labelsFilters button', { hasText: 'Ships' }).click();
+    await expect(page.locator('#scopeZooms button')).toHaveText(['1×', '2×', '4×', '8×', '12×', '20×']);
+    await expect(page.locator('#scopeZooms button', { hasText: /^1×$/ })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#scopeZooms button', { hasText: /^8×$/ }).click();
+    await expect(page.locator('#scopeZooms button', { hasText: /^8×$/ })).toHaveAttribute('aria-pressed', 'true');
     const view = (await state(page)).viewScreen;
-    assert.equal(view.mode, 'dual');
+    assert.equal(view.mode, 'srs');
     assert.equal(view.srs, '100-km');
     assert.equal(view.labels.ships, false);
-    await expect(page.locator('#viewScreenStatus')).toHaveText('View screen settings updated for this preview.');
+    assert.equal(view.zoom, 8);
+    await expect(page.locator('#viewScreenStatus')).toHaveText('View screen updated.');
+    // Saved where the View Screen reads it, and kept after a reload.
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('xmps-demo-view-screen')));
+    assert.deepEqual([saved.mode, saved.srs, saved.zoom, saved.labels.ships], ['srs', '100-km', 8, false]);
+    await page.reload();
+    await page.locator('#viewScreenBtn').click();
+    await expect(page.locator('[data-view-mode="srs"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#scopeZooms button', { hasText: /^8×$/ })).toHaveAttribute('aria-pressed', 'true');
   },
 });

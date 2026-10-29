@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor and Torpedo Assembly Control use. `Weapons/` contains the shared compiled assets for the five other weapon and defense screens.
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Torpedo Assembly and Torpedo Launch Control use. `Weapons/` contains the shared compiled assets for the four other weapon and defense screens.
 
 ## Local preview
 
@@ -21,7 +21,7 @@ node scripts/build-static.cjs          # demo-app/static-src/<Page>/*.js -> <Pag
 node scripts/build-static.cjs --check  # exit 1 if a public script is stale
 ```
 
-esbuild is taken from `ESBUILD`, or from the simulator workspace's `ng-app/node_modules`. Edit the sources, not the minified files.
+esbuild is taken from `ESBUILD`, or from the simulator workspace's `ng-app/node_modules`. A source named `*.bundle.js` is bundled with three.js from `demo-app/render-deps` (Torpedo Launch Control's 3D scene). Edit the sources, not the minified files.
 
 ## Tests
 
@@ -37,6 +37,8 @@ node tests/reactor-control.cjs      # Reactor Control
 node tests/reactor-layout.cjs       # Reactor fits iPad landscape through 4K
 node tests/torpedo-assembly.cjs     # Torpedo Assembly Control
 node tests/torpedo-assembly-layout.cjs  # Torpedo Assembly fits iPad landscape through 4K
+node tests/torpedo-launch.cjs       # Torpedo Launch Control
+node tests/torpedo-launch-layout.cjs    # Torpedo Launch fits iPad landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

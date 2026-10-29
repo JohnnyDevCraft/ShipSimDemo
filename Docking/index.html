@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Docking Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="docking">
+
+<!-- The berth, side on: the station and its docking collar on the left, our ship's bow port on the right. -->
+<svg id="schematic" viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The station's docking collar on the left and our ship's bow port on the right, joined by mooring lines, clamps, the gangway and the umbilical">
+  <defs>
+    <linearGradient id="hullShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4166"/><stop offset=".5" stop-color="#0b2240"/><stop offset="1" stop-color="#142f50"/></linearGradient>
+    <linearGradient id="stationShade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0b1d33"/><stop offset="1" stop-color="#173658"/></linearGradient>
+    <linearGradient id="fuelLevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#c47a12"/></linearGradient>
+    <clipPath id="tankClip"><rect x="806" y="312" width="52" height="136" rx="10"/></clipPath>
+  </defs>
+
+  <!-- Station -->
+  <g id="station">
+    <text class="s-label" x="135" y="44" text-anchor="middle">STATION</text>
+    <rect x="20" y="60" width="230" height="640" rx="18" class="s-shell station-body"/>
+    <path d="M40 140H230M40 260H230M40 500H230M40 620H230" class="s-divider"/>
+    <text id="stationName" class="s-caption" x="135" y="100" text-anchor="middle">EARTH ORBITAL STATION</text>
+    <text id="berthName" class="s-value-sm" x="135" y="122" text-anchor="middle">BERTH 3</text>
+    <!-- Mooring winches -->
+    <g id="winches"><circle cx="232" cy="170" r="11" class="winch"/><circle cx="232" cy="228" r="11" class="winch"/><circle cx="232" cy="532" r="11" class="winch"/><circle cx="232" cy="590" r="11" class="winch"/></g>
+    <!-- Service socket -->
+    <rect x="186" y="610" width="64" height="70" rx="10" class="s-backing socket"/>
+    <text class="s-caption" x="218" y="702" text-anchor="middle">SERVICES</text>
+    <circle id="socketLamp" cx="218" cy="645" r="9" class="lamp"/>
+    <!-- Docking collar -->
+    <rect x="250" y="312" width="86" height="136" rx="10" class="s-shell collar"/>
+    <rect x="262" y="345" width="74" height="70" rx="6" class="s-channel"/>
+    <text class="s-caption" x="293" y="300" text-anchor="middle">COLLAR</text>
+  </g>
+
+  <!-- Moorings, clamps, gangway and umbilical are drawn between the two; the ship slides in and out. -->
+  <g id="moorings"></g>
+  <g id="gangway"><rect id="gangwayTube" x="336" y="350" width="84" height="60" rx="6"/><text id="gangwayLabel" class="s-caption" x="378" y="436" text-anchor="middle">GANGWAY</text></g>
+  <g id="umbilicalArm">
+    <path id="umbilicalTube" class="tube"/>
+    <path id="fuelStream" class="s-stream thin fuel idle"/>
+    <path id="powerStream" class="s-stream thin station idle"/>
+  </g>
+
+  <g id="ship">
+    <text class="s-label" x="712" y="246" text-anchor="middle">TNS VIGILANT</text>
+    <path d="M440 330Q440 292 486 286L956 268Q986 268 986 300V460Q986 492 956 492L486 474Q440 468 440 430Z" class="hull"/>
+    <path d="M520 300V460M640 296V464M760 292V468" class="s-divider"/>
+    <rect x="420" y="336" width="26" height="88" rx="6" class="s-shell port"/>
+    <text class="s-caption" x="520" y="512" text-anchor="middle">BOW PORT</text>
+    <!-- Hardpoints for the mooring lines -->
+    <g id="hardpoints"><circle cx="520" cy="292" r="7"/><circle cx="640" cy="288" r="7"/><circle cx="520" cy="470" r="7"/><circle cx="640" cy="474" r="7"/></g>
+    <!-- Umbilical reel -->
+    <circle cx="566" cy="452" r="16" class="s-backing reel"/><circle id="reelLamp" cx="566" cy="452" r="6" class="lamp"/>
+    <!-- Fuel tank -->
+    <text class="s-caption" x="832" y="302" text-anchor="middle">FUEL</text>
+    <rect x="806" y="312" width="52" height="136" rx="10" class="s-backing"/>
+    <rect id="tankFill" x="806" y="312" width="52" height="136" clip-path="url(#tankClip)"/>
+    <rect x="806" y="312" width="52" height="136" rx="10" class="s-glass"/>
+    <text id="tankPercent" class="s-value-sm" x="832" y="470" text-anchor="middle">—</text>
+    <!-- Ship bus -->
+    <text class="s-caption" x="700" y="372" text-anchor="middle">SHIP BUS</text>
+    <text id="busPower" class="s-value" x="700" y="402" text-anchor="middle">—</text>
+  </g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">DOCKING CONTROL</div>
+    <div class="scan-caption" id="caption">BOW DOCKING PORT · STATION SERVICES OVER THE UMBILICAL</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state dock-state" id="stateBox" title="Docking state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h6M15 12h6M9 7h6v10H9z"/></svg><span id="state">—</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: the berth -->
+<div class="col left">
+  <section class="panel berth" aria-label="Berth">
+    <div class="thead"><h2>BERTH</h2><small id="berthState" class="chip">—</small></div>
+    <dl class="rows">
+      <div><dt>STATION</dt><dd id="stationRow">—</dd></div>
+      <div><dt>PORT CONTACT</dt><dd id="contactRow">—</dd></div>
+    </dl>
+    <div class="group"><div class="ghead"><small>MOORINGS</small><b id="mooringCount">—</b></div><div class="lamps" id="mooringLamps"></div></div>
+    <div class="group"><div class="ghead"><small>CLAMPS</small><b id="clampCount">—</b></div><div class="lamps" id="clampLamps"></div></div>
+    <dl class="rows">
+      <div><dt>GANGWAY</dt><dd id="gangwayRow">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: station services -->
+<div class="col right">
+  <section class="panel services" aria-label="Station services">
+    <div class="thead"><h2>SERVICES</h2><small id="servicesState" class="chip">—</small></div>
+    <div class="service"><div class="ghead"><small>UMBILICAL</small><b id="umbilicalRow">—</b></div><div class="bar"><i id="umbilicalFill"></i></div></div>
+    <div class="service"><div class="ghead"><small>FUEL</small><b id="fuelRow">—</b></div><div class="bar fuel-bar"><i id="fuelFill"></i></div><small class="sub" id="fuelSub">—</small></div>
+    <div class="service"><div class="ghead"><small>STATION POWER</small><b id="powerRow">—</b></div><small class="sub" id="powerSub">—</small></div>
+    <dl class="rows">
+      <div><dt>LIFE SUPPORT</dt><dd id="lifeRow">—</dd></div>
+      <div><dt>DATA LINK</dt><dd id="dataRow">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Docking functions">
+  <button type="button" id="umbilicalBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c4 0 4-10 9-10s5 10 9 10"/><circle cx="3" cy="17" r="1.6"/><circle cx="21" cy="17" r="1.6"/></svg></span><span id="umbilicalLabel">EXTEND UMBILICAL</span></button>
+  <button type="button" id="fuelBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4.5 5.5 7.6 5.5 10.6a5.5 5.5 0 0 1-11 0C6.5 10.6 9 7.5 12 3Z"/></svg></span><span id="fuelLabel">REQUEST FUEL</span></button>
+  <button type="button" id="powerBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h6l-1 8 8-12h-6Z"/></svg></span><span id="powerLabel">REQUEST POWER</span></button>
+  <button type="button" id="gangwayBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="8" rx="1.5"/><path d="M8 8v8M16 8v8"/></svg></span><span id="gangwayBtnLabel">PRESSURIZE GANGWAY</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="logBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>DOCK LOG</button>
+</nav>
+
+<!-- Dock master's log -->
+<dialog id="logDialog" class="modal" aria-labelledby="logTitle">
+  <div class="mhead"><h2 id="logTitle">DOCK LOG</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <ol class="log" id="logList"></ol>
+  <p class="mnote">Requests to the station and its replies, newest first.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Dock, the station's release, undock, our fuel level, and what the station can supply</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Docked and secured at Earth Orbital Station, umbilical retracted, fuel at 35%</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>SHIP</h3>
+        <p class="mstatus" id="demoStatus"></p>
+        <div class="mrow"><button type="button" id="demoDock">DOCK AT STATION</button><button type="button" id="demoUndock">UNDOCK NOW</button></div>
+        <button type="button" id="demoRelease" class="wide">STATION RELEASES THE SHIP</button>
+        <p class="mnote">Dock stands in for the Helm's auto dock: the ship closes on the berth and the station runs out its moorings and clamps. The station's release stands in for the comm officer's request and the station's reply; the station holds it until the umbilical is retracted and the gangway sealed. Undock now puts the ship back in free flight at once.</p>
+        <div class="field" data-field="fuel"><div><small>FUEL IN THE TANK</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+      </div>
+      <div class="msection">
+        <h3>STATION</h3>
+        <label class="switch"><input type="checkbox" id="demoStationFuel"><span></span>Fuel available at this berth</label>
+        <label class="switch"><input type="checkbox" id="demoStationPower"><span></span>Power available at this berth</label>
+        <div class="field" data-field="approval"><div><small>DOCK MASTER REPLY TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="docking.js?v=3"></script>
+</body>
+</html>

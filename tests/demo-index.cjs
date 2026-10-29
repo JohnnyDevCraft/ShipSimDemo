@@ -8,6 +8,15 @@ run({
     await expect(page).toHaveTitle(/Navigation Control/);
     await expect(page.locator('#odName')).toHaveText('Gliese 1061');
   },
+  'the demo index lists Docking Control after Power Distribution and opens it': async ({ open }) => {
+    const page = await open('/');
+    const cards = page.locator('nav[aria-label="Bridge demos"] a strong');
+    await expect(cards.nth(4)).toHaveText(/^Power Distribution/);
+    await expect(cards.nth(5)).toHaveText(/^Docking Control/);
+    await page.getByRole('link', { name: /Docking Control/ }).click();
+    await expect(page).toHaveTitle(/Docking Control/);
+    await expect(page.locator('#schematic')).toBeVisible();
+  },
   'the demo index lists Battery Control beside Reactor Control and opens it': async ({ open }) => {
     const page = await open('/index.html');
     const cards = page.locator('nav[aria-label="Bridge demos"] a strong');

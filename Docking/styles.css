@@ -1,0 +1,116 @@
+/* Docking Control. The shared console look is in ../Shared/console.css; this adds the berth schematic (in the
+   drawing style of Battery and Reactor Control), the berth and services panels, and the dialogs. Landscape only. */
+:root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.4rem; }
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.thead h2, .thead small { white-space: nowrap; }
+.thead { gap: 0.6rem; }
+.dock-state span { white-space: nowrap; }
+[data-level="ok"].dock-state, .chip[data-level="ok"], b[data-level="ok"] { color: var(--green); }
+[data-level="busy"].dock-state, .chip[data-level="busy"], b[data-level="busy"] { color: var(--cyan); }
+[data-level="off"].dock-state, .chip[data-level="off"], b[data-level="off"] { color: var(--muted); }
+.light { flex: none; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #3d4f63; }
+.light[data-state="on"] { background: var(--green); box-shadow: 0 0 0.5rem var(--green); }
+.light[data-state="busy"] { background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
+
+body.docking {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
+
+/* ── Schematic ──────────────────────────────────────────────────────────────────────────────── */
+#schematic {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#schematic text { font-variant-numeric: tabular-nums; }
+.s-label { fill: var(--muted); font-size: 17px; font-weight: 600; letter-spacing: 2.4px; }
+.s-value { fill: var(--text); font-size: 22px; font-weight: 600; }
+.s-value[data-state="station"] { fill: #e0d0ff; }
+.s-value-sm { fill: #e8fff8; font-size: 16px; font-weight: 600; }
+.s-caption { fill: var(--muted); font-size: 13.5px; letter-spacing: 1.4px; }
+.s-shell { fill: rgba(8, 24, 44, 0.88); stroke: var(--edge); stroke-width: 2; }
+.station-body { fill: url(#stationShade); }
+.s-glass { fill: none; stroke: rgba(150, 210, 255, 0.35); stroke-width: 1.5; }
+.s-backing { fill: rgba(2, 8, 18, 0.84); stroke: var(--edge-soft); stroke-width: 1.5; }
+.s-divider { fill: none; stroke: var(--edge-soft); stroke-width: 1.5; }
+.s-channel { fill: #020a14; }
+.hull { fill: url(#hullShade); stroke: #4b86b8; stroke-width: 2; }
+.winch { fill: #0d2440; stroke: #4b86b8; stroke-width: 2; }
+#hardpoints circle { fill: #0d2440; stroke: #7cb6e8; stroke-width: 2; }
+.lamp { fill: #3d4f63; }
+.lamp[data-state="on"] { fill: var(--green); filter: drop-shadow(0 0 5px var(--green)); }
+.lamp[data-state="busy"] { fill: var(--amber); filter: drop-shadow(0 0 5px var(--amber)); }
+
+/* Mooring lines: amber while tensioning or slack, green when engaged, hidden when stowed. */
+#moorings path { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke 0.3s; }
+#moorings path[data-state="stowed"] { display: none; }
+#moorings path[data-state="tension"], #moorings path[data-state="slack"] { stroke: var(--amber); stroke-dasharray: 10 8; filter: drop-shadow(0 0 4px rgba(255, 182, 72, 0.6)); }
+#moorings path[data-state="engaged"] { stroke: var(--green); filter: drop-shadow(0 0 4px rgba(79, 224, 141, 0.6)); }
+/* Clamp jaws reach out from the collar onto the port. */
+#moorings rect { stroke-width: 2; transition: x 0.3s, fill 0.3s; }
+#moorings rect[data-state="open"] { fill: #1b3047; stroke: #3d5875; }
+#moorings rect[data-state="locking"], #moorings rect[data-state="releasing"] { fill: #6b4a12; stroke: var(--amber); }
+#moorings rect[data-state="locked"] { fill: #1f6b45; stroke: var(--green); filter: drop-shadow(0 0 4px rgba(79, 224, 141, 0.6)); }
+/* The gangway fills as it pressurizes. */
+#gangwayTube { --fill: 0; fill: rgba(2, 8, 18, 0.7); stroke: #3d5875; stroke-width: 2; }
+#gangwayTube[data-state="pressurizing"], #gangwayTube[data-state="sealing"] { fill: color-mix(in srgb, #ffb648 calc(var(--fill) * 45%), rgba(2, 8, 18, 0.7)); stroke: var(--amber); }
+#gangwayTube[data-state="open"] { fill: rgba(79, 224, 141, 0.28); stroke: var(--green); filter: drop-shadow(0 0 5px rgba(79, 224, 141, 0.5)); }
+/* The umbilical pays out from our reel. */
+.tube { fill: none; stroke: #4e6f8f; stroke-width: 26; stroke-linecap: round; }
+.tube[data-state="connected"] { stroke: #5b84aa; }
+.s-stream { fill: none; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 8 16; transition: opacity 0.3s; }
+.s-stream.fuel { stroke: #ffc35a; filter: drop-shadow(0 0 4px #ffb648); }
+.s-stream.station { stroke: #c5a8f0; filter: drop-shadow(0 0 4px #c5a8f0); }
+.s-stream.idle { opacity: 0; }
+#tankFill { fill: url(#fuelLevel); filter: drop-shadow(0 0 8px rgba(255, 182, 72, 0.5)); transition: y 0.3s, height 0.3s; }
+#tankFill[data-level="low"] { fill: #c0392b; }
+
+/* ── Panels ─────────────────────────────────────────────────────────────────────────────────── */
+.berth, .services { width: 100%; min-width: 0; flex: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.7rem; padding: 0.9rem 1rem 1rem; }
+.rows dt { flex: none; }
+.rows dd { min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.rows div { padding: 0.38rem 0; }
+.rows dd { font-size: 0.8rem; }
+.group, .service { display: grid; gap: 0.45rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--edge-soft); }
+.ghead { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+.ghead b { font-size: 0.74rem; letter-spacing: 0.08em; font-weight: 600; white-space: nowrap; }
+.lamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.lamp-cell { display: flex; align-items: center; justify-content: center; gap: 0.35rem; padding: 0.35rem 0; border: 1px solid var(--edge-soft); border-radius: 0.45rem; font-size: 0.66rem; letter-spacing: 0.08em; color: var(--muted); }
+.service .sub { font-size: 0.66rem; color: var(--muted); letter-spacing: 0.04em; }
+.fuel-bar i { background: linear-gradient(90deg, #c47a12, #ffd27a); box-shadow: 0 0 0.6rem rgba(255, 182, 72, 0.5); }
+.fuel-bar i[data-level="low"] { background: var(--red); box-shadow: 0 0 0.6rem var(--red); }
+
+/* ── Advisory and bottom bar ────────────────────────────────────────────────────────────────── */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--green);
+}
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
+.advisory[data-level="off"] { color: var(--muted); }
+.dock { padding: 0.75rem 2.1rem 0; }
+/* The panels sit at the top; the columns stop above the bottom bar, which is wider than the gap between them. */
+.col.left, .col.right { bottom: calc(var(--dock-h) + 0.5rem); }
+.dock button { min-width: 5.6rem; }
+.dock button[data-level="on"] { color: var(--green); }
+.dock button[data-level="on"] .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
+.dock button[data-level="busy"] { color: var(--cyan); }
+.dock button[data-level="busy"] .ring { border-color: var(--cyan); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 1.1rem var(--glow); } 50% { box-shadow: 0 0 0.3rem var(--glow); } }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+#logDialog { width: min(40rem, 94vw); }
+.log { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; max-height: 55dvh; overflow: auto; }
+.log li { display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; padding: 0.5rem 0.7rem; border: 1px solid var(--edge-soft); border-radius: 0.5rem; font-size: 0.82rem; }
+.log time { color: var(--cyan); font-variant-numeric: tabular-nums; }
+.log .empty { display: block; color: var(--muted); }

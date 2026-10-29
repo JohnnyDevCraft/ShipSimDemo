@@ -47,8 +47,9 @@ body.reactor {
 .s-pump { fill: #0e2742; stroke: #4b86b8; stroke-width: 2; }
 .s-rotor { fill: #9cc8ff; }
 .s-ring-outer { fill: none; stroke: rgba(215, 170, 103, 0.3); stroke-width: 2; }
-.s-ring { fill: none; stroke: #d7aa67; stroke-width: 5; transition: stroke 0.3s; }
-.s-ring.weak { stroke: #ff6b78; stroke-dasharray: 14 10; }
+.s-ring { fill: none; stroke: #d7aa67; stroke-width: 5; transition: stroke 0.3s, stroke-width 0.3s; }
+#confinementRing[data-state="unstable"] { filter: drop-shadow(0 0 6px rgba(255, 64, 72, 0.7)); }
+#confinementRing[data-state="off"] { filter: drop-shadow(0 0 3px rgba(61, 139, 255, 0.7)); }
 .s-core-value { fill: #fff; font-size: 34px; font-weight: 700; paint-order: stroke; stroke: rgba(2, 12, 24, 0.75); stroke-width: 5px; }
 .s-core-caption { fill: #eaf8ff; font-size: 13.5px; letter-spacing: 2px; paint-order: stroke; stroke: rgba(2, 12, 24, 0.75); stroke-width: 4px; }
 .s-core-out { fill: #ff6b78; font-size: 38px; font-weight: 700; letter-spacing: 3px; }
@@ -93,7 +94,8 @@ body.reactor {
 .vs-target::after { content: ''; position: absolute; right: -0.55rem; top: calc(1px - 0.35rem); border: 0.35rem solid transparent; border-right-color: var(--amber); }
 
 /* ── Dock ───────────────────────────────────────────────────────────────────────────────────── */
-.dock button:disabled { opacity: 0.4; cursor: not-allowed; }
+.dock button:disabled, .dock button.blocked { opacity: 0.4; cursor: not-allowed; }
+.dock button.blocked:hover .ring { border-color: var(--edge); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
 .dock .eject { color: #ffb4a8; }
 .dock .eject .ring { border-color: #a5513f; background: radial-gradient(circle, rgba(110, 30, 24, 0.7), rgba(30, 6, 6, 0.85)); box-shadow: 0 0 0.8rem rgba(255, 70, 50, 0.35), inset 0 0 0.8rem rgba(255, 70, 50, 0.25); }
 .dock .eject:hover:not(:disabled) .ring { border-color: #ff8a70; box-shadow: 0 0 1.1rem rgba(255, 90, 60, 0.6); }

@@ -31,20 +31,61 @@ run({
     await demoControls(page, () => page.locator('#takeDamage').click());
     await expect(page.locator('#damageGauge')).toHaveAttribute('aria-valuenow', '10.0');
   },
-  'a cold start, then Initialize runs the startup sequence with the controls locked': async ({ open }) => {
+  'a cold start, then Initialize ramps fuel to idle (10%) with every control locked': async ({ open }) => {
     const page = await open('/Reactor/');
     await coldStart(page);
     await expect(page.locator('#state')).toHaveText('OFFLINE');
     await expect(page.locator('#advisory')).toHaveText(/Reactor cold/);
-    await expect(page.locator('#stop')).toBeDisabled();
+    await expect(page.locator('#stop')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#confinementRing')).toHaveAttribute('data-state', 'off');
     await page.locator('#start').click();
     await expect(page.locator('#state')).toHaveText('INITIALIZING');
     await expect(page.locator('#sequenceNote')).toHaveText('AUTO · STARTUP');
-    await expect(page.locator('#flowSlider')).toHaveAttribute('aria-disabled', 'true');
-    await expect(page.locator('#coolantSlider')).toHaveAttribute('aria-disabled', 'false');
+    for (const slider of ['#flowSlider', '#beamSlider', '#angleSlider', '#coolantSlider']) await expect(page.locator(slider)).toHaveAttribute('aria-disabled', 'true');
     await page.evaluate(() => ReactorControl.step(1000));
     await expect(page.locator('#state')).toHaveText('ONLINE');
-    await expect(page.locator('#flowSlider')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#flowValue')).toHaveText('0.100');
+    for (const slider of ['#flowSlider', '#beamSlider', '#angleSlider', '#coolantSlider']) await expect(page.locator(slider)).toHaveAttribute('aria-disabled', 'false');
+    assert.ok((await state(page)).temperature < 80, 'startup kept the chamber cool');
+  },
+  'a running reactor cannot take fuel flow below idle': async ({ open }) => {
+    const page = await open('/Reactor/');
+    await page.locator('#flowSlider').focus();
+    await page.keyboard.press('Home');
+    await expect(page.locator('#flowValue')).toHaveText('0.100');
+    await expect(page.locator('#flowSlider .vs-floor')).toBeVisible();
+    await expect(page.locator('#sequenceNote')).toHaveText('MIN 10% FUEL');
+  },
+  'a controlled shutdown needs idle fuel, 80% stability and a green chamber, then ramps fuel to zero': async ({ open }) => {
+    const page = await open('/Reactor/');
+    // A blocked Shutdown is still tappable (marked aria-disabled, not disabled), so the tap can say why.
+    const tryShutdown = async reason => {
+      await page.locator('#stop').click({ force: true });
+      await expect(page.locator('#notice')).toHaveText(reason);
+      await expect(page.locator('#state')).not.toHaveText('CONTROLLED SHUTDOWN');
+    };
+    await tryShutdown(/fuel flow down to idle/);
+    await page.locator('#flowSlider').focus();
+    await page.keyboard.press('Home');
+    // Settle at idle with the beam the reactor needs, then overdrive it by 30%: about 70% stability.
+    const tune = factor => page.evaluate(times => { for (let i = 0; i < 400; i++) ReactorControl.set({ controls: { beam: ReactorControl.state().readings.required * times } }); }, factor);
+    await tune(1);
+    await tune(1.3);
+    await expect(page.locator('#confinementRing')).toHaveAttribute('data-state', 'unstable');
+    await tryShutdown(/Plasma stability must be 80%/);
+    await tune(1);
+    await expect(page.locator('#confinementRing')).toHaveAttribute('data-state', 'stable');
+    await page.evaluate(() => ReactorControl.set({ temperature: 85 }));
+    await tryShutdown(/must be in the green/);
+    await page.evaluate(() => ReactorControl.set({ temperature: 30 }));
+    await expect(page.locator('#advisory')).toHaveText(/Ready for a controlled shutdown/);
+    await page.locator('#stop').click();
+    await expect(page.locator('#state')).toHaveText('CONTROLLED SHUTDOWN');
+    await expect(page.locator('#coolantSlider')).toHaveAttribute('aria-disabled', 'true');
+    await page.evaluate(() => ReactorControl.step(600));
+    await expect(page.locator('#state')).toHaveText('OFFLINE');
+    await expect(page.locator('#flowValue')).toHaveText('0.000');
+    await expect(page.locator('#confinementRing')).toHaveAttribute('data-state', 'off');
   },
   'the sliders set the controls, and the confinement slider marks the beam the reactor needs': async ({ open }) => {
     const page = await open('/Reactor/');
@@ -54,7 +95,7 @@ run({
     await page.keyboard.press('End');
     await expect(page.locator('#flowValue')).toHaveText('1.000');
     await page.keyboard.press('Home');
-    await expect(page.locator('#flowValue')).toHaveText('0.000');
+    await expect(page.locator('#flowValue')).toHaveText('0.100');
     const box = await page.locator('#coolantSlider .vs-body').boundingBox();
     await page.mouse.click(box.x + box.width / 4, box.y + box.height * 0.5);
     const coolant = (await state(page)).controls.coolant;
@@ -62,6 +103,8 @@ run({
   },
   'damage breaks subsystems, which show on the schematic and in Maintenance': async ({ open }) => {
     const page = await open('/Reactor/');
+    // On a cold reactor, so the faults cannot set off a containment failure mid-test.
+    await coldStart(page);
     await page.evaluate(() => ReactorControl.setDamage(55));
     const { faults } = await state(page);
     assert.ok(faults.length >= 2, `faults after 55% damage (${faults})`);
@@ -70,7 +113,9 @@ run({
     await page.locator('#maintenanceBtn').click();
     await expect(page.locator('#faultCount')).toHaveText(`${faults.length} FAULTS`);
     await expect(page.locator('.component[data-state="fault"]')).toHaveCount(faults.length);
-    // Replacing a part needs a cold reactor.
+    // Replacing a part needs a cold reactor with every control at zero.
+    await expect(page.locator('.component[data-state="fault"] button').first()).toBeEnabled();
+    await page.evaluate(() => ReactorControl.set({ controls: { coolant: 10 } }));
     await expect(page.locator('.component[data-state="fault"] button').first()).toBeDisabled();
     await page.locator('#repair').click();
     await expect(page.locator('#repair')).toHaveText('PAUSE REPAIRS');

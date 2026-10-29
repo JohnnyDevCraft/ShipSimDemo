@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Life Support Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="life">
+
+<!-- The life support system: what feeds it (the station over the umbilical, or ship power) on the left, the plant
+     in the middle, and what it supplies (the cabin's air and temperature, and gravity) on the right. -->
+<svg id="schematic" viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The station feed and ship power supply the life support plant, which supplies the cabin air and gravity">
+  <!-- Ducts and their streams -->
+  <path d="M260 175H310V255H355" class="duct"/>
+  <path id="stationStream" d="M260 175H310V255H355" class="s-stream station idle"/>
+  <path d="M260 480H310V420H355" class="duct"/>
+  <path id="shipStream" d="M260 480H310V420H355" class="s-stream power idle"/>
+  <path d="M645 255H692V215H740" class="duct"/>
+  <path id="airStream" d="M645 255H692V215H740" class="s-stream air idle"/>
+  <path d="M645 445H692V500H740" class="duct"/>
+  <path id="gravityStream" d="M645 445H692V500H740" class="s-stream grav idle"/>
+
+  <!-- Station feed -->
+  <g id="stationBox" class="box">
+    <text class="s-label" x="140" y="58" text-anchor="middle">STATION FEED</text>
+    <rect x="20" y="70" width="240" height="210" rx="18" class="s-shell"/>
+    <circle cx="52" cy="104" r="9" class="lamp"/>
+    <text id="feedState" class="s-caption state" x="70" y="110">—</text>
+    <text class="s-caption" x="140" y="140" text-anchor="middle">OVER THE UMBILICAL</text>
+    <line x1="40" y1="156" x2="240" y2="156" class="s-divider"/>
+    <text class="s-caption" x="44" y="186">AIR</text><text id="feedAir" class="s-value-sm" x="236" y="186" text-anchor="end">—</text>
+    <text class="s-caption" x="44" y="220">HEAT</text><text id="feedHeat" class="s-value-sm" x="236" y="220" text-anchor="end">—</text>
+    <text class="s-caption" x="44" y="254">POWER</text><text id="feedPower" class="s-value-sm" x="236" y="254" text-anchor="end">—</text>
+  </g>
+  <!-- Ship power -->
+  <g id="shipBox" class="box">
+    <text class="s-label" x="140" y="388" text-anchor="middle">SHIP POWER</text>
+    <rect x="20" y="400" width="240" height="160" rx="18" class="s-shell"/>
+    <circle cx="52" cy="434" r="9" class="lamp"/>
+    <text id="shipState" class="s-caption state" x="70" y="440">—</text>
+    <text class="s-caption" x="140" y="478" text-anchor="middle">FROM THE SHIP BUS</text>
+    <text id="shipPower" class="s-value big" x="140" y="530" text-anchor="middle">—</text>
+  </g>
+  <!-- The plant -->
+  <g id="plantBox" class="box">
+    <text class="s-label" x="500" y="128" text-anchor="middle">LIFE SUPPORT PLANT</text>
+    <rect x="355" y="140" width="290" height="400" rx="18" class="s-shell"/>
+    <circle cx="387" cy="174" r="9" class="lamp"/>
+    <text id="plantState" class="s-caption state" x="405" y="180">—</text>
+    <text class="s-caption" x="500" y="216" text-anchor="middle">EFFECTIVENESS</text>
+    <text id="plantEffect" class="s-value big" x="500" y="252" text-anchor="middle">—</text>
+    <line x1="375" y1="272" x2="625" y2="272" class="s-divider"/>
+    <g id="plantUnits"></g>
+  </g>
+  <!-- Cabin -->
+  <g id="cabinBox" class="box">
+    <text class="s-label" x="860" y="58" text-anchor="middle">CABIN</text>
+    <rect x="740" y="70" width="240" height="300" rx="18" class="s-shell"/>
+    <text class="s-caption" x="860" y="104" text-anchor="middle">AMBIENT TEMPERATURE</text>
+    <text id="cabinTempValue" class="s-value big" x="860" y="144" text-anchor="middle">—</text>
+    <line x1="760" y1="166" x2="960" y2="166" class="s-divider"/>
+    <text class="s-caption" x="764" y="200">OXYGEN</text><text id="cabinO2" class="s-value-sm" x="956" y="200" text-anchor="end">—</text>
+    <text class="s-caption" x="764" y="236">CO₂</text><text id="cabinCO2" class="s-value-sm" x="956" y="236" text-anchor="end">—</text>
+    <text class="s-caption" x="764" y="272">CO</text><text id="cabinCO" class="s-value-sm" x="956" y="272" text-anchor="end">—</text>
+    <line x1="760" y1="294" x2="960" y2="294" class="s-divider"/>
+    <text id="cabinState" class="s-caption state" x="860" y="336" text-anchor="middle">—</text>
+  </g>
+  <!-- Gravity -->
+  <g id="gravityBox" class="box">
+    <text class="s-label" x="860" y="428" text-anchor="middle">GRAVITY</text>
+    <rect x="740" y="440" width="240" height="120" rx="18" class="s-shell"/>
+    <text id="gravityValue" class="s-value big" x="860" y="500" text-anchor="middle">—</text>
+    <text id="gravityState" class="s-caption" x="860" y="534" text-anchor="middle">—</text>
+  </g>
+  <text id="outside" class="s-caption" x="500" y="600" text-anchor="middle">OUTSIDE · SPACE</text>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">LIFE SUPPORT CONTROL</div>
+    <div class="scan-caption" id="caption">ATMOSPHERE · TEMPERATURE · GRAVITY</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state life-state" id="stateBox" title="Habitability"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.4-7-10.2A4.3 4.3 0 0 1 12 8a4.3 4.3 0 0 1 7 2.8C19 16.6 12 21 12 21Z"/></svg><span id="state">—</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: the air -->
+<div class="col left">
+  <section class="panel atmosphere" aria-label="Atmosphere">
+    <div class="thead"><h2>ATMOSPHERE</h2><small id="habitability" class="chip">—</small></div>
+    <div class="gas" id="gasO2"><div class="ghead"><small>OXYGEN</small><b data-value>—</b></div><div class="meter"><i data-fill></i><span class="mark" data-mark></span></div><small class="sub" data-note>—</small></div>
+    <div class="gas" id="gasCO2"><div class="ghead"><small>CARBON DIOXIDE</small><b data-value>—</b></div><div class="meter"><i data-fill></i><span class="mark" data-mark></span></div><small class="sub" data-note>—</small></div>
+    <div class="gas" id="gasCO"><div class="ghead"><small>CARBON MONOXIDE</small><b data-value>—</b></div><div class="meter"><i data-fill></i><span class="mark" data-mark></span></div><small class="sub" data-note>—</small></div>
+    <dl class="rows">
+      <div><dt>NON-HABITABLE IN</dt><dd id="timeLeft">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: the systems -->
+<div class="col right">
+  <section class="panel systems" aria-label="Life support systems">
+    <div class="thead"><h2>SYSTEMS</h2><small id="sourceChip" class="chip">—</small></div>
+    <dl class="rows">
+      <div><dt>SOURCE</dt><dd id="sourceRow">—</dd></div>
+      <div><dt>POWER DRAW</dt><dd id="drawRow">—</dd></div>
+      <div><dt>SHIP PLANT</dt><dd id="plantRow">—</dd></div>
+    </dl>
+    <div class="group"><div class="ghead"><small>EFFECTIVENESS</small><b id="effectRow">—</b></div><div class="bar effect-bar"><i id="effectFill"></i></div><small class="sub" id="effectNote">—</small></div>
+    <div class="group"><div class="ghead"><small>GRAVITY</small><b id="gravityRow">—</b></div><div class="bar grav-bar"><i id="gravityFill"></i></div><small class="sub" id="gravityNote">—</small></div>
+    <dl class="rows">
+      <div><dt>CABIN</dt><dd id="cabinTemp">—</dd></div>
+      <div><dt>THERMOSTAT</dt><dd id="setpointRow">—</dd></div>
+      <div><dt>OUTSIDE</dt><dd id="outsideRow">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Life support functions">
+  <button type="button" id="lifeBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.4-7-10.2A4.3 4.3 0 0 1 12 8a4.3 4.3 0 0 1 7 2.8C19 16.6 12 21 12 21Z"/></svg></span><span id="lifeLabel">LIFE SUPPORT ON</span></button>
+  <button type="button" id="gravityBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13M7 11l5 5 5-5"/><path d="M4 20h16"/></svg></span><span id="gravityLabel">GRAVITY ON</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="thermostatBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4a2 2 0 0 1 4 0v9.3a4 4 0 1 1-4 0Z"/><path d="M12 17v-6"/></svg></span>THERMOSTAT</button>
+  <button type="button" id="diagnosticsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Thermostat -->
+<dialog id="thermostatDialog" class="modal narrow" aria-labelledby="thermostatTitle">
+  <div class="mhead"><h2 id="thermostatTitle">THERMOSTAT</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="thermo">
+    <button type="button" id="setDown" class="icon-btn" aria-label="One degree cooler"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+    <div><b id="setpointValue">21 °C</b><small>CABIN SETPOINT</small></div>
+    <button type="button" id="setUp" class="icon-btn" aria-label="One degree warmer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+  </div>
+  <p class="mnote">The cabin temperature the thermal regulator holds, from 16 to 26 °C.</p>
+</dialog>
+
+<!-- Diagnostics -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Fictional model; rates and limits are provisional gameplay values.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Station feed over the umbilical, damage to the plant, and the demo clock</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Docked with the umbilical connected, the plant on and undamaged, air and temperatures normal</span></button>
+    <a href="../Docking/index.html" target="_blank" rel="noopener"><b>Docking Control</b><span>Where the umbilical is run out and retracted</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>STATION</h3>
+        <label class="switch"><input type="checkbox" id="demoFeed"><span></span>Docked, umbilical connected</label>
+        <p class="mnote">Stands in for Docking Control. While connected, the station feeds air, heat and gravity over the umbilical and the ship's plant is redundant.</p>
+      </div>
+      <div class="msection">
+        <h3>SHIP PLANT</h3>
+        <div class="field" data-field="damage"><div><small>DAMAGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <p class="mnote">Damage lowers the plant's effectiveness. Below 80% it cannot keep up with the crew and the air slowly gets worse.</p>
+      </div>
+      <div class="msection">
+        <h3>DEMO CLOCK</h3>
+        <div class="seg" role="group" aria-label="Demo clock"><button type="button" data-speed="1">×1</button><button type="button" data-speed="10">×10</button><button type="button" data-speed="60">×60</button></div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/habitability.js?v=2"></script>
+<script src="lifesupport.js?v=4"></script>
+</body>
+</html>

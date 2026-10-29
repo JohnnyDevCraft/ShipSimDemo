@@ -1,0 +1,134 @@
+/* Life Support Control. The shared console look is in ../Shared/console.css; this adds the system schematic (in
+   the drawing style of Battery, Reactor and Docking Control), the atmosphere and systems panels, and the dialogs.
+   Landscape only. The NON-HABITABLE notice comes from ../Shared/habitability.js. */
+:root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.4rem; --station: #c5a8f0; }
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.thead h2, .thead small { white-space: nowrap; }
+.thead { gap: 0.6rem; }
+.life-state span { white-space: nowrap; }
+/* Levels: ok green, degraded or danger amber, lost red, station violet, busy cyan. */
+[data-level="ok"]:is(.life-state, .chip, b, dd) { color: var(--green); }
+[data-level="degraded"]:is(.life-state, .chip, b, dd), [data-level="danger"]:is(.life-state, .chip, b, dd) { color: var(--amber); }
+[data-level="lost"]:is(.life-state, .chip, b, dd) { color: #ff8f9b; }
+[data-level="station"]:is(.chip, b, dd) { color: var(--station); }
+[data-level="busy"]:is(.chip, b, dd) { color: var(--cyan); }
+dd[data-level="freezing"], dd[data-level="cold"] { color: #8fd0ff; }
+dd[data-level="warm"] { color: var(--amber); }
+dd[data-level="hot"] { color: #ff8f9b; }
+
+body.life {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
+
+/* ── System schematic ───────────────────────────────────────────────────────────────────────── */
+#schematic {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#schematic text { font-variant-numeric: tabular-nums; }
+.s-label { fill: var(--muted); font-size: 17px; font-weight: 600; letter-spacing: 2.4px; }
+.s-value { fill: var(--text); font-size: 22px; font-weight: 600; }
+.s-value.big { font-size: 34px; }
+.s-value-sm { fill: #e8fff8; font-size: 16px; font-weight: 600; }
+.s-caption { fill: var(--muted); font-size: 13.5px; letter-spacing: 1.4px; }
+.s-caption.state { font-size: 15px; font-weight: 600; letter-spacing: 2px; }
+.s-shell { fill: rgba(8, 24, 44, 0.88); stroke: var(--edge); stroke-width: 2; transition: stroke 0.4s; }
+.s-backing { fill: rgba(2, 8, 18, 0.84); stroke: var(--edge-soft); stroke-width: 1.5; }
+.s-divider { stroke: var(--edge-soft); stroke-width: 1.5; }
+.lamp { fill: #3d4f63; }
+.duct { fill: none; stroke: #1b3d60; stroke-width: 18; stroke-linejoin: round; }
+.s-stream { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10 16; transition: opacity 0.3s; }
+.s-stream.station { stroke: var(--station); filter: drop-shadow(0 0 4px var(--station)); }
+.s-stream.power { stroke: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); }
+.s-stream.air { stroke: var(--green); filter: drop-shadow(0 0 4px var(--green)); }
+.s-stream.grav { stroke: #8fa8ff; filter: drop-shadow(0 0 4px #6f8fff); }
+.s-stream.idle { opacity: 0; }
+/* Box states light the lamp and the state caption. */
+#stationBox[data-state="on"] .lamp { fill: var(--station); filter: drop-shadow(0 0 5px var(--station)); }
+#stationBox[data-state="on"] .state { fill: #e0d0ff; }
+#stationBox[data-state="on"] .s-shell { stroke: rgba(197, 168, 240, 0.8); }
+#shipBox[data-state="on"] .lamp { fill: var(--cyan); filter: drop-shadow(0 0 5px var(--cyan)); }
+#shipBox[data-state="on"] .state { fill: var(--cyan); }
+#plantBox[data-state="on"] .lamp { fill: var(--green); filter: drop-shadow(0 0 5px var(--green)); }
+#plantBox[data-state="on"] .state { fill: var(--green); }
+#plantBox[data-state="weak"] .lamp { fill: var(--amber); filter: drop-shadow(0 0 5px var(--amber)); }
+#plantBox[data-state="weak"] .state, #plantBox[data-state="weak"] #plantEffect { fill: var(--amber); }
+#plantBox[data-state="standby"] .state { fill: var(--station); }
+#plantBox[data-state="off"] .lamp { fill: #ff5968; }
+#plantBox[data-state="off"] .state { fill: #ff8f9b; }
+#plantBox[data-state="off"] .s-shell { stroke: rgba(255, 90, 100, 0.7); }
+.unit-label { fill: #cfe3f5; font-size: 12px; letter-spacing: 0.6px; }
+.unit-value { fill: var(--text); font-size: 13px; font-weight: 600; }
+.unit-track { fill: rgba(90, 140, 190, 0.22); }
+.unit-fill { fill: var(--green); transition: width 0.3s; }
+.unit[data-state="on"] .lamp { fill: var(--green); filter: drop-shadow(0 0 4px var(--green)); }
+.unit[data-state="weak"] .lamp { fill: var(--amber); filter: drop-shadow(0 0 4px var(--amber)); }
+.unit[data-state="weak"] .unit-fill { fill: var(--amber); }
+.unit[data-state="off"] .lamp { fill: #ff5968; }
+.unit[data-state="off"] .unit-value { fill: #ff8f9b; }
+#unit3 .unit-fill { fill: #8fa8ff; }
+#cabinBox .state { fill: var(--green); }
+#cabinBox[data-state="degraded"] .state, #cabinBox[data-state="danger"] .state { fill: var(--amber); }
+#cabinBox[data-state="degraded"] .s-shell, #cabinBox[data-state="danger"] .s-shell { stroke: rgba(255, 182, 72, 0.8); }
+#cabinBox[data-state="lost"] .state { fill: #ff8f9b; }
+#cabinBox[data-state="lost"] .s-shell { stroke: var(--red); }
+#cabinTempValue[data-band="cold"], #cabinTempValue[data-band="freezing"] { fill: #8fd0ff; }
+#cabinTempValue[data-band="warm"] { fill: var(--amber); }
+#cabinTempValue[data-band="hot"] { fill: #ff8f9b; }
+#gravityBox[data-state="on"] .s-shell { stroke: rgba(143, 168, 255, 0.8); }
+#gravityBox[data-state="off"] #gravityValue { fill: var(--amber); }
+
+/* ── Panels ─────────────────────────────────────────────────────────────────────────────────── */
+.atmosphere, .systems { width: 100%; min-width: 0; flex: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.7rem; padding: 0.9rem 1rem 1rem; }
+.rows div { padding: 0.38rem 0; }
+.rows dt { flex: none; }
+.rows dd { min-width: 0; overflow-wrap: anywhere; text-align: right; font-size: 0.8rem; }
+.gas, .group { display: grid; gap: 0.4rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--edge-soft); }
+.ghead { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+.ghead b { font-size: 0.95rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sub { font-size: 0.64rem; color: var(--muted); letter-spacing: 0.03em; }
+.meter { position: relative; height: 0.55rem; border-radius: 1rem; background: rgba(90, 140, 190, 0.22); }
+.meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 1rem; background: var(--green); box-shadow: 0 0 0.5rem var(--green); transition: width 0.3s; }
+.meter .mark { position: absolute; top: -0.25rem; bottom: -0.25rem; width: 2px; background: var(--amber); }
+.gas[data-level="degraded"] .meter i, .gas[data-level="danger"] .meter i { background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
+.gas[data-level="lost"] .meter i { background: var(--red); box-shadow: 0 0 0.5rem var(--red); }
+.gas[data-level="ok"] b { color: var(--text); }
+.gas[data-level="degraded"] b, .gas[data-level="danger"] b { color: var(--amber); }
+.gas[data-level="lost"] b { color: #ff8f9b; }
+.effect-bar i[data-level="warn"] { background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
+.effect-bar i[data-level="bad"] { background: var(--red); box-shadow: 0 0 0.5rem var(--red); }
+.grav-bar i { background: linear-gradient(90deg, #4a6cff, #8fb0ff); box-shadow: 0 0 0.5rem #6f8fff; }
+
+/* ── Advisory and bottom bar ────────────────────────────────────────────────────────────────── */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--green);
+}
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
+.advisory[data-level="busy"] { color: var(--station); border-color: rgba(197, 168, 240, 0.5); }
+.dock button { min-width: 6rem; }
+.dock button[data-level="on"] { color: var(--green); }
+.dock button[data-level="on"] .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
+.dock button[data-level="off"] { color: #ff8f9b; }
+.dock button[data-level="off"] .ring { border-color: rgba(255, 90, 90, 0.7); background: radial-gradient(circle, rgba(110, 24, 30, 0.7), rgba(28, 6, 8, 0.85)); box-shadow: 0 0 1rem rgba(255, 70, 85, 0.35); }
+.dock button[data-level="station"] { color: var(--station); }
+.dock button[data-level="station"] .ring { border-color: var(--station); box-shadow: 0 0 1rem rgba(197, 168, 240, 0.4); }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+.thermo { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1rem; padding: 0.6rem 0 1rem; text-align: center; }
+.thermo b { display: block; font-size: 2.4rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; }
+#diagnosticsDialog { width: min(44rem, 94vw); }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.5); }

@@ -1,41 +1,260 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Transporter · Ship Sim</title><link rel="icon" type="image/x-icon" href="../favicon.ico"><link rel="stylesheet" href="../Reactor/helm-theme.css"><link rel="stylesheet" href="styles.css"></head>
-<body>
-<header><div class="brand"><a href="../index.html" aria-label="Back to demo selector" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px"><img src="../brand/xelseor-emblem.png" alt="" width="44" height="44" style="display:block"></a> <span title="Xelseor Mission Protocol Sim">XMPS</span><b>TRANSPORTER CONTROL</b></div><span class="pill">DISCOVERY PREVIEW</span></header>
-<main>
-  <section class="panel targets-panel"><div class="unavailable-screen" role="status" hidden>System not available</div><div class="powered-content target-content">
-    <div class="sectiontitle">TARGET <span>01 · ACQUIRE</span></div>
-    <fieldset id="sourceControls"><label for="targetType">TARGET TYPE</label><select id="targetType"><option value="bio">Bio · Personnel</option><option value="nonbio">Non-bio · Mission cargo</option></select>
-    <label for="sourceType">TARGET LOCATION</label><select id="sourceType"><option value="pad">Transporter Pad</option><option value="cargo">Cargo Bay</option><option value="other">Other Location</option></select>
-    <label id="sourceOtherLabel" for="sourceOther" hidden>WITHIN RANGE<select id="sourceOther"></select></label>
-    <button id="scan" class="primary">Scan location</button></fieldset>
-    <div class="list-heading"><small>AVAILABLE TARGETS</small><span id="scanCount">—</span></div>
-    <div id="availableTargets" class="target-list" aria-label="Available transport targets"></div>
-    <p class="scan-note" id="scanNote">Scan the selected location to acquire targets.</p></div>
-  </section>
-  <section class="panel transport-panel">
-    <div class="sectiontitle">TRANSPORT <span id="cycleBadge">STANDBY</span></div>
-    <div class="transport-heading"><div><small id="moduleName">TRANSPORTER · MARK I</small><small id="rangeReading"></small><h1>Pattern transfer</h1></div><div class="shield-indicators"><strong id="shieldState">SHIELDS DOWN</strong><small id="remoteShieldState" hidden></small></div><div class="power-stats"><div><small>MINIMUM REQUIRED</small><strong id="minimumReading">1.0 PU</strong></div><div><small>POWER IN USE</small><strong id="powerUsed">0.0 <em>PU</em></strong></div><div><small>AVAILABLE POWER</small><strong id="powerAvailable">12.0 <em>PU</em></strong></div></div></div>
-    <div class="unavailable-screen" role="status" hidden>System not available</div><div class="powered-content transport-content">
-    <div class="transport-workspace">
-      <div class="manifest"><div class="list-heading"><small>SELECTED TARGETS</small><span id="selectedCount">0</span></div><div id="selectedTargets" class="target-grid" aria-label="Selected transport targets"></div></div>
-      <div class="transfer-console">
-        <div class="lever"><label for="dematerialize">DEMATERIALIZE</label><output id="dematValue">0%</output><input class="vertical" id="dematerialize" aria-label="Dematerialization power" type="range" min="0" max="100" value="0"><small>INTO BUFFER</small></div>
-        <div class="buffer"><small>PATTERN BUFFER</small><div class="buffer-chamber" id="bufferChamber"><div class="buffer-fill" id="bufferFill"></div><div class="buffer-grid"></div><div class="buffer-center"><span class="buffer-symbol">◈</span><strong id="bufferCount">EMPTY</strong><small id="bufferState">AWAITING PATTERNS</small></div><div id="bufferTargets" class="target-grid" aria-label="Buffered transport targets" hidden></div></div><div class="buffer-meter"><span id="bufferPercent">0%</span><small>BUFFER OCCUPANCY</small><small id="massReading"></small><small id="speedReading"></small></div></div>
-        <div class="lever"><label for="materialize">MATERIALIZE</label><output id="matValue">0%</output><input class="vertical" id="materialize" aria-label="Materialization power" type="range" min="0" max="100" value="0"><small>TO DESTINATION</small></div>
-      </div>
-      <div class="manifest delivered"><div class="list-heading"><small>DELIVERED TARGETS</small><span id="deliveredCount">0</span></div><div id="deliveredTargets" class="target-grid" aria-label="Delivered transport targets"></div></div>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Transporter Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="transporter">
+
+<!-- The transfer schematic fills the space between the side panels: source pad, pattern buffer, destination. -->
+<svg id="schematic" viewBox="0 0 1000 880" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Targets dematerialize from the source into the pattern buffer, then materialize at the destination">
+  <defs>
+    <radialGradient id="padGlow"><stop offset="0" stop-color="#bff6ff" stop-opacity="0.9"/><stop offset=".45" stop-color="#4fd6ff" stop-opacity="0.45"/><stop offset="1" stop-color="#0a3a66" stop-opacity="0"/></radialGradient>
+    <linearGradient id="beamColumn" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9ff0ff" stop-opacity="0.75"/><stop offset=".7" stop-color="#4fd6ff" stop-opacity="0.18"/><stop offset="1" stop-color="#4fd6ff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="bufferLiquid" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1a6fe6" stop-opacity="0.85"/><stop offset="1" stop-color="#4fd6ff" stop-opacity="0.55"/></linearGradient>
+    <linearGradient id="pipeShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d5a82"/><stop offset=".45" stop-color="#0e2742"/><stop offset="1" stop-color="#173a5c"/></linearGradient>
+    <pattern id="checker" width="28" height="28" patternUnits="userSpaceOnUse"><rect width="28" height="28" fill="#000"/><rect width="14" height="14" fill="#0c1218"/><rect x="14" y="14" width="14" height="14" fill="#0c1218"/></pattern>
+    <clipPath id="bufferClip"><rect x="398" y="282" width="204" height="296" rx="34"/></clipPath>
+  </defs>
+
+  <!-- Gauges across the top -->
+  <g id="gauges"></g>
+
+  <g id="stations">
+    <!-- Source -->
+    <g id="sourceNode" class="node">
+      <text class="s-label" x="150" y="262" text-anchor="middle">SOURCE</text>
+      <text id="sourceName" class="s-name" x="150" y="292" text-anchor="middle">Transporter Pad</text>
+      <text id="sourceWhere" class="s-caption" x="150" y="316" text-anchor="middle">ON BOARD · DECK 4</text>
+      <rect id="sourceBeam" x="92" y="300" width="116" height="120" class="s-beam" opacity="0"/>
+      <g class="pad-art" transform="translate(150 430)"></g>
+      <text id="sourceShield" class="s-chip" x="150" y="530" text-anchor="middle" hidden></text>
+    </g>
+
+    <!-- Dematerialize stream into the buffer -->
+    <g id="dematPipe">
+      <text class="s-label pipe-label" x="320" y="402" text-anchor="middle">DEMATERIALIZE</text>
+      <rect x="250" y="416" width="140" height="32" rx="8" class="s-pipe"/>
+      <rect x="250" y="424" width="140" height="16" class="s-channel"/>
+      <line id="dematStream" x1="252" y1="432" x2="388" y2="432" class="s-stream"/>
+      <text id="dematReading" class="s-caption" x="320" y="474" text-anchor="middle">0%</text>
+    </g>
+
+    <!-- Pattern buffer -->
+    <g id="buffer">
+      <text class="s-label" x="500" y="252" text-anchor="middle">PATTERN BUFFER</text>
+      <rect x="390" y="274" width="220" height="312" rx="40" class="s-shell"/>
+      <g clip-path="url(#bufferClip)">
+        <rect id="bufferFill" x="398" y="578" width="204" height="0" fill="url(#bufferLiquid)"/>
+        <g id="bufferGrid" class="s-grid"></g>
+        <g id="bufferSparks"></g>
+      </g>
+      <rect x="398" y="282" width="204" height="296" rx="34" class="s-glass"/>
+      <rect x="410" y="384" width="180" height="92" rx="10" class="s-backing"/>
+      <text id="bufferCount" class="s-value" x="500" y="424" text-anchor="middle">EMPTY</text>
+      <text id="bufferState" class="s-caption buffer-state" x="500" y="456" text-anchor="middle">AWAITING PATTERNS</text>
+      <text id="bufferPercent" class="s-value-sm" x="500" y="316" text-anchor="middle">0%</text>
+      <text id="routeLine" class="s-caption" x="500" y="618" text-anchor="middle">NO TARGETS SELECTED</text>
+    </g>
+
+    <!-- Materialize stream out of the buffer -->
+    <g id="matPipe">
+      <text class="s-label pipe-label" x="680" y="402" text-anchor="middle">MATERIALIZE</text>
+      <rect x="610" y="416" width="140" height="32" rx="8" class="s-pipe"/>
+      <rect x="610" y="424" width="140" height="16" class="s-channel"/>
+      <line id="matStream" x1="612" y1="432" x2="748" y2="432" class="s-stream"/>
+      <text id="matReading" class="s-caption" x="680" y="474" text-anchor="middle">0%</text>
+    </g>
+
+    <!-- Destination -->
+    <g id="destinationNode" class="node" role="button" tabindex="0" aria-label="Choose the destination">
+      <text class="s-label" x="850" y="262" text-anchor="middle">DESTINATION</text>
+      <text id="destinationName" class="s-name" x="850" y="292" text-anchor="middle">Cargo Bay</text>
+      <text id="destinationWhere" class="s-caption" x="850" y="316" text-anchor="middle">ON BOARD · DECK 6</text>
+      <rect id="destinationBeam" x="792" y="300" width="116" height="120" class="s-beam" opacity="0"/>
+      <g class="pad-art" transform="translate(850 430)"></g>
+      <text id="destinationAir" class="s-chip" x="850" y="530" text-anchor="middle">BREATHABLE · 289 K</text>
+      <text id="destinationShield" class="s-chip" x="850" y="556" text-anchor="middle" hidden></text>
+    </g>
+
+    <!-- Selected targets waiting at the source, and what has been delivered -->
+    <g id="manifest"><text class="s-label" x="150" y="582" text-anchor="middle">SELECTED <tspan id="manifestCount">0</tspan></text></g>
+    <g id="deliveredList"><text class="s-label" x="850" y="582" text-anchor="middle">DELIVERED <tspan id="deliveredCount">0</tspan></text></g>
+  </g>
+
+  <!-- Below minimum power the workspace is replaced by a checkered screen. -->
+  <g id="offline" hidden>
+    <rect x="20" y="230" width="960" height="640" rx="16" fill="url(#checker)" stroke="rgba(70,160,240,.35)"/>
+    <text class="s-offline" x="500" y="540" text-anchor="middle">SYSTEM NOT AVAILABLE</text>
+    <text id="offlineNote" class="s-caption" x="500" y="580" text-anchor="middle"></text>
+  </g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">TRANSPORTER CONTROL</div>
+    <div class="scan-caption" id="caption">COMPACT TRANSPORTER · MARK I · RANGE 10,000 KM · POWER IN PU</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state shield-state" id="shieldBox" title="Our shields"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6Z"/></svg><span id="shieldState">SHIELDS DOWN</span></div>
+    <div class="ship-state cycle-state" id="stateBox" title="Transport cycle"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="19" rx="7" ry="2.4"/><path d="M7 17V7M17 17V7M12 16V4"/><path d="M9.5 12h5M9.5 8h5"/></svg><span id="state">STANDBY</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: what we are beaming, and from where -->
+<div class="col left">
+  <section class="panel targets" aria-label="Target scan">
+    <div class="thead"><h2>TARGET SCAN</h2><small id="targetNote">01 · ACQUIRE</small></div>
+    <div class="offline-screen" role="status" hidden>SYSTEM NOT AVAILABLE</div>
+    <div class="panel-body" id="sourceControls">
+      <div class="cgroup"><small>TARGET TYPE</small>
+        <div class="seg" role="group" aria-label="Target type"><button type="button" data-kind="bio">BIO · PERSONNEL</button><button type="button" data-kind="nonbio">NON-BIO · CARGO</button></div></div>
+      <div class="cgroup"><small>TARGET LOCATION</small>
+        <div class="seg" role="group" aria-label="Target location"><button type="button" data-source="pad">PAD</button><button type="button" data-source="cargo">CARGO BAY</button><button type="button" data-source="other">OTHER</button></div></div>
+      <button type="button" id="sourceOther" class="picker" data-open="sourceDialog" hidden><small>WITHIN RANGE</small><b id="sourceOtherName">—</b></button>
+      <button type="button" id="scan" class="primary wide">SCAN LOCATION</button>
+      <div class="list-head"><small>AVAILABLE TARGETS</small><b id="scanCount">—</b></div>
+      <div id="targetList" class="target-list" role="list" aria-label="Available transport targets"></div>
+      <p id="scanNote" class="list-note">Scan the selected location to acquire targets.</p>
     </div>
-    <div class="cycle-bottom"><div class="cycle-status-row"><p id="cycleStatus" role="status">Select targets and a destination to begin.</p><button id="clearTransport">Clear Transport</button></div><div class="progress-heading"><small id="actionLabel">TRANSPORT PROGRESS</small><strong id="progressValue">0%</strong></div><progress id="cycleProgress" max="100" value="0" aria-label="Current transport action progress"></progress><div class="bottom-readings"><span id="routeSummary">No targets selected</span><span>MAX VARIABLE POWER <b id="maxPowerReading">12.0 PU</b></span></div></div>
-  </div></section>
-  <section class="panel destination-panel"><div class="unavailable-screen" role="status" hidden>System not available</div><div class="powered-content destination-content">
-    <div class="sectiontitle">DESTINATION <span>02 · DELIVER</span></div>
-    <fieldset id="destinationControls"><label for="destinationType">DESTINATION LOCATION</label><select id="destinationType"><option value="pad">Transporter Pad</option><option value="cargo" selected>Cargo Bay</option><option value="other">Other Location</option></select><label id="destinationOtherLabel" for="destinationOther" hidden>WITHIN RANGE<select id="destinationOther"></select></label></fieldset>
-    <div class="destination-summary"><span class="destination-symbol">⌖</span><strong id="destinationName">Cargo Bay</strong><small id="destinationDistance">ON BOARD</small></div>
-    <div class="environment"><div class="sectiontitle">DESTINATION CONDITIONS</div><div class="breathability" id="breathability"><i></i><strong>BREATHABLE</strong></div><small>ATMOSPHERE</small><div id="atmosphere" class="atmosphere"></div><div class="temperature"><small>TEMPERATURE</small><strong id="temperature"></strong></div><p id="environmentNote"></p></div>
-  </div></section>
-</main>
-<footer><span>DISCOVERY TEMPLATE · LOCAL DEMO · NO LIVE SHIP CONNECTION</span><label class="lock-setting" for="lockSpeed">Target lock time · seconds <input id="lockSpeed" type="number" min="0.1" step="0.1" value="3"></label><label class="lock-setting" for="maxMass">Max mass · kg <input id="maxMass" type="number" min="1" value="160"></label><label class="lock-setting" for="maxCargoMass">Max cargo mass · kg <input id="maxCargoMass" type="number" min="1" value="320"></label><label class="lock-setting" for="transporterMark">Transporter <select id="transporterMark"><option value="1">Mark I</option><option value="2">Mark II</option><option value="3">Mark III</option></select></label><label class="lock-setting" for="transporterRange">Range · km <input id="transporterRange" type="number" min="10000" max="15000" step="100" value="10000"></label><label class="lock-setting" for="minimumPower">Minimum / idle power · PU <input id="minimumPower" type="number" min="0.1" step="0.1" value="1"></label><label class="lock-setting" for="maximumPower">Max variable power · PU <input id="maximumPower" type="number" min="0.2" step="0.1" value="12"></label><label class="lock-setting" for="busPower">Bus supply · PU <input id="busPower" type="number" min="0" step="0.1" value="12"></label><label class="lock-setting" for="restrictor">Restrictor · % <input id="restrictor" type="number" min="0" max="100" step="1" value="100"></label><label class="lock-setting" for="slowestSpeed">Lowest speed · % per second <input id="slowestSpeed" type="number" min="0.01" step="0.01" value="1.25"></label><label class="lock-setting" for="fastestSpeed">Fastest speed · % per second <input id="fastestSpeed" type="number" min="0.1" step="0.1" value="12.5"></label><label class="lock-setting"><input id="ourShields" type="checkbox"> Our shields up</label><label class="lock-setting"><input id="remoteShields" type="checkbox"> Other ship shields up</label><label class="lock-setting">Ship bearing around Earth · degrees <input id="shipBearing" type="number" min="0" max="359.99" step="0.5" value="202.5"></label><label class="lock-setting">Altitude · km <input id="shipAltitude" type="number" min="1" value="1000"></label><button id="reset">Reset demo</button></footer>
-<script src="preview.js"></script>
-</body></html>
+  </section>
+</div>
+
+<!-- Right: the two power levers -->
+<div class="col right">
+  <section class="panel controls" aria-label="Pattern transfer">
+    <div class="thead"><h2>TRANSFER</h2><small id="transferNote"></small></div>
+    <div class="offline-screen" role="status" hidden>SYSTEM NOT AVAILABLE</div>
+    <div class="slider-pair">
+      <div class="control" id="dematControl">
+        <small>DEMATERIALIZE</small><b id="dematValue">0%</b><em>into buffer</em>
+        <div id="dematSlider" class="vslider range-slider" aria-label="Dematerialization power"></div>
+      </div>
+      <div class="control" id="matControl">
+        <small>MATERIALIZE</small><b id="matValue">0%</b><em>to destination</em>
+        <div id="matSlider" class="vslider range-slider" aria-label="Materialization power"></div>
+      </div>
+    </div>
+    <dl class="rows">
+      <div><dt>MINIMUM REQUIRED</dt><dd id="minimumReading">—</dd></div>
+      <div><dt>POWER IN USE</dt><dd id="powerUsed">—</dd></div>
+      <div><dt>AVAILABLE POWER</dt><dd id="powerAvailable">—</dd></div>
+      <div><dt>TRANSFER SPEED</dt><dd id="speedReading">—</dd></div>
+      <div><dt>STAGE PROGRESS</dt><dd id="stageReading">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Transporter functions">
+  <button type="button" data-open="destinationDialog" id="destinationBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></span>DESTINATION</button>
+  <button type="button" data-open="rangeDialog" id="rangeBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="14" r="5"/><circle cx="17.5" cy="6.5" r="1.8"/><path d="M3.5 5.5a11 11 0 0 1 16 13"/></svg></span>RANGE MAP</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="clearTransport"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></svg></span>CLEAR TRANSPORT</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Destination: where the patterns materialize, and the conditions there -->
+<dialog id="destinationDialog" class="modal" aria-labelledby="destinationTitle">
+  <div class="mhead"><h2 id="destinationTitle">DESTINATION</h2><small id="destinationLock"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="msection">
+    <div class="seg" role="group" aria-label="Destination location"><button type="button" data-destination="pad">TRANSPORTER PAD</button><button type="button" data-destination="cargo">CARGO BAY</button><button type="button" data-destination="other">OTHER LOCATION</button></div>
+    <div id="destinationList" class="place-list" role="list" aria-label="Destinations within range" hidden></div>
+  </div>
+  <div class="msection">
+    <h3>DESTINATION CONDITIONS</h3>
+    <div class="dest-summary"><b id="dlgDestinationName">Cargo Bay</b><small id="dlgDestinationWhere">ON BOARD · DECK 6</small></div>
+    <div id="breathability" class="breathability"><i></i><b>BREATHABLE</b></div>
+    <dl class="rows" id="atmosphere"></dl>
+    <p id="environmentNote" class="mnote"></p>
+  </div>
+</dialog>
+
+<!-- Source: a location within range for Other -->
+<dialog id="sourceDialog" class="modal narrow" aria-labelledby="sourceTitle">
+  <div class="mhead"><h2 id="sourceTitle">TARGET LOCATION</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="sourceList" class="place-list" role="list" aria-label="Locations within range"></div>
+  <p class="mnote">Only locations within transporter range and clear of planetary obstruction are offered.</p>
+</dialog>
+
+<!-- Range map: the ship, Earth, the survey moon and every external location -->
+<dialog id="rangeDialog" class="modal wide-modal" aria-labelledby="rangeTitle">
+  <div class="mhead"><h2 id="rangeTitle">RANGE MAP</h2><small id="rangeNote"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="range-body">
+    <svg id="rangeMap" viewBox="-500 -500 1000 1000" role="img" aria-label="Transporter range around our ship"></svg>
+    <div id="rangeList" class="range-list"></div>
+  </div>
+  <p class="mnote">A beam may not pass through a planet or moon. Range is measured to the surface location, not the planet's centre. Positions are local demo fixtures.</p>
+</dialog>
+
+<!-- Diagnostics: every reading in one place -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Fictional discovery model; power ratings, masses and speeds are provisional.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Transporter mark, range and mass limits, power, shields, ship position and reset</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>TRANSPORTER</h3>
+        <div class="seg" role="group" aria-label="Transporter mark"><button type="button" data-mark="1">MARK I</button><button type="button" data-mark="2">MARK II</button><button type="button" data-mark="3">MARK III</button></div>
+        <div class="field-grid">
+          <div class="field" data-field="range"><div><small>RANGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="lockSeconds"><div><small>TARGET LOCK TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxMass"><div><small>PAD MAX MASS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxCargoMass"><div><small>CARGO MAX MASS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>POWER AND SPEED</h3>
+        <div class="field-grid">
+          <div class="field" data-field="minPower"><div><small>MINIMUM / IDLE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxPower"><div><small>MAX VARIABLE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="bus"><div><small>BUS SUPPLY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="restrictor"><div><small>RESTRICTOR</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="fastest"><div><small>FASTEST STAGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="slowest"><div><small>LOWEST STAGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+      </div>
+      <div class="msection">
+        <h3>SHIELDS AND SHIP</h3>
+        <label class="switch"><input type="checkbox" id="ourShields"><span></span>Our shields up</label>
+        <label class="switch"><input type="checkbox" id="remoteShields"><span></span>Other ship (TNS Resolute) shields up</label>
+        <div class="field-grid">
+          <div class="field" data-field="bearing"><div><small>BEARING AROUND EARTH</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="altitude"><div><small>ALTITUDE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p id="lockedNote" class="mnote">Mark, range, mass limits and ship position are locked during a transport cycle.</p>
+      </div>
+      <div class="msection">
+        <h3>DEMO</h3>
+        <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+        <p class="mnote">Reset returns every person and item to its original location and clears the transport.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=4"></script>
+<script src="transporter.js?v=4"></script>
+</body>
+</html>

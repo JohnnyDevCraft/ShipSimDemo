@@ -16,6 +16,15 @@ run({
     await expect(page).toHaveTitle(/DOT Bay Control/);
     await expect(page.locator('.cradle')).toHaveCount(4);
   },
+  'the demo index lists Command Control after View Screen and opens it': async ({ open }) => {
+    const page = await open('/');
+    const cards = page.locator('nav[aria-label="Bridge demos"] a strong');
+    await expect(cards.nth(13)).toHaveText(/^View Screen/);
+    await expect(cards.nth(14)).toHaveText(/^Command Control/);
+    await page.getByRole('link', { name: /Command Control/ }).click();
+    await expect(page).toHaveTitle(/Command Control/);
+    await expect(page.locator('.title-pill')).toHaveText('COMMAND CONTROL');
+  },
   'the demo index lists Life Support Control after Docking Control and opens it': async ({ open }) => {
     const page = await open('/');
     const cards = page.locator('nav[aria-label="Bridge demos"] a strong');

@@ -87,7 +87,8 @@ run({
     now = await state(page);
     assert.ok(near(now.heading, 30), 'the nose turned 30°');
     assert.ok(near(now.aim, 30), 'the scope looks along the nose');
-    await expect(page.locator('#aimValue')).toHaveText('030°');
+    await expect(page.locator('#aimValue')).toHaveText('0°', { timeout: 1000 }); // 0° is always the nose
+    await expect(page.locator('#aimMode')).toHaveText('NOSE');
   },
 
   'turning does not turn the momentum: the ship drifts until Forward Thrust swings it to the nose, keeping the speed': async ({ open: openPage }) => {
@@ -267,7 +268,7 @@ run({
     now = await state(page);
     assert.equal(now.charge, 240);
     assert.equal(now.loaded, true);
-    await expect(page.locator('#chargeValue')).toHaveText('240 / 240 PU · 4 SHOTS');
+    await expect(page.locator('#chargeValue')).toHaveText('4 SHOTS · 240 PU');
     await expect(page.locator('#torpedoState')).toHaveText('READY');
     // Put the training ship dead ahead at 5 km, still, and fire along the nose.
     await page.evaluate(() => {
@@ -428,6 +429,73 @@ run({
     }
   },
 
+  'the short-range scan: the slider sets its range from 2 to 500 km, ships show inside it, and a tap targets one': async ({ open: openPage }) => {
+    const page = await open(openPage, { lit: true });
+    await page.evaluate(() => {
+      const scope = FighterControl.scope;
+      if (scope.moving) scope.toggleMoving();
+      Object.assign(scope.contacts[0], { bearing: 90, range: 20000 });
+    });
+    await expect(page.locator('#srsRange')).toHaveText('50 KM');
+    let scan = await page.evaluate(() => FighterControl.srs());
+    assert.equal(scan.hits.length, 1, 'the training ship 20 km out is on a 50 km scan');
+    // Drag the slider to the left end: 2 km, and the ship is off the scan.
+    const track = await page.locator('#srsZoom .hs-track').boundingBox();
+    await page.mouse.move(track.x + track.width * 0.5, track.y + track.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(track.x - 20, track.y + track.height / 2, { steps: 4 });
+    await page.mouse.up();
+    await page.evaluate(() => FighterControl.advance(100));
+    await expect(page.locator('#srsRange')).toHaveText('2 KM');
+    assert.equal((await page.evaluate(() => FighterControl.srs())).hits.length, 0);
+    // The keyboard on the slider: End is 500 km.
+    await page.locator('#srsZoom').focus();
+    await page.keyboard.press('End');
+    await expect(page.locator('#srsRange')).toHaveText('500 KM');
+    await expect(page.locator('#srsZoom')).toHaveAttribute('aria-valuenow', '500');
+    // Back to 40 km, then tap the ship on the scan to target it.
+    await page.evaluate(() => { FighterControl.setSrsRange(40000); FighterControl.advance(100); });
+    scan = await page.evaluate(() => FighterControl.srs());
+    const ship = scan.hits[0];
+    const box = await page.locator('#srs').boundingBox();
+    assert.ok(ship.x > box.width / 2 && Math.abs(ship.y - box.height / 2) < 2, 'due east of us (north up)');
+    await page.mouse.click(box.x + ship.x + 3, box.y + ship.y + 2);
+    assert.equal((await state(page)).selected, 'ship:Training ship A');
+    await expect(page.locator('#notice')).toHaveText('Target: Training ship A · 20 km.');
+  },
+
+  'bearings are relative to the nose: the scan is nose up, so space turns as we turn, and there is no compass': async ({ open: openPage }) => {
+    const page = await open(openPage, { lit: true });
+    await page.evaluate(() => {
+      const scope = FighterControl.scope;
+      if (scope.moving) scope.toggleMoving();
+      Object.assign(scope.contacts[0], { bearing: 50, range: 20000 });
+      FighterControl.set({ heading: 30 });
+      scope.select('ship:Training ship A');
+      FighterControl.advance(100);
+    });
+    const angle = async () => {
+      const box = await page.locator('#srs').boundingBox(), hit = (await page.evaluate(() => FighterControl.srs())).hits[0];
+      return (Math.atan2(hit.x - box.width / 2, box.height / 2 - hit.y) * 180) / Math.PI;
+    };
+    await expect(page.locator('#aimMode')).toHaveText('TARGET');
+    await expect(page.locator('#aimValue')).toHaveText('20° S');
+    await expect(page.locator('#targetValue')).toHaveText('20° S');
+    assert.ok(near(await angle(), 20, 0.5), 'on the scan, 20° to starboard of straight up');
+    // Turn 20° to starboard: the ship is now dead ahead, at the top of the scan.
+    await stick(page, 1, 0);
+    await advance(page, 2000 / 3);
+    await stick(page, 0, 0);
+    await advance(page, 100);
+    assert.ok(near(await angle(), 0, 0.5), 'space turned, the ship did not');
+    await expect(page.locator('#targetValue')).toHaveText('0°');
+    // Drifting shows on the tape and in the panel, relative to the nose; no compass anywhere.
+    await page.evaluate(() => FighterControl.set({ heading: 0, vx: 500, vz: 0 }));
+    await expect(page.locator('#driftValue')).toHaveText('90° S');
+    const text = await page.evaluate(() => document.body.innerText);
+    assert.ok(!/\b(0[0-9]{2}|[12][0-9]{2}|3[0-5][0-9])°/.test(text), 'no three-figure compass headings on the page');
+  },
+
   'the default keys: half and full turns, half throttle, full stop, max forward and reverse, and the weapon and system toggles': async ({ open: openPage }) => {
     const page = await open(openPage, { lit: true });
     await page.evaluate(() => document.activeElement.blur());
@@ -491,6 +559,55 @@ run({
     assert.equal((await state(page)).thrust, true);
     await page.keyboard.up('f');
     assert.equal((await state(page)).thrust, false);
+    // , and . step through the targets by range; Up and Down zoom the view one level.
+    await page.evaluate(() => {
+      FighterControl.scope.addShip();
+      FighterControl.scope.addShip();
+      if (FighterControl.scope.moving) FighterControl.scope.toggleMoving();
+      FighterControl.scope.contacts.forEach((c, i) => Object.assign(c, { range: [30000, 5000, 12000][i], bearing: [0, 25, -25][i] })); // apart, so none hides behind another
+      FighterControl.scope.select('');
+      document.activeElement.blur();
+    });
+    const names = await page.evaluate(() => FighterControl.scope.contacts.map(c => c.name));
+    const picked = async key => (await page.keyboard.press(key), (await state(page)).selected.replace('ship:', ''));
+    assert.equal(await picked('.'), names[1], 'next from none: the nearest');
+    assert.equal(await picked('.'), names[2]);
+    assert.equal(await picked('.'), names[0]);
+    assert.equal(await picked(','), names[2], 'previous steps back in');
+    await page.evaluate(() => FighterControl.scope.select(''));
+    assert.equal(await picked(','), names[0], 'previous from none: the furthest');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    assert.equal((await state(page)).zoom, 4);
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    assert.equal((await state(page)).zoom, 8);
+    await expect(page.locator('#notice')).toHaveText('Zoomed in all the way (8×).');
+    await page.keyboard.press('ArrowDown');
+    assert.equal((await state(page)).zoom, 4);
+    await expect(page.locator('#zoomLabel')).toHaveText('ZOOM 4×');
+    // On the focused scan slider the arrows move the slider, not the view's zoom.
+    await page.locator('#srsZoom').focus();
+    await page.keyboard.press('ArrowDown');
+    const after = await state(page);
+    assert.equal(after.zoom, 4);
+    assert.ok((await page.evaluate(() => FighterControl.srs().range)) < 50000);
+  },
+
+  'keys saved before the target and zoom keys arrived move Next Target from Tab to "." and keep the pilot\'s own keys': async ({ open: openPage }) => {
+    const page = await open(openPage);
+    await page.evaluate(() => {
+      const old = { turnPortHalf: 'a', turnPort: 'q', turnStbdHalf: 'd', turnStbd: 'e', accelHalf: 'w', reverseHalf: 'x', fullStop: 's', maxForward: 'c', maxReverse: 'z', forwardThrust: 'f', autoDrift: 'v', fireCannon: 'ArrowUp', fireTorpedo: 'ArrowRight', weapons: 'b', nextTarget: 'Tab', clearTarget: '', shotPower: '', shields: 'n', engines: '', zoom: '' };
+      localStorage.setItem('xmps-fighter-keys', JSON.stringify(old));
+    });
+    await page.reload();
+    const keys = await page.evaluate(() => FighterControl.bindings());
+    assert.equal(keys.nextTarget, '.');
+    assert.equal(keys.prevTarget, ',');
+    assert.equal(keys.fireCannon, 'ArrowUp', 'the pilot\'s own key is kept');
+    assert.equal(keys.zoomIn, '', 'so Zoom In does not take ArrowUp from it');
+    assert.equal(keys.zoomOut, 'ArrowDown');
+    await page.evaluate(() => localStorage.removeItem('xmps-fighter-keys'));
   },
 
   'Menu → Controls rebinds keys: a key in use moves, Backspace unbinds, Escape cancels, and the choice survives a reload': async ({ open: openPage }) => {

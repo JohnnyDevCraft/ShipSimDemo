@@ -20,6 +20,8 @@
 
 Demo ratings: 2,500 m/s ahead, 500 m/s astern, 150 m/s², 30°/s.
 
+Bearings are relative to the nose everywhere (John, 2026-10-29): 0° is dead ahead and space turns around the fighter. The bearing tape is a fixed relative scale, the scan is nose up, and no compass heading is shown.
+
 ## Power (as built)
 
 The battery runs life support, communications and sensors (8 PU) while the engines are off. Start Engines cold-starts the pocket reactor in 90 s; once lit, the dampener comes on and the engine, shields and weapons can run. Power reaches the systems in order (life support, comms, sensors, dampener, impulse, shield, torpedo, cannon); the reactor covers up to 120 PU, the battery up to 40 PU more, and spare reactor output recharges the battery. Short power slows the cannon's charge first. Without its full 26 PU the dampener stops the engine. Full thrust, recharging shields, a loading torpedo and a charging cannon ask 148 PU, so a hard fight drains the battery.

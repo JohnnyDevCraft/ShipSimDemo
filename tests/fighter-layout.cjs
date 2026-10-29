@@ -28,14 +28,18 @@ for (const [width, height] of sizes)
     const overlap = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
     const names = Object.keys(boxes);
     for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) assert.ok(!overlap(boxes[names[i]], boxes[names[j]]), `${names[i]} and ${names[j]} do not overlap`);
-    for (const control of ['#enginesBtn', '#shieldsCmd', '#weaponsCmd', '#ownShields', '#flightStick', '#thrustBtn', '#stopBtn', '#fireBtn', '#torpedoBtn', '#shotPower', '#torpedoState', '#menuBtn', '#state'])
+    for (const control of ['#enginesBtn', '#shieldsCmd', '#weaponsCmd', '#ownShields', '#flightStick', '#thrustBtn', '#stopBtn', '#fireBtn', '#torpedoBtn', '#shotPower', '#torpedoState', '#srs', '#srsZoom', '#menuBtn', '#state'])
       await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
     const clipped = await page.evaluate(() => [...document.querySelectorAll('.panel')].filter(panel => !panel.hidden && panel.scrollHeight > panel.clientHeight + 1).map(panel => panel.className));
     assert.deepEqual(clipped, [], 'no panel has content cut off');
-    const lines = await page.evaluate(() => [...document.querySelectorAll('.thead, .meter > div:first-child, .torp-line, .stick-readout, .flight-stats b')].filter(e => e.scrollWidth > e.clientWidth + 1).map(e => e.textContent));
+    const lines = await page.evaluate(() => [...document.querySelectorAll('.thead, .meter > div:first-child, #torpedoBtn small, #fireBtn small, .srs-zoom, .qchips span, .stick-readout, .flight-stats b')].filter(e => e.scrollWidth > e.clientWidth + 1).map(e => e.textContent));
     assert.deepEqual(lines, [], 'headings and readouts fit on one line');
     const size = await page.locator('#flightStick').evaluate(element => element.getBoundingClientRect().width);
     assert.ok(size >= 110, `the stick is big enough to fly with (${Math.round(size)}px)`);
+    const scan = await page.locator('#srs').evaluate(element => Math.min(element.getBoundingClientRect().width, element.getBoundingClientRect().height));
+    assert.ok(scan >= height * 0.2, `the short-range scan is big enough to read (${Math.round(scan)}px)`);
+    const barClear = await page.evaluate(() => document.getElementById('chargeBarWrap').getBoundingClientRect().top >= document.getElementById('chargeValue').getBoundingClientRect().bottom);
+    assert.ok(barClear, 'the cannon\'s charge bar sits below its text');
     const advisoryLines = await page.locator('#advisory').evaluate(element => Math.round(element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight)));
     assert.ok(advisoryLines <= 2, 'the advisory takes at most two lines');
     for (const dialog of ['enginesDialog', 'diagnosticsDialog']) {

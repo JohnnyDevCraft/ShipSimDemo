@@ -1,7 +1,7 @@
 /* Fighter Control. The console look is ../Shared/console.css and the scope's (layers, target panel, advisory,
    dock, history) ../Shared/scope.css; this adds the heading tape, engines, the flight stick, shields and hull,
    the weapons and the systems list. The console is used in landscape. */
-:root { --left-w: 17rem; --right-w: 18rem; }
+:root { --left-w: 17rem; --right-w: 21rem; }
 
 /* Panels share one padding; headings stay on one line. */
 .fighter .panel { width: 100%; padding: 0.85rem 1rem 0.95rem; }
@@ -47,7 +47,7 @@
 
 /* ── Left: flight stick ─────────────────────────────────────────────────────────────────────────── */
 .flight-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.flight-stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 0.35rem; }
+.flight-stats { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 0.35rem; }
 .flight-stats div { min-width: 0; display: grid; gap: 0.05rem; padding: 0.3rem 0.45rem; border: 1px solid var(--edge-soft); border-radius: 0.5rem; background: rgba(9, 28, 52, 0.45); }
 .flight-stats small { font-size: 0.5rem; letter-spacing: 0.12em; }
 .flight-stats b { font-size: 0.82rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -114,20 +114,13 @@
 .shot-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem; }
 .shot-row small { font-size: 0.58rem; letter-spacing: 0.12em; }
 .shot-row .seg button { padding: 0.35rem 0.2rem; font-size: 0.78rem; }
-.torp-line { display: flex; align-items: baseline; gap: 0.5rem; }
-.torp-line small { font-size: 0.58rem; letter-spacing: 0.12em; }
-.torp-line b { font-size: 0.85rem; font-weight: 500; font-variant-numeric: tabular-nums; }
-.torp-line em { margin-left: auto; font-style: normal; font-size: 0.6rem; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; }
-.torp-line em[data-level="ok"] { color: var(--green); }
-.torp-line em[data-level="bad"] { color: #ff8f9b; }
 .fighter .fire-row { grid-template-columns: 1.4fr 1fr; }
 .fighter .fire-row button { min-height: 2.9rem; font-size: 0.78rem; }
 .fighter button.blocked { opacity: 0.45; }
 .fighter .fire-row .fire.blocked { background: rgba(60, 20, 20, 0.55); border-color: rgba(255, 138, 112, 0.4); color: #e0b5ad; box-shadow: none; }
 
 /* On shorter screens the target's shield detail gives way to the weapons. */
-@media (max-height: 760px) { .fighter #shieldBlock { display: none; } }
-@media (max-height: 820px) { .fighter .target-panel .stats div:nth-child(n + 3) { display: none; } }
+@media (max-height: 700px) { .fighter #shieldBlock { display: none; } }
 
 /* ── Dialogs ────────────────────────────────────────────────────────────────────────────────────── */
 .systems { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem 0.5rem; }
@@ -157,3 +150,57 @@
 .key-cap.unbound { color: var(--dim); }
 .key-cap.listening { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
 .binding-note { min-height: 1.2em; color: var(--cyan); }
+
+/* Short-range scan (bottom right): the View Screen's radar, with a range slider under it */
+.srs-panel { flex: 1 1 auto; min-height: 11rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.srs-panel .radar { position: relative; flex: 1; min-height: 6rem; }
+.srs-panel .radar canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
+.srs-zoom { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.6rem; }
+.srs-zoom small { font-size: 0.52rem; letter-spacing: 0.1em; white-space: nowrap; }
+.hslider { position: relative; height: 1.9rem; touch-action: none; cursor: pointer; outline: none; }
+.hs-track { position: absolute; left: 0.7rem; right: 0.7rem; top: 50%; height: 0.35rem; transform: translateY(-50%); border-radius: 1rem; background: rgba(90, 140, 190, 0.22); }
+.hs-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 1rem; background: linear-gradient(90deg, var(--blue-hi), var(--cyan)); box-shadow: 0 0 0.5rem var(--cyan); }
+.hs-knob { position: absolute; top: 50%; left: 0; width: 1.4rem; height: 1.4rem; margin-left: 0; transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 50% 42%, #bff1ff 0 18%, #4cc3ff 45%, #1268d8 80%); border: 2px solid #c8f3ff; box-shadow: 0 0 0.6rem var(--cyan); }
+.hslider:focus-visible .hs-knob, .hslider.active .hs-knob { box-shadow: 0 0 1rem var(--cyan), 0 0 0 3px rgba(79, 214, 255, 0.35); }
+
+/* The target's shields, compact: one value per quadrant, then its hull */
+.target-shields { display: grid; gap: 0.3rem; }
+.qchips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.3rem; }
+.qchips span { display: flex; align-items: baseline; justify-content: space-between; gap: 0.2rem; min-width: 0; padding: 0.22rem 0.4rem; border: 1px solid rgba(88, 170, 255, 0.6); border-radius: 0.45rem; color: #9fd0ff; }
+.qchips small { font-size: 0.48rem; letter-spacing: 0.06em; color: inherit; }
+.qchips b { font-size: 0.72rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.qchips [data-level="low"] { border-color: rgba(244, 202, 89, 0.6); color: #ffd98a; }
+.qchips [data-level="down"] { border-color: rgba(255, 90, 100, 0.55); color: #ff8f9b; }
+.target-shields #subsystemNote { margin: 0; font-size: 0.62rem; }
+/* The torpedo button carries the rack's count and state */
+#torpedoBtn { display: grid; justify-items: center; align-content: center; gap: 0.1rem; line-height: 1.1; }
+#torpedoBtn small { font-size: 0.55rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; white-space: nowrap; }
+#torpedoBtn small b { font-weight: 600; }
+#torpedoBtn small em { font-style: normal; }
+#torpedoBtn em[data-level="ok"] { color: #b7ffd3; }
+
+/* Tight right column: the scan takes what the target and weapons leave */
+.target-hull { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem; }
+.target-hull small { font-size: 0.52rem; letter-spacing: 0.1em; }
+.target-hull b { font-size: 0.72rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fighter .target-panel { gap: 0.4rem; padding-top: 0.7rem; padding-bottom: 0.75rem; }
+.fighter .target-panel .stats div { padding: 0.25rem 0.5rem; }
+.fighter .arms-panel { gap: 0.45rem; padding-top: 0.7rem; padding-bottom: 0.75rem; }
+.fighter .arms-panel .fire-row button { min-height: 2.6rem; }
+.fighter .srs-panel { min-height: 8rem; padding-top: 0.7rem; padding-bottom: 0.6rem; gap: 0.3rem; }
+.fighter .srs-panel .radar { min-height: 4rem; }
+
+/* The cannon's charge rides in its button: shots ready, the charge, and a bar ticked at every shot's worth */
+#fireBtn { position: relative; display: grid; justify-items: center; align-content: center; gap: 0.1rem; line-height: 1.1; padding-bottom: 0.55rem; overflow: hidden; }
+#fireBtn small { font-size: 0.55rem; font-weight: 500; letter-spacing: 0.08em; opacity: 0.9; white-space: nowrap; }
+#fireBtn .charge-bar { position: absolute; left: 0.5rem; right: 0.5rem; bottom: 0.3rem; height: 0.28rem; display: block; background: rgba(0, 0, 0, 0.35); }
+#fireBtn .charge-bar i { background: linear-gradient(90deg, #ffd0a0, #fff4e0); box-shadow: 0 0 0.4rem rgba(255, 230, 200, 0.8); }
+.fighter .col.right { gap: 0.6rem; }
+.fighter .hslider { height: 1.6rem; }
+/* The target's range and bearing are not shown (the scan, the scope and the heading tape have them). */
+.fighter .target-panel .stats { display: none; }
+/* 4:3 screens (iPads) have width to spare and height the scan can use: a wider right column lets its circle grow. */
+@media (max-aspect-ratio: 7/5) { :root { --left-w: 16rem; --right-w: 23rem; } }
+.fighter .arms-panel .fire-row button { min-height: 3rem; }
+#fireBtn { padding-bottom: 0.75rem; }
+#fireBtn .charge-bar { bottom: 0.32rem; }

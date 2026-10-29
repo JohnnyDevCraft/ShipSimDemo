@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the shared compiled assets for the two other weapon and defense screens (Tactical Officer and Shields).
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all thirteen demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Communications, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the shared compiled assets for the two other weapon and defense screens (Tactical Officer and Shields).
 
 ## Local preview
 
@@ -41,6 +41,8 @@ node tests/torpedo-launch.cjs       # Torpedo Launch Control
 node tests/torpedo-launch-layout.cjs    # Torpedo Launch fits iPad landscape through 4K
 node tests/energy-weapons.cjs       # EPW and EBW Control
 node tests/energy-weapons-layout.cjs    # EPW and EBW fit iPad landscape through 4K
+node tests/communications.cjs       # Communications Control
+node tests/communications-layout.cjs    # Communications fits iPad landscape through 4K
 node tests/demo-index.cjs           # index link
 ```
 

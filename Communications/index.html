@@ -1,17 +1,174 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Communications · Ship Sim</title><link rel="icon" type="image/x-icon" href="../favicon.ico"><link rel="stylesheet" href="helm-theme.css"><link rel="stylesheet" href="styles.css?v=connection-2"></head>
-<body><header><div class="brand"><a href="../index.html" aria-label="Back to demo selector" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px"><img src="../brand/xelseor-emblem.png" alt="" width="44" height="44" style="display:block"></a> <span title="Xelseor Mission Protocol Sim">XMPS</span><b>COMMUNICATIONS CONTROL</b></div><span class="pill">DISCOVERY PREVIEW</span></header>
-<main><section class="panel detections"><div class="sectiontitle">DETECTED TRANSMISSIONS <span id="count"></span></div><div class="filters"><button data-filter="all" class="active">All</button><button data-filter="Subspace">Subspace</button><button data-filter="RF">RF</button></div><div id="transmissions" role="list" aria-label="Detected transmissions"></div></section>
-<section class="panel receiver"><div class="sectiontitle">TRANSMISSION CONTROL <div class="view-tabs" role="tablist" aria-label="Transmission control views"><button id="mapTab" role="tab" aria-selected="true">Map</button><button id="transmissionTab" role="tab" aria-selected="false">Transmission</button><button id="commsTab" role="tab" aria-selected="false">Communications</button><button id="settingsTab" role="tab" aria-selected="false">Settings</button></div></div><div id="mapView" role="tabpanel" aria-labelledby="mapTab"><div class="map-toolbar"><button id="mapHome">30 LY overview</button><span id="mapRadius"></span></div><canvas id="signalMap" aria-label="GTO communications map"></canvas><div class="map-footer"><div class="monitor-row"><div class="monitor-line"><i></i> PASSIVE MONITORING</div><div id="mapSelection" aria-live="polite">No map object selected</div></div><small>Scroll to zoom · Drag to pan · Double-click a point to center</small><div id="rangeNote"></div></div></div><div id="transmissionView" role="tabpanel" aria-labelledby="transmissionTab" hidden><span id="security" class="badge"></span><div class="signal-heading"><small id="medium"></small><h1 id="title"></h1><p id="channel"></p></div><div class="wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path id="waveform" fill="none" stroke="#6ee7df" stroke-width="2"/></svg><span>RECEIVED SIGNAL</span></div><div class="facts"><div><small>TRANSMISSION TYPE</small><strong id="type"></strong></div><div><small>ORIGIN</small><strong id="origin"></strong></div><div id="destinationRow" hidden><small>DESTINATION</small><strong id="destination"></strong></div><div><small>CARRIER / CHANNEL</small><strong id="frequency"></strong></div></div><div class="message"><small>RECEIVED CONTENT</small><p id="content"></p></div></div><div id="commsView" role="tabpanel" aria-labelledby="commsTab" hidden>
-<div class="communications-layout"><aside class="active-communications"><h3>Active communications</h3><div id="activeCommunications" aria-label="Active communications"></div><div class="communication-actions"><button id="newCommunication" aria-label="New communication" title="New communication">+</button><button id="terminateCommunication" aria-label="Terminate communication" title="Terminate communication">−</button></div></aside><div class="communication-editor"><p id="contactSummary">Select a transmission or standard frequency.</p>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Communications Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="comms">
 
-<div id="connectionSetup"><div class="compose-fields"><label>Transmission type<select id="sendType"><option>Unicast</option><option>Multicast</option><option>Point to point</option></select></label>
-<label>Medium<select id="sendMedium"><option>Subspace</option><option>RF</option></select></label>
-<label>Recipient<input id="recipient" placeholder="Ship or station name"></label>
-<label>Channel<input id="sendChannel" value="0"></label></div>
-<p class="muted">Unicast uses channel 0. Multicast and Point-to-point require a specific nonzero channel.</p><label id="encryptionControl"><input id="encryptCommunication" type="checkbox"> Encrypt point-to-point communication</label><button id="saveCommunication" type="button">Save communication</button></div>
-<div id="activeChat" hidden><div id="connectionDetails" class="muted"></div><div id="conversation" aria-label="Communication history" role="log"></div><label>Message<textarea id="sendMessage" rows="3" placeholder="Compose a hail or reply"></textarea></label><div class="chat-actions"><button id="dictate" type="button">🎙 Ready</button><button id="sendTransmission">Send transmission</button></div></div><p id="sendStatus" role="status"></p>
-</div></div></div><div id="broadcastSettingsView" role="tabpanel" aria-labelledby="settingsTab" hidden><div class="settings-column"><h2>Contact settings</h2><label>Our subspace channel<input id="ownChannel" type="number" min="0.001" step="0.001" value="42.7"></label><p class="muted">Advertise this return channel so other ships can contact us.</p><button id="broadcastToggle" aria-pressed="true"><i class="broadcast-light"></i> Broadcast Channel</button><p id="broadcastStatus" role="status"></p></div><div class="settings-column view-screen-settings"><h2>View Screen Settings</h2><div class="view-mode-buttons" role="group" aria-label="View Screen mode"><button data-view-mode="srs" aria-pressed="true"><i class="broadcast-light"></i>SRS</button><button data-view-mode="lrs" aria-pressed="false"><i class="broadcast-light"></i>LRS</button><button data-view-mode="dual" aria-pressed="false"><i class="broadcast-light"></i>DUAL</button></div><label for="viewScreenSrsRange">SRS Range<select id="viewScreenSrsRange" aria-label="SRS Range"><option value="1-bkm">1 BKM</option><option value="0.1-bkm">0.1 BKM</option><option value="0.01-bkm">0.01 BKM</option><option value="1-mkm">1 MKM</option><option value="0.1-mkm">0.1 MKM</option><option value="0.01-mkm">0.01 MKM</option><option value="10000-km">10,000 km</option><option value="1000-km">1,000 km</option><option value="100-km">100 km</option><option value="10-km">10 km</option></select></label><label for="viewScreenLrsRange">LRS Range<select id="viewScreenLrsRange" aria-label="LRS Range"><option value="30-ly">30 LY</option><option value="20-ly">20 LY</option><option value="10-ly">10 LY</option><option value="5-ly">5 LY</option><option value="1-ly">1 LY</option><option value="1-bkm">1 BKM</option></select></label><section class="view-filter-section"><h3>Labels</h3><div class="view-filter-buttons"><button data-view-filter="labels-stars" aria-pressed="true"><i class="broadcast-light"></i>Stars</button><button data-view-filter="labels-planets" aria-pressed="true"><i class="broadcast-light"></i>Planets</button><button data-view-filter="labels-anomalies" aria-pressed="true"><i class="broadcast-light"></i>Anomalies</button><button data-view-filter="labels-starbases" aria-pressed="true"><i class="broadcast-light"></i>Star bases</button><button data-view-filter="labels-ships" aria-pressed="true"><i class="broadcast-light"></i>Ships</button><button data-view-filter="labels-settlements" aria-pressed="true"><i class="broadcast-light"></i>Settlements</button></div></section><section class="view-filter-section"><h3>Objects</h3><div class="view-filter-buttons"><button data-view-filter="objects-stars" aria-pressed="true"><i class="broadcast-light"></i>Stars</button><button data-view-filter="objects-planets" aria-pressed="true"><i class="broadcast-light"></i>Planets</button><button data-view-filter="objects-anomalies" aria-pressed="true"><i class="broadcast-light"></i>Anomalies</button><button data-view-filter="objects-starbases" aria-pressed="true"><i class="broadcast-light"></i>Star bases</button><button data-view-filter="objects-ships" aria-pressed="true"><i class="broadcast-light"></i>Ships</button><button data-view-filter="objects-settlements" aria-pressed="true"><i class="broadcast-light"></i>Settlements</button></div></section><p id="viewScreenStatus" role="status"></p></div></div></section>
-<aside class="panel channels"><div class="sectiontitle">STANDARD FREQUENCIES</div><label class="frequency-search">Search by name<input id="frequencySearch" type="search" placeholder="Find a frequency…" autocomplete="off"></label><div class="frequency-toggle" role="group" aria-label="Frequency medium"><button data-frequency-medium="Subspace">Subspace</button><button data-frequency-medium="RF">RF</button></div><p id="frequencyCount" class="muted" aria-live="polite"></p><div id="frequencies" aria-label="Standard frequencies"></div><div class="catalog-note">FREQUENCY CATALOG<p>20 demo entries · GTO frequency catalog</p></div></aside></main>
-<footer><span>DISCOVERY TEMPLATE · SIMULATED TRANSMISSIONS · NO LIVE SHIP CONNECTION</span><div><button id="add">Detect sample transmission</button><button id="configure">Configure demo</button><button id="reset">Reset demo</button></div></footer>
-<dialog id="settings"><h2>Demo settings</h2><p>Set the RF detection range for this local preview.</p><label>RF range · kilometers<input id="range" type="number" min="0" step="1000" placeholder="Awaiting confirmation"></label><p id="conversion"></p><div class="actions"><button id="cancel">Cancel</button><button id="save">Apply</button></div></dialog><script src="gto-data.js"></script><script src="map.js?v=24"></script><script src="preview.js?v=18"></script><script src="conversations.js?v=connection-2"></script></body></html>
+<!-- The signal map fills the window. -->
+<canvas id="map" role="img" aria-label="Communications map: stars, stations, detected transmissions and our ship. Drag to pan, pinch or scroll to zoom, tap to select."></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">COMMUNICATIONS</div>
+    <div class="scan-caption">SUBSPACE AND RF · PASSIVE MONITORING · MAP UP GALACTIC CENTRE · <span id="gridScale">GRID</span></div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state comms-state" id="stateBox" title="Contact channel broadcast"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13v8"/><circle cx="12" cy="11" r="1.6"/><path d="M8.5 7.5a5 5 0 0 0 0 7M15.5 7.5a5 5 0 0 1 0 7M5.6 4.6a9 9 0 0 0 0 12.8M18.4 4.6a9 9 0 0 1 0 12.8"/></svg><span id="state">BROADCAST</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: what we are hearing -->
+<div class="col left">
+  <section class="panel detections" aria-label="Detected transmissions">
+    <div class="thead"><h2>DETECTED TRANSMISSIONS</h2><small id="txCount">0</small></div>
+    <div class="seg" role="group" aria-label="Medium"><button type="button" data-filter="all">ALL</button><button type="button" data-filter="Subspace">SUBSPACE</button><button type="button" data-filter="RF">RF</button></div>
+    <div id="transmissions" class="tx-list" role="list" aria-label="Detected transmissions"></div>
+    <div class="monitor"><i aria-hidden="true"></i><span>PASSIVE MONITORING</span></div>
+    <p class="mnote" id="rangeNote"></p>
+  </section>
+</div>
+
+<!-- Right: the selected transmission and the map range -->
+<div class="col right">
+  <section class="panel signal-panel" id="signalPanel" aria-label="Selected transmission" hidden>
+    <div class="thead"><h2>TRANSMISSION</h2><small id="sigSecurity" class="security"></small></div>
+    <div class="signal-head"><small id="sigMedium"></small><h3 id="sigTitle"></h3></div>
+    <div class="wave" aria-hidden="true"><svg viewBox="0 0 800 100" preserveAspectRatio="none"><path id="waveform"/></svg><span>RECEIVED SIGNAL</span></div>
+    <div class="stats">
+      <div><small>TYPE</small><b id="sigType"></b></div>
+      <div><small>CHANNEL</small><b id="sigChannel"></b></div>
+      <div><small>ORIGIN</small><b id="sigOrigin"></b></div>
+      <div><small id="sigOtherLabel">SYSTEM</small><b id="sigOther"></b></div>
+    </div>
+    <div class="content"><small>RECEIVED CONTENT</small><p id="sigContent"></p></div>
+    <button type="button" class="primary" id="contactBtn">CONTACT ORIGIN</button>
+  </section>
+  <div class="target-chip" id="noSignal"><i aria-hidden="true"></i>NO TRANSMISSION SELECTED</div>
+  <section class="panel range-panel" aria-label="Map range">
+    <div class="thead"><h2>MAP RANGE</h2><small id="rangeValue"></small></div>
+    <div id="rangeSlider" class="vslider range-slider" aria-label="Map range"></div>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Communications functions">
+  <button type="button" id="frequenciesBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12h2l2-6 3 12 3-15 3 15 2-6h4"/></svg></span>FREQUENCIES</button>
+  <button type="button" id="commsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H9l-5 4Z"/><path d="M8 9h8M8 12h5"/></svg><em id="commsCount" class="badge" hidden></em></span>COMMUNICATIONS</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="contactSettingsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13v8"/><circle cx="12" cy="11" r="1.6"/><path d="M8.5 7.5a5 5 0 0 0 0 7M15.5 7.5a5 5 0 0 1 0 7M5.6 4.6a9 9 0 0 0 0 12.8M18.4 4.6a9 9 0 0 1 0 12.8"/></svg></span>CONTACT</button>
+  <button type="button" id="viewScreenBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/></svg></span>VIEW SCREEN</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="homeBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8"/></svg></span>30 LY VIEW</button>
+  <button type="button" id="ourShipBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 18 20l-6-3.5L6 20Z"/></svg></span>OUR SHIP</button>
+</nav>
+
+<!-- Standard frequencies -->
+<dialog id="frequencyDialog" class="modal list-modal" aria-labelledby="frequencyTitle">
+  <div class="mhead"><h2 id="frequencyTitle">STANDARD FREQUENCIES</h2><small id="frequencyCount"></small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="seg" role="group" aria-label="Frequency medium"><button type="button" data-frequency-medium="Subspace">SUBSPACE</button><button type="button" data-frequency-medium="RF">RF</button></div>
+  <input type="search" id="frequencySearch" class="list-search" placeholder="Search by name" aria-label="Search frequencies" autocomplete="off" spellcheck="false">
+  <div id="frequencyList" class="scroll-list frequency-list" role="list" aria-label="Standard frequencies"></div>
+  <p class="mnote catalog">Tap a frequency to open a communication on it. Channels for systems off the map are hidden; ships on the map add their advertised return channels.</p>
+</dialog>
+
+<!-- Communications: contacts and chats -->
+<dialog id="commsDialog" class="modal comms-modal" aria-labelledby="commsTitle">
+  <div class="mhead"><h2 id="commsTitle">COMMUNICATIONS</h2><small id="commCount"></small><div class="seg input-mode" role="group" aria-label="Text entry"><button type="button" data-input-mode="keyboard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h1M9.5 10h1M13 10h1M16.5 10h1M7 14h10"/></svg>KEYBOARD</button><button type="button" data-input-mode="voice"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>VOICE</button></div><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="comms-body">
+    <aside class="comm-side">
+      <div id="commList" class="comm-list" role="group" aria-label="Active communications"></div>
+      <div class="mrow"><button type="button" id="newComm">NEW</button><button type="button" id="endComm" class="danger">END</button></div>
+    </aside>
+    <div class="comm-editor">
+      <div id="commEmpty" class="comm-empty" hidden><p>Start a new communication, tap a standard frequency, or contact a detected transmission's origin.</p></div>
+      <div id="commSetup" hidden>
+        <input id="recipientInput" class="list-search" placeholder="Recipient: ship, station or channel" aria-label="Recipient" autocomplete="off" spellcheck="false">
+        <div id="setupFields" class="setup-fields">
+          <div class="cgroup"><small>TRANSMISSION TYPE</small><div class="seg"><button type="button" data-comm-type="Unicast">UNICAST</button><button type="button" data-comm-type="Multicast">MULTICAST</button><button type="button" data-comm-type="Point to point">POINT TO POINT</button></div></div>
+          <div class="cgroup"><small>MEDIUM</small><div class="seg"><button type="button" data-comm-medium="Subspace">SUBSPACE</button><button type="button" data-comm-medium="RF">RF</button></div></div>
+          <button type="button" class="field channel-field" id="channelField"><div><small>CHANNEL</small><b id="channelValue"></b></div><span>SET</span></button>
+          <p class="mnote">Unicast uses channel 0. Multicast and point to point need a specific channel other than 0.</p>
+          <label class="switch" id="encryptRow"><input type="checkbox" id="encryptComm"><span></span>Encrypt point-to-point communication</label>
+          <button type="button" class="primary wide" id="saveComm">OPEN COMMUNICATION</button>
+        </div>
+      </div>
+      <div id="commChat" hidden>
+        <p class="mnote" id="commDetails"></p>
+        <div id="conversation" class="conversation" role="log" aria-label="Communication history"></div>
+        <div class="composer"><input id="messageInput" class="list-search" placeholder="Compose a hail or reply" aria-label="Message" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="sendMessage">SEND</button></div>
+      </div>
+      <div id="commPad" hidden></div>
+      <p class="mnote status" id="commStatus" role="status"></p>
+    </div>
+  </div>
+</dialog>
+
+<!-- Contact settings -->
+<dialog id="contactDialog" class="modal narrow" aria-labelledby="contactTitle">
+  <div class="mhead"><h2 id="contactTitle">CONTACT SETTINGS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="fields-view">
+    <div class="field" data-field="ownChannel"><div><small>OUR SUBSPACE CHANNEL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+    <p class="mnote">Advertise this return channel so other ships can contact us.</p>
+    <button type="button" class="toggle light wide" id="broadcastToggle" aria-pressed="true"><i aria-hidden="true"></i>BROADCAST CHANNEL</button>
+    <p class="mnote status" id="broadcastStatus" role="status"></p>
+    <p class="mnote" data-error role="alert"></p>
+  </div>
+</dialog>
+
+<!-- View screen settings -->
+<dialog id="viewScreenDialog" class="modal wide-modal" aria-labelledby="viewScreenTitle">
+  <div class="mhead"><h2 id="viewScreenTitle">VIEW SCREEN SETTINGS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">The communications officer sets up the bridge view screen. These settings last for this session and describe the future view screen.</p>
+  <div class="view-grid">
+    <div class="msection">
+      <h3>VIEW TYPE</h3>
+      <div class="seg" role="group" aria-label="View Screen mode"><button type="button" data-view-mode="srs">SRS</button><button type="button" data-view-mode="lrs">LRS</button><button type="button" data-view-mode="dual">DUAL</button></div>
+      <h3>SRS RANGE</h3>
+      <div class="toggle-grid" id="srsRanges" role="group" aria-label="SRS Range"></div>
+      <h3>LRS RANGE</h3>
+      <div class="toggle-grid" id="lrsRanges" role="group" aria-label="LRS Range"></div>
+    </div>
+    <div class="msection">
+      <h3>LABELS</h3>
+      <div class="toggle-grid" id="labelsFilters" role="group" aria-label="Labels"></div>
+      <h3>OBJECTS</h3>
+      <div class="toggle-grid" id="objectsFilters" role="group" aria-label="Objects"></div>
+    </div>
+  </div>
+  <p class="mnote status" id="viewScreenStatus" role="status"></p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Detect a sample transmission and set the RF detection range</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>The seven sample transmissions and no communications</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="mrow"><button type="button" id="detectSample">DETECT SAMPLE TRANSMISSION</button></div>
+      <div class="field" data-field="rfRange"><div><small>RF DETECTION RANGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+      <p class="mnote">RF transmissions further away than this are not detected. Subspace has no range limit. Detections drop off the list five minutes after they are heard.</p>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="gto-data.js"></script>
+<script src="comms.js?v=2"></script>
+</body>
+</html>

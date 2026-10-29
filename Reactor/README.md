@@ -17,7 +17,7 @@ Files: `index.html`, `styles.css`, `../Shared/console.css` (the shared console l
   - Eject Core, which asks first.
 - **Menu → Demo controls:** requested ship load and available fuel on the keypad, take 10% damage, station power, refill fuel, install a new core, cold start and reset.
 
-Station power and battery support are not shown on this console; they are planned for their own screen. The battery still exists in the model, which uses it for startup, confinement and load support, and Diagnostics shows its level.
+Station power and battery support are not shown on this console: Battery Control (`../Battery/`) now shows the battery, its recharge and bus support, and power sync. The battery still exists in this console's model, which uses it for startup, confinement and load support, and Diagnostics shows its level; the two demos do not share state.
 
 ## Rules the stand-in follows
 

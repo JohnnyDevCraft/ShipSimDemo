@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Battery Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body class="battery">
+
+<!-- The power schematic fills the space between the side panels. -->
+<svg id="schematic" viewBox="0 0 1000 860" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The reactor feeds the ship bus; its surplus and station power charge the backup battery through the recharge breaker; the battery supplies the bus through the bus power breaker">
+  <defs>
+    <linearGradient id="pipeShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d5a82"/><stop offset=".45" stop-color="#0e2742"/><stop offset="1" stop-color="#173a5c"/></linearGradient>
+    <linearGradient id="cellCharge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ff0b4"/><stop offset="1" stop-color="#1f8f5a"/></linearGradient>
+    <linearGradient id="cellLow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd36b"/><stop offset="1" stop-color="#b8761c"/></linearGradient>
+    <linearGradient id="cellReserve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a7a"/><stop offset="1" stop-color="#a02828"/></linearGradient>
+    <pattern id="reserveHatch" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="none"/><rect width="5" height="14" fill="rgba(255, 182, 72, 0.18)"/></pattern>
+    <clipPath id="cellClip"><rect x="412" y="260" width="176" height="400" rx="14"/></clipPath>
+  </defs>
+
+  <!-- Reactor -->
+  <g id="reactorBox" class="box" data-on="true">
+    <text class="s-label" x="155" y="58" text-anchor="middle">REACTOR</text>
+    <rect x="30" y="70" width="250" height="150" rx="18" class="s-shell"/>
+    <circle cx="70" cy="110" r="9" class="lamp"/>
+    <text id="reactorState" class="s-caption state" x="90" y="116">ONLINE</text>
+    <text class="s-caption" x="155" y="160" text-anchor="middle">OUTPUT</text>
+    <text id="reactorOut" class="s-value big" x="155" y="196" text-anchor="middle">—</text>
+  </g>
+
+  <!-- Reactor straight to the bus -->
+  <g>
+    <rect x="280" y="120" width="440" height="50" rx="10" class="s-pipe"/>
+    <rect x="280" y="131" width="440" height="28" class="s-channel"/>
+    <path id="directStream" d="M282 145H718" class="s-stream power"/>
+    <rect x="420" y="131" width="160" height="28" rx="7" class="s-backing"/>
+    <text id="directFlow" class="s-value" x="500" y="153" text-anchor="middle">—</text>
+    <text class="s-caption" x="500" y="108" text-anchor="middle">REACTOR TO BUS</text>
+  </g>
+
+  <!-- Ship bus -->
+  <g id="busBox" class="box">
+    <text class="s-label" x="845" y="58" text-anchor="middle">SHIP BUS</text>
+    <rect x="720" y="70" width="250" height="200" rx="18" class="s-shell"/>
+    <text class="s-caption" x="745" y="112">LOAD</text><text id="busLoad" class="s-value" x="945" y="114" text-anchor="end">—</text>
+    <line x1="740" y1="132" x2="950" y2="132" class="s-divider"/>
+    <text class="s-caption" x="745" y="166">SUPPLIED</text><text id="busSupply" class="s-value" x="945" y="168" text-anchor="end">—</text>
+    <line x1="740" y1="186" x2="950" y2="186" class="s-divider"/>
+    <text class="s-caption" x="745" y="220">UNMET</text><text id="busUnmet" class="s-value" x="945" y="222" text-anchor="end">—</text>
+    <text class="s-caption" x="845" y="254" text-anchor="middle">PU</text>
+  </g>
+
+  <!-- Reactor surplus down to the charge bus bar -->
+  <g>
+    <path d="M155 220V420H330" class="s-cable"/>
+    <path id="surplusStream" d="M155 222V420H328" class="s-stream power thin"/>
+    <rect x="166" y="380" width="150" height="28" rx="7" class="s-backing"/>
+    <text id="surplusFlow" class="s-value-sm" x="241" y="400" text-anchor="middle">—</text>
+    <text class="s-caption" x="241" y="368" text-anchor="middle">REACTOR SURPLUS</text>
+  </g>
+
+  <!-- Station -->
+  <g id="stationBox" class="box" data-state="away">
+    <text class="s-label" x="155" y="638" text-anchor="middle">STATION</text>
+    <rect x="30" y="650" width="250" height="170" rx="18" class="s-shell"/>
+    <circle cx="70" cy="690" r="9" class="lamp"/>
+    <text id="stationDock" class="s-caption state" x="90" y="696">UNDOCKED</text>
+    <text id="stationUmbilical" class="s-caption" x="155" y="744" text-anchor="middle">UMBILICAL DETACHED</text>
+    <text id="stationSync" class="s-caption" x="155" y="782" text-anchor="middle">POWER SYNC OFF</text>
+  </g>
+
+  <!-- Station umbilical up to the charge bus bar -->
+  <g>
+    <path id="umbilicalLine" d="M280 735H330V640" class="s-umbilical" data-state="detached"/>
+    <path id="stationStream" d="M282 735H330V642" class="s-stream station thin"/>
+    <rect x="164" y="574" width="150" height="28" rx="7" class="s-backing"/>
+    <text id="stationFlow" class="s-value-sm" x="239" y="594" text-anchor="middle">—</text>
+    <text class="s-caption" x="239" y="562" text-anchor="middle">STATION CHARGE</text>
+  </g>
+
+  <!-- Charge bus bar, the recharge breaker and the feed into the battery -->
+  <g>
+    <path d="M330 410V650" class="s-busbar"/>
+    <path d="M330 530H430" class="s-cable"/>
+    <path id="chargeStream" d="M332 530H428" class="s-stream power thin"/>
+    <g id="chargeBreaker" class="breaker" data-closed="true" transform="translate(380 530)">
+      <rect x="-26" y="-20" width="52" height="40" rx="8" class="breaker-box"/>
+      <circle cx="-13" cy="0" r="4" class="breaker-pin"/><circle cx="13" cy="0" r="4" class="breaker-pin"/>
+      <line class="lever" x1="-13" y1="0" x2="13" y2="0"/>
+    </g>
+    <text class="s-caption" x="380" y="578" text-anchor="middle">RECHARGE</text>
+  </g>
+
+  <!-- Backup battery -->
+  <g id="cell" transform="translate(30 0)">
+    <text class="s-label" x="500" y="214" text-anchor="middle">BACKUP BATTERY</text>
+    <rect x="440" y="226" width="40" height="16" rx="4" class="terminal"/><rect x="520" y="226" width="40" height="16" rx="4" class="terminal"/>
+    <rect x="400" y="240" width="200" height="440" rx="24" class="s-shell"/>
+    <g clip-path="url(#cellClip)">
+      <rect x="412" y="580" width="176" height="80" fill="url(#reserveHatch)"/>
+      <rect id="cellFill" x="412" y="260" width="176" height="400" data-level="ok"/>
+    </g>
+    <path d="M412 340H588M412 420H588M412 500H588" class="cell-divider"/>
+    <path d="M404 580H596" class="reserve-line"/>
+    <text class="s-caption reserve-label" x="500" y="572" text-anchor="middle">RESERVE</text>
+    <rect x="412" y="260" width="176" height="400" rx="14" class="s-glass"/>
+    <rect x="426" y="400" width="148" height="104" rx="10" class="s-backing"/>
+    <text id="cellPercent" class="s-core-value" x="500" y="444" text-anchor="middle">—</text>
+    <text id="cellEnergy" class="s-value-sm" x="500" y="470" text-anchor="middle">—</text>
+    <text id="cellState" class="s-caption" x="500" y="493" text-anchor="middle">—</text>
+  </g>
+
+  <!-- Battery to the bus, through the bus power breaker -->
+  <g>
+    <rect x="630" y="436" width="215" height="48" rx="10" class="s-pipe"/>
+    <rect x="630" y="446" width="215" height="28" class="s-channel"/>
+    <rect x="821" y="270" width="48" height="214" rx="10" class="s-pipe"/>
+    <rect x="831" y="270" width="28" height="204" class="s-channel"/>
+    <path id="busStream" d="M632 460H845V272" class="s-stream bus"/>
+    <g id="busBreaker" class="breaker" data-closed="true" transform="translate(682 460)">
+      <rect x="-26" y="-20" width="52" height="40" rx="8" class="breaker-box"/>
+      <circle cx="-13" cy="0" r="4" class="breaker-pin"/><circle cx="13" cy="0" r="4" class="breaker-pin"/>
+      <line class="lever" x1="-13" y1="0" x2="13" y2="0"/>
+    </g>
+    <text class="s-caption" x="682" y="512" text-anchor="middle">BUS POWER</text>
+    <rect x="718" y="446" width="100" height="28" rx="7" class="s-backing"/>
+    <text id="busFlow" class="s-value-sm" x="768" y="466" text-anchor="middle">—</text>
+    <text class="s-caption" x="740" y="424" text-anchor="middle">BATTERY TO BUS</text>
+  </g>
+</svg>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">BATTERY CONTROL</div>
+    <div class="scan-caption">BACKUP BATTERY · 10,000 PU·s · POWER SYNC MONITOR · POWER IN PU</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state battery-state" id="stateBox" title="Battery state"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10.5v3"/><path d="m11 9-2.5 3.5h4L10 16"/></svg><span id="state">—</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: the battery -->
+<div class="col left">
+  <section class="panel battery-panel" aria-label="Battery state">
+    <div class="thead"><h2>BATTERY</h2><small id="batteryState" class="chip">—</small></div>
+    <div class="level">
+      <div class="level-gauge" aria-hidden="true"><i id="levelFill"></i><b class="reserve-mark"></b></div>
+      <div class="level-read"><b id="batteryPercent">—</b><small id="batteryEnergy">—</small></div>
+    </div>
+    <dl class="rows">
+      <div><dt>RESERVE</dt><dd id="batteryReserve">—</dd></div>
+      <div><dt>CHARGING IN</dt><dd id="chargingIn">—</dd></div>
+      <div class="sub"><dt>FROM REACTOR</dt><dd id="fromReactor">—</dd></div>
+      <div class="sub"><dt>FROM STATION</dt><dd id="fromStation">—</dd></div>
+      <div><dt>OUT TO BUS</dt><dd id="outToBus">—</dd></div>
+      <div><dt>NET</dt><dd id="netRate">—</dd></div>
+      <div><dt id="timeLabel">TIME</dt><dd id="timeValue">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<!-- Right: what the battery depends on, monitored here -->
+<div class="col right">
+  <section class="panel monitor-panel" aria-label="Power sync">
+    <div class="thead"><h2>POWER SYNC</h2><small>MONITOR</small></div>
+    <dl class="rows">
+      <div><dt>DOCKING</dt><dd id="dockState">—</dd></div>
+      <div><dt>UMBILICAL</dt><dd id="umbilicalState">—</dd></div>
+      <div><dt>POWER SYNC</dt><dd><i id="syncLight" class="light" aria-hidden="true"></i><span id="syncState">—</span></dd></div>
+      <div><dt>STATION CHARGE</dt><dd id="stationCharge">—</dd></div>
+      <div><dt>CHARGE STAGE</dt><dd id="chargeStage">—</dd></div>
+    </dl>
+    <p class="mnote">Power sync is set up with the station when docked. This console shows it but cannot turn it on or off.</p>
+  </section>
+  <section class="panel monitor-panel" aria-label="Reactor">
+    <div class="thead"><h2>REACTOR</h2><small>MONITOR</small></div>
+    <dl class="rows">
+      <div><dt>STATE</dt><dd id="reactorStatus">—</dd></div>
+      <div><dt>OUTPUT</dt><dd id="reactorOutput">—</dd></div>
+      <div><dt>SHIP LOAD</dt><dd id="shipLoad">—</dd></div>
+      <div><dt>SURPLUS</dt><dd id="surplus">—</dd></div>
+    </dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Battery functions">
+  <button type="button" id="rechargeBtn" aria-pressed="true"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10.5v3"/><path d="M11 9.5v5M8.5 12h5"/></svg></span><span id="rechargeBtnLabel">RECHARGE ON</span></button>
+  <button type="button" id="busBtn" aria-pressed="true"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8" width="11" height="8" rx="1.5"/><path d="M13.5 12H21M18 9l3 3-3 3"/></svg></span><span id="busBtnLabel">BUS POWER ON</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" data-open="diagnosticsDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>DIAGNOSTICS</button>
+</nav>
+
+<!-- Diagnostics: every reading in one place -->
+<dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
+  <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows diag-rows" id="diagnostics"></dl>
+  <p class="mnote">Fictional discovery model; values are provisional.</p>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>The reactor, ship load, battery charge, docking and power sync</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Undocked, reactor online, battery at 86%</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>REACTOR AND SHIP</h3>
+        <label class="switch"><input type="checkbox" id="demoReactor"><span></span>Reactor online</label>
+        <div class="field-grid">
+          <div class="field" data-field="reactorOutput"><div><small>REACTOR OUTPUT</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="load"><div><small>SHIP LOAD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <div class="field" data-field="battery"><div><small>BATTERY CHARGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+      </div>
+      <div class="msection">
+        <h3>STATION</h3>
+        <p class="mstatus" id="demoStation"></p>
+        <div class="mrow"><button type="button" id="demoDock">DOCK</button><button type="button" id="demoUndock">UNDOCK</button></div>
+        <button type="button" id="demoSync" class="wide">START POWER SYNC</button>
+        <p class="mnote">Stand-ins for the station link. The umbilical attaches ten seconds after docking; power sync needs it, and disconnecting takes ten seconds. Stop power sync before undocking.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="battery.js?v=1"></script>
+</body>
+</html>

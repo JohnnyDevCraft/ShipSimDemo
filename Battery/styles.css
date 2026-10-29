@@ -1,0 +1,126 @@
+/* Battery Control. The shared console look is in ../Shared/console.css; this adds the power schematic (in the
+   same drawing style as Reactor Control's), the battery and monitor panels, and the dialogs. Used in landscape. */
+:root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.6rem; }
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.battery-state[data-level="ok"] { color: var(--green); }
+.battery-state[data-level="busy"] { color: #9fd0ff; }
+.battery-state[data-level="warn"] { color: var(--amber); }
+.battery-state[data-level="bad"] { color: var(--red); }
+.battery-state[data-level="off"] { color: var(--muted); }
+.battery-state span { white-space: nowrap; }
+.thead h2, .thead small { white-space: nowrap; }
+
+body.battery {
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(30, 90, 160, 0.18), transparent 60%),
+    linear-gradient(rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    linear-gradient(90deg, rgba(80, 160, 235, 0.06) 1px, transparent 1px) 0 0 / 3rem 3rem,
+    var(--bg);
+}
+
+/* ── Schematic ──────────────────────────────────────────────────────────────────────────────── */
+#schematic {
+  position: fixed; z-index: 1;
+  left: calc(var(--pad) * 2 + var(--left-w)); top: calc(var(--top-h) + 0.5rem);
+  width: calc(100vw - var(--pad) * 4 - var(--left-w) - var(--right-w));
+  height: calc(100dvh - var(--top-h) - 0.5rem - var(--dock-h) - var(--advisory-h) - 1rem);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#schematic text { font-variant-numeric: tabular-nums; }
+.s-label { fill: var(--muted); font-size: 17px; font-weight: 600; letter-spacing: 2.4px; }
+.s-value { fill: var(--text); font-size: 22px; font-weight: 600; }
+.s-value.big { font-size: 30px; }
+.s-value.bad { fill: #ff8f9b; }
+.s-value-sm { fill: #e8fff8; font-size: 16px; font-weight: 600; }
+.s-caption { fill: var(--muted); font-size: 13.5px; letter-spacing: 1.4px; }
+.s-caption.state { font-size: 15px; font-weight: 600; letter-spacing: 2px; }
+.s-shell { fill: rgba(8, 24, 44, 0.88); stroke: var(--edge); stroke-width: 2; }
+.s-glass { fill: none; stroke: rgba(150, 210, 255, 0.35); stroke-width: 1.5; }
+.s-backing { fill: rgba(2, 8, 18, 0.84); }
+.s-divider { stroke: var(--edge-soft); stroke-width: 1.5; }
+.s-pipe { fill: url(#pipeShell); stroke: #4b86b8; stroke-width: 2; }
+.s-channel { fill: #020a14; }
+.s-cable { fill: none; stroke: #2b5880; stroke-width: 16; stroke-linejoin: round; }
+.s-busbar { fill: none; stroke: #4b86b8; stroke-width: 10; stroke-linecap: round; }
+.s-umbilical { fill: none; stroke: #4e6f8f; stroke-width: 14; stroke-linejoin: round; }
+.s-umbilical[data-state="detached"] { stroke: #2a3c4f; stroke-dasharray: 10 12; }
+.s-stream { fill: none; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 8 18; transition: opacity 0.3s; }
+.s-stream.thin { stroke-width: 7; }
+.s-stream.power { stroke: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); }
+.s-stream.station { stroke: #c5a8f0; filter: drop-shadow(0 0 4px #c5a8f0); }
+.s-stream.bus { stroke: var(--green); filter: drop-shadow(0 0 4px var(--green)); }
+.s-stream.idle { opacity: 0; }
+.s-core-value { fill: #fff; font-size: 38px; font-weight: 700; }
+.box .lamp { fill: #3d4f63; }
+#reactorBox[data-on="true"] .lamp { fill: var(--green); filter: drop-shadow(0 0 5px var(--green)); }
+#reactorBox[data-on="true"] .state { fill: var(--green); }
+#reactorBox[data-on="false"] .state { fill: #ff8f9b; }
+#stationBox[data-state="power"] .lamp { fill: #c5a8f0; filter: drop-shadow(0 0 5px #c5a8f0); }
+#stationBox[data-state="power"] .state { fill: #e0d0ff; }
+#stationBox[data-state="docked"] .lamp { fill: var(--amber); }
+.terminal { fill: #4b86b8; }
+#cellFill { fill: url(#cellCharge); transition: y 0.3s, height 0.3s; filter: drop-shadow(0 0 10px rgba(79, 224, 141, 0.5)); }
+#cellFill[data-level="low"] { fill: url(#cellLow); filter: drop-shadow(0 0 10px rgba(255, 182, 72, 0.5)); }
+#cellFill[data-level="reserve"] { fill: url(#cellReserve); filter: drop-shadow(0 0 10px rgba(255, 80, 80, 0.5)); }
+.cell-divider { stroke: rgba(2, 8, 18, 0.55); stroke-width: 2; }
+.reserve-line { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 8 6; }
+.reserve-label { fill: var(--amber); font-size: 11px; }
+.breaker-box { fill: rgba(2, 8, 18, 0.92); stroke: var(--edge); stroke-width: 2; }
+.breaker-pin { fill: #9cc8ff; }
+.breaker .lever { stroke: var(--green); stroke-width: 4; stroke-linecap: round; transform-box: fill-box; transform-origin: left center; transition: transform 0.25s, stroke 0.25s; }
+.breaker[data-closed="false"] .lever { stroke: #ff8f9b; transform: rotate(-38deg); }
+.breaker[data-closed="false"] .breaker-box { stroke: rgba(255, 90, 90, 0.7); }
+
+/* What the battery needs, under the schematic */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel);
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: var(--green);
+}
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
+.advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
+.advisory[data-level="off"] { color: var(--muted); }
+
+/* ── Panels ─────────────────────────────────────────────────────────────────────────────────── */
+.battery-panel { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.8rem; padding: 0.9rem 1rem 1rem; }
+.chip[data-level="ok"] { color: var(--green); }
+.chip[data-level="busy"] { color: var(--cyan); }
+.chip[data-level="warn"] { color: var(--amber); }
+.chip[data-level="bad"] { color: #ff8f9b; }
+.level { flex: 1; min-height: 8rem; display: grid; grid-template-columns: 4.2rem 1fr; gap: 1rem; align-items: stretch; }
+.level-gauge { position: relative; border: 1px solid var(--edge); border-radius: 1rem; background: linear-gradient(180deg, rgba(10, 35, 66, 0.75), rgba(3, 12, 24, 0.85)); overflow: hidden; box-shadow: inset 0 0 1rem rgba(40, 140, 255, 0.18); }
+.level-gauge i { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg, #1f8f5a, #7ff0b4); box-shadow: 0 0 1rem rgba(79, 224, 141, 0.6); transition: height 0.3s; }
+.level-gauge i[data-level="low"] { background: linear-gradient(0deg, #b8761c, #ffd36b); box-shadow: 0 0 1rem rgba(255, 182, 72, 0.6); }
+.level-gauge i[data-level="reserve"] { background: linear-gradient(0deg, #a02828, #ff7a7a); box-shadow: 0 0 1rem rgba(255, 80, 80, 0.6); }
+.reserve-mark { position: absolute; left: 0; right: 0; bottom: 0; height: 20%; border-top: 2px dashed var(--amber); background: repeating-linear-gradient(135deg, rgba(255, 182, 72, 0.18) 0 0.3rem, transparent 0.3rem 0.6rem); }
+.level-read { display: flex; flex-direction: column; justify-content: center; gap: 0.3rem; }
+.level-read b { font-size: 2.3rem; font-weight: 500; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.level-read small { font-size: 0.7rem; }
+.rows .sub dt { padding-left: 0.8rem; font-size: 0.66rem; }
+.rows .sub dd { font-size: 0.78rem; color: var(--muted); }
+.monitor-panel { width: 100%; flex: none; display: grid; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
+.monitor-panel dd { display: flex; align-items: center; gap: 0.45rem; justify-content: flex-end; }
+.monitor-panel dd.good { color: var(--green); }
+.monitor-panel dd.bad { color: #ff8f9b; }
+.light { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #3d4f63; }
+.light[data-state="on"] { background: var(--green); box-shadow: 0 0 0.5rem var(--green); }
+.light[data-state="busy"] { background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
+
+/* ── Dock ───────────────────────────────────────────────────────────────────────────────────── */
+.dock button { min-width: 6.4rem; }
+.dock button.active { color: var(--green); }
+.dock button.active .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
+.dock button[aria-pressed="false"] { color: #ff8f9b; }
+.dock button[aria-pressed="false"] .ring { border-color: rgba(255, 90, 90, 0.6); }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+#diagnosticsDialog { width: min(50rem, 94vw); }
+.diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
+.diag-rows div { padding: 0.5rem 0; }
+.diag-rows dd { max-width: 60%; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.field-grid .field b, .msection .field b { font-size: 1.1rem; }

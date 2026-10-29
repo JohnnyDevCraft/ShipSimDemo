@@ -1,13 +1,223 @@
 <!doctype html>
-<html lang="en" data-beasties-container>
-<head><script>if(!location.hash)location.hash='/demo/toc';</script>
-  <meta charset="utf-8">
-  <title>Admin</title>
-  <base href="../Weapons/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<style>*{box-sizing:border-box}body{margin:0;background:#17212b;color:#e0e8ee;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;line-height:1.5}</style><link rel="stylesheet" href="styles-IXDVMELG.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-IXDVMELG.css"></noscript></head>
-<body>
-  <app-root></app-root>
-<link rel="modulepreload" href="chunk-T6JYABCD.js"><script src="main-HNGCEZAO.js" type="module"></script></body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tactical Officer Control · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=7">
+</head>
+<body class="tactical">
+
+<!-- The tactical scanner fills the window, heading up, as on the Helm's SRS view. -->
+<canvas id="map" aria-label="Tactical scanner. Tap a contact to select it as the target."></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="scan-tabs" role="group" aria-label="Scanner mode"><button type="button" data-mode="SRS" class="active" aria-pressed="true">SRS</button><button type="button" data-mode="LRS" aria-pressed="false">LRS</button></div>
+    <div class="scan-caption"><span id="scanTitle">TACTICAL · SHORT RANGE SCAN</span> · <span id="scanRange">—</span></div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <button type="button" id="conditionBadge" class="condition-badge" aria-haspopup="dialog" title="Readiness condition"><span>CONDITION</span><b id="conditionValue">IV</b></button>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: our weapons and our shields -->
+<div class="col left">
+  <section class="panel weapons" aria-label="Weapons control">
+    <div class="thead"><h2>WEAPONS</h2><small id="weaponsState" class="chip">—</small></div>
+    <div class="weapon-grid" id="weaponGrid"></div>
+  </section>
+  <section class="panel shields" aria-label="Shields monitoring">
+    <div class="thead"><h2>SHIELDS</h2><small id="shieldsState" class="chip">—</small></div>
+    <svg id="shieldDiagram" viewBox="-240 -160 480 320" role="img" aria-label="Our shield quadrants">
+      <g id="ownQuadrants"></g>
+      <path id="ownHull" d="M0 -40 L13 -14 L13 30 L0 38 L-13 30 L-13 -14 Z"/>
+    </svg>
+    <dl class="rows">
+      <div><dt>TOTAL</dt><dd id="totalSeo">—</dd></div>
+      <div><dt>GENERATOR</dt><dd id="generator">—</dd></div>
+      <div><dt>HULL</dt><dd id="ownHullValue">—</dd></div>
+    </dl>
+    <div class="bar hull-bar" aria-hidden="true"><i id="ownHullFill"></i></div>
+  </section>
+</div>
+
+<!-- Right: the target, and the scanner range -->
+<div class="col right">
+  <section class="panel target tactical-target" id="targetPanel" aria-label="Target information" hidden>
+    <div class="thead"><h2>TARGET</h2><small id="targetKind" class="chip">—</small></div>
+    <div class="tname"><i id="targetDot"></i><div><h3 id="targetName">—</h3><p id="targetSub">—</p></div></div>
+    <dl class="rows" id="targetRows">
+      <div><dt>DISTANCE</dt><dd id="tDistance">—</dd></div>
+      <div><dt>SPEED</dt><dd id="tSpeed">—</dd></div>
+      <div><dt>BEARING</dt><dd id="tBearing">—</dd></div>
+      <div data-ship><dt>HULL</dt><dd id="tHull">—</dd></div>
+      <div data-ship><dt>WEAPONS</dt><dd id="tWeapons">—</dd></div>
+      <div data-ship><dt>PEOPLE ABOARD</dt><dd id="tPeople">—</dd></div>
+      <div data-ship><dt>WARP COILS</dt><dd id="tCoils">—</dd></div>
+      <div data-body hidden><dt>RADIUS</dt><dd id="tRadius">—</dd></div>
+    </dl>
+    <div class="bar coil-bar" data-ship aria-hidden="true"><i id="tCoilFill"></i></div>
+    <div class="target-shields" data-ship id="targetShields" aria-label="Target shield quadrants"></div>
+    <div class="scan-state" data-ship><small id="scanStatus">—</small><div class="bar"><i id="scanFill"></i></div></div>
+    <p class="tsub" data-ship>SUBSYSTEM <b id="tSubsystem">None selected</b></p>
+  </section>
+  <section class="panel target-empty" id="noTarget" aria-label="No target">
+    <div class="thead"><h2>TARGET</h2><small>NONE</small></div>
+    <p class="mnote">Tap a contact on the scanner to select a target.</p>
+  </section>
+  <section class="panel range" aria-label="Scanner range">
+    <h2>RANGE</h2>
+    <div id="rangeSlider" class="vslider range-slider" aria-label="Scanner range"></div>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Tactical functions">
+  <button type="button" id="scanBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12 18 6"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg></span>SCAN TARGET</button>
+  <button type="button" id="subsystemsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg></span>SUBSYSTEMS</button>
+  <button type="button" id="clearBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="m8.5 8.5 7 7M15.5 8.5l-7 7"/></svg></span>CLEAR TARGET</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="shieldsBtn" class="shields-toggle" aria-pressed="true"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6Z"/><path d="M8.5 12 11 14.5 15.5 9.5"/></svg></span><span id="shieldsLabel">SHIELDS ON</span></button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="cameraBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/><circle cx="12" cy="10.5" r="2.6"/></svg></span>VIEW SCREEN</button>
+  <button type="button" id="conditionBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 7.8 8 9 4.6-1.2 8-4.5 8-9V6Z"/><path d="M12 8v5M12 16v.5"/></svg></span>CONDITION</button>
+</nav>
+
+<!-- View screen camera -->
+<dialog id="cameraDialog" class="modal camera-modal" aria-labelledby="cameraTitle">
+  <div class="mhead"><h2 id="cameraTitle">VIEW SCREEN CAMERA</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="camera-grid">
+    <div class="camera-stick">
+      <span class="stick-hint up">ZOOM IN</span>
+      <span class="stick-hint down">ZOOM OUT</span>
+      <span class="stick-hint left">PORT</span>
+      <span class="stick-hint right">STBD</span>
+      <div id="cameraStick" class="jbase stick2" role="slider" tabindex="0" aria-label="Camera. Push left or right to turn the camera, up or down to zoom." aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0">
+        <div class="jring"></div><div class="jaxis"></div><div id="cameraKnob" class="jknob"></div>
+      </div>
+    </div>
+    <div class="camera-dial">
+      <button type="button" class="view-btn fwd" data-camera-view="forward" aria-pressed="true">FORWARD</button>
+      <button type="button" class="view-btn port" data-camera-view="port" aria-pressed="false">PORT</button>
+      <svg viewBox="-60 -60 120 120" aria-hidden="true" class="dial">
+        <circle r="46" class="dial-ring"/>
+        <path id="cameraWedge" class="dial-wedge" d=""/>
+        <path class="dial-ship" d="M0 -14 L7 10 L0 6 L-7 10 Z"/>
+      </svg>
+      <button type="button" class="view-btn stbd" data-camera-view="starboard" aria-pressed="false">STARBOARD</button>
+      <button type="button" class="view-btn aft" data-camera-view="aft" aria-pressed="false">AFT</button>
+    </div>
+    <div class="camera-read">
+      <div><small>CAMERA</small><b id="cameraBearing">000.0°</b><span id="cameraView">FORWARD VIEW</span></div>
+      <div class="zoom-read"><small>ZOOM</small><b id="cameraZoom">1×</b><div class="zoom-bar" aria-hidden="true"><i id="cameraZoomFill"></i></div></div>
+    </div>
+  </div>
+  <p class="mnote">The camera bearing is measured from the bow. Push the stick further to turn or zoom faster; let go to hold. The bridge view screen follows at once.</p>
+</dialog>
+
+<!-- Readiness condition -->
+<dialog id="conditionDialog" class="modal narrow" aria-labelledby="conditionTitle">
+  <div class="mhead"><h2 id="conditionTitle">READINESS CONDITION</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="condition-grid" id="conditionGrid" role="group" aria-label="Readiness condition"></div>
+  <p class="mnote">Sets the ship's readiness for the crew. It does not change the weapons or shields.</p>
+</dialog>
+
+<!-- Target subsystems -->
+<dialog id="subsystemsDialog" class="modal wide-modal" aria-labelledby="subsystemsTitle">
+  <div class="mhead"><h2 id="subsystemsTitle">TARGET SUBSYSTEMS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mstatus" id="subsystemsStatus"></p>
+  <div class="subsystem-grid" id="subsystemGrid"></div>
+  <p class="mnote">Detailed scan within <span id="scanReach">30,000 km</span>; shields up triple the scan time. After a scan, pick a subsystem at any range: it locks within 25 km, shots aim at it only while locked, and hits within 5 km strike it alone. FQ forward · AQ aft · SQ starboard · PQ port · OD omnidirectional. Training-ship subsystem fixtures.</p>
+</dialog>
+
+<!-- Ship destroyed -->
+<dialog id="destroyedDialog" class="modal narrow destroyed" aria-labelledby="destroyedTitle">
+  <h2 id="destroyedTitle">SHIP DESTROYED</h2>
+  <p>Simulation ended.</p>
+  <button type="button" id="restartBtn" class="primary wide">RESTART DEMO</button>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>The training ships, our flight, weapon settings, scans and identification</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>One training ship 110 km out, our hull and shields full</span></button>
+    <a href="../ViewScreen/index.html" target="_blank" rel="noopener"><b>View Screen</b><span>The bridge screen this console's camera points</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="demo-grid">
+        <div class="demo-col">
+          <div class="msection">
+            <h3>TRAINING SHIPS</h3>
+            <div class="field-grid">
+              <div class="field" data-field="enemyImpulse"><div><small>ENEMY IMPULSE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <label class="field-select"><small>ENEMY BEHAVIOUR</small><select id="demoBehavior" aria-label="Enemy behaviour"><option value="attack">Attack us</option><option value="run">Run from us</option></select></label>
+            </div>
+            <div class="mrow"><button type="button" id="demoAddShip">ADD RANDOM TARGET</button><button type="button" id="demoCoils">CHARGE TARGET COILS</button></div>
+            <label class="switch"><input type="checkbox" id="demoHostile"><span></span>Enemy contacts</label>
+            <label class="switch"><input type="checkbox" id="demoKnown"><span></span>Enemies known on entry</label>
+            <p class="mnote">Unknown contacts stay green; enemies are identified within 100 km and stay red. Coils charge in 10 seconds and only show the preparation.</p>
+          </div>
+        </div>
+        <div class="demo-col">
+          <div class="msection">
+            <h3>OUR FLIGHT</h3>
+            <div class="field-grid">
+              <div class="field" data-field="ownImpulse"><div><small>OUR IMPULSE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <label class="field-select"><small>NAVIGATION</small><select id="demoNavigation" aria-label="Navigation"><option value="follow">Follow the enemy</option><option value="away">Move away</option></select></label>
+            </div>
+            <p class="mstatus" id="demoFlight"></p>
+          </div>
+          <div class="msection">
+            <h3>DETAILED SCANS</h3>
+            <div class="field-grid">
+              <div class="field" data-field="scanKm"><div><small>SCAN DISTANCE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="scanMs"><div><small>SCAN TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="people"><div><small>PEOPLE ABOARD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <label class="switch compact"><input type="checkbox" id="demoArmed"><span></span>Target armed</label>
+            </div>
+            <p class="mnote">Armed and people aboard are captured when a scan completes.</p>
+          </div>
+        </div>
+        <div class="demo-col">
+          <div class="msection">
+            <h3>WEAPONS</h3>
+            <div class="field-grid">
+              <div class="field" data-field="cannonPower"><div><small>CANNON POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="cannonSpeed"><div><small>CANNON SPEED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="cannonRangeKm"><div><small>CANNON TARGETING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="cannonFullKm"><div><small>CANNON FULL POWER TO</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="cannonZeroKm"><div><small>CANNON DISSIPATES AT</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="torpedoYield"><div><small>TORPEDO YIELD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="torpedoSpeed"><div><small>TORPEDO SPEED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="torpedoRangeKm"><div><small>TORPEDO TARGETING</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="torpedoLifetime"><div><small>TORPEDO LIFETIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+              <div class="field" data-field="arrayPower"><div><small>ARRAY POWER</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+            </div>
+            <p class="mnote">The training ships fire the same weapons at half our power settings.</p>
+          </div>
+        </div>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/nav-world.js?v=2"></script>
+<script src="../Shared/view-screen-settings.js?v=2"></script>
+<script src="camera.js?v=1"></script>
+<script src="tactical.js?v=5"></script>
+</body>
 </html>

@@ -89,6 +89,24 @@ run({
     await expect.poll(() => visible(page, 'Earth')).toBe(null);
     assert.equal((await state(page)).settings.objects.planets, false);
   },
+  'the tactical officer points the camera: aft, abeam or any bearing, and zooms to any value': async ({ open }) => {
+    const page = await open('/ViewScreen/?models=0');
+    const tactical = await open('/ViewScreen/?models=0');
+    await tactical.evaluate(() => ViewScreenSettings.write({ camera: 180 }));
+    await expect(page.locator('#caption')).toHaveText('AFT VIEW · ZOOM 1× · SRS 1 BKM · LRS 30 LY');
+    await expect.poll(async () => (await state(page)).camera).toBe(180);
+    // Earth is dead ahead, so it is behind the aft view; the heading scale reads the bearing looked along.
+    assert.equal(await visible(page, 'Earth'), null);
+    await tactical.evaluate(() => ViewScreenSettings.write({ camera: 0, zoom: 3.5 }));
+    await expect(page.locator('#caption')).toHaveText('FORWARD VIEW · ZOOM 3.5× · SRS 1 BKM · LRS 30 LY');
+    await expect.poll(async () => (await state(page)).zoom).toBe(3.5);
+    assert.ok(Math.abs((await visible(page, 'Earth')).angle) < 0.01, 'Earth ahead again');
+    // A small turn glides; the view follows any bearing.
+    await tactical.evaluate(() => ViewScreenSettings.write({ camera: 12 }));
+    await expect(page.locator('#caption')).toHaveText('VIEW 012° REL · ZOOM 3.5× · SRS 1 BKM · LRS 30 LY');
+    await expect.poll(async () => Math.round((await state(page)).camera * 100) / 100).toBe(12);
+    assert.ok(Math.abs((await visible(page, 'Earth')).angle + 12) < 0.01, 'Earth 12° to the left');
+  },
   'the screen follows the Helm and plays ahead between its reports': async ({ open }) => {
     const page = await open('/ViewScreen/?models=0');
     const helm = await open('/ViewScreen/?models=0');
@@ -165,7 +183,7 @@ run({
     await expect(page.locator('#advisory')).toHaveText(/^Tactical target Earth Orbital Station · 93,229 KM · ahead\.$/);
     await demo(page, () => page.locator('#demoTarget').selectOption('Sol|TNS Endeavor'));
     await expect(page.locator('#targetSub')).toHaveText('Terran Navy · TN-0388');
-    await expect(page.locator('#targetView')).toHaveText('Off screen to port');
+    await expect(page.locator('#targetView')).toHaveText('Off screen to the left');
     await demo(page, () => page.locator('#demoTarget').selectOption(''));
     await expect(page.locator('#noTarget')).toBeVisible();
   },

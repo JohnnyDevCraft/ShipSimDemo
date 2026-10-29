@@ -1,0 +1,21 @@
+/* EPW and EBW Control: the energy weapon panel. The scope, target and zoom panels and bottom bar are in
+   ./scope.css (after ./console.css). The shot power slider sits beside the chambers (phase cannon) or the
+   capacitor (phaser array), each filling as it charges, with the shot power marked across it. */
+.charge { flex: 1; min-height: 12rem; display: grid; grid-template-columns: 6.6rem 1fr; gap: 0.8rem; }
+.power-control { min-height: 0; display: grid; grid-template-rows: auto auto auto 1fr; justify-items: start; gap: 0.15rem; }
+.power-control small, .cell small { font-size: 0.6rem; letter-spacing: 0.12em; white-space: nowrap; }
+.power-control b { font-size: 1.55rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; line-height: 1.15; }
+.power-control em { font-style: normal; font-size: 0.62rem; color: var(--muted); margin-bottom: 0.4rem; white-space: nowrap; }
+.power-control .vslider { width: 100%; height: 100%; min-height: 7rem; }
+
+.cells { min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.45rem; }
+.cell { min-height: 0; display: grid; grid-template-rows: auto 1fr auto; justify-items: center; gap: 0.35rem; }
+.cell-tube { position: relative; width: 100%; max-width: 2.6rem; height: 100%; min-height: 6rem; border: 1px solid var(--edge); border-radius: 0.8rem; background: linear-gradient(180deg, rgba(10, 35, 66, 0.75), rgba(3, 12, 24, 0.85)); box-shadow: inset 0 0 0.8rem rgba(40, 140, 255, 0.18); overflow: hidden; }
+.cells[data-count="1"] .cell-tube { max-width: 4.4rem; }
+.cell-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: linear-gradient(0deg, #1a6fe6, #4fd6ff); box-shadow: 0 0 0.8rem var(--cyan); transition: height 0.1s linear; }
+.energy[data-weapon="array"] .cell-fill { background: linear-gradient(0deg, #c27a14, #ffd36b); box-shadow: 0 0 0.8rem var(--amber); }
+.cell-mark { position: absolute; left: -1px; right: -1px; height: 2px; margin-bottom: -1px; background: #fff; box-shadow: 0 0 0.4rem #fff; }
+.cell span { font-size: 0.62rem; letter-spacing: 0.1em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cell[data-state="ready"] span, .cell[data-state="next"] span { color: var(--green); }
+.cell[data-state="next"] .cell-tube { border-color: var(--green); box-shadow: 0 0 0.8rem rgba(79, 224, 141, 0.55), inset 0 0 0.8rem rgba(79, 224, 141, 0.25); }
+.cell[data-state="next"] small { color: var(--green); }

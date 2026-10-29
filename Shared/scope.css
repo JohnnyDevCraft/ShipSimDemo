@@ -1,0 +1,129 @@
+/* The forward targeting scope shared by the weapon consoles (Torpedo Launch, EPW and EBW Control): the
+   full-window scope, the aim tape, the target and zoom panels, the advisory line, the bottom bar's toggles and
+   the history. Loaded after ./console.css; each console adds its weapon panel. Used in landscape. */
+:root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.6rem; }
+body.scope-page { background: #000; }
+/* Notices drop below the aim tape. */
+.toast { top: calc(var(--top-h) + 3.8rem); }
+
+/* The scope layers fill the window; the overlay canvas takes the drags, taps, pinches and wheel. */
+.scope-layer { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#stars, #scene3d { pointer-events: none; }
+#hud { touch-action: none; cursor: grab; }
+#hud:active { cursor: grabbing; }
+
+/* Top bar */
+.title-pill { min-width: 17rem; padding: 0.5rem 1.4rem; border: 1px solid #63b4ff; border-radius: 0.7rem; background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.5); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.16em; text-align: center; }
+.weapon-state[data-level="off"] { color: var(--muted); }
+.weapon-state[data-level="busy"] { color: #9fd0ff; }
+.weapon-state[data-level="ok"] { color: var(--green); }
+.weapon-state[data-level="bad"] { color: #ff6b6b; text-shadow: 0 0 0.5rem rgba(255, 80, 80, 0.6); }
+
+/* Columns stop above the bottom bar so the bar never covers them. */
+.col { bottom: calc(var(--dock-h) + 0.5rem); }
+.thead h2, .thead small { white-space: nowrap; }
+
+/* ── Aim tape ───────────────────────────────────────────────────────────────────────────────── */
+.aim-tape {
+  position: fixed; z-index: 2; top: calc(var(--top-h) + 0.6rem); left: 50%; transform: translateX(-50%);
+  width: min(30rem, calc(100vw - var(--left-w) - var(--right-w) - var(--pad) * 6));
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.9rem;
+  padding: 0.45rem 1rem; border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel); pointer-events: none;
+}
+.aim-tape small { font-size: 0.6rem; color: var(--cyan); }
+.aim-tape.delegated small, .aim-tape.delegated b { color: var(--amber); }
+.aim-tape > b { min-width: 4.2rem; text-align: right; font-size: 1rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tape { position: relative; height: 1.7rem; margin: 0 0.6rem; background: repeating-linear-gradient(90deg, rgba(150, 190, 220, 0.5) 0 1px, transparent 1px calc(100% / 12)) 0 0 / calc(100% + 1px) 0.45rem no-repeat; border-top: 1px solid rgba(150, 190, 220, 0.5); }
+.tape span { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 0.58rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tape i { position: absolute; top: -0.35rem; width: 0; height: 0; transform: translateX(-50%); }
+.tape .mark { border: 0.45rem solid transparent; border-top-color: var(--cyan); filter: drop-shadow(0 0 0.3rem var(--cyan)); }
+.aim-tape.delegated .tape .mark { border-top-color: var(--amber); filter: drop-shadow(0 0 0.3rem var(--amber)); }
+.tape .lead { top: -0.15rem; width: 0.7rem; height: 0.7rem; border: 2px solid #ffe04b; border-radius: 50%; }
+
+/* ── Weapon panel (left): the parts every weapon shares ─────────────────────────────────────── */
+.weapon-panel { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.7rem; padding: 0.9rem 1rem 1rem; }
+.control-mode.delegated { color: var(--amber); }
+.fire-row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0.6rem; }
+.fire-row button { min-height: 3.2rem; font-weight: 600; letter-spacing: 0.14em; }
+#armBtn.active { border-color: #ff8a8a; color: #ffd0d0; background: rgba(90, 20, 20, 0.7); }
+.fire-row .fire:not(.blocked) { background: linear-gradient(180deg, #d6453a, #8f1f1a); border-color: #ff8a70; color: #fff; box-shadow: 0 0 1rem rgba(255, 70, 50, 0.5); }
+.fire-row button.blocked { opacity: 0.4; cursor: not-allowed; }
+.fire-row button.blocked:hover { box-shadow: none; }
+
+/* ── Target and zoom (right) ────────────────────────────────────────────────────────────────── */
+.target-panel { width: 100%; flex: none; display: grid; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
+.target-panel .tname i { --dot: #99d9ff; }
+.target-panel[data-affiliation="enemy"] .tname i { --dot: var(--red); }
+.target-panel[data-affiliation="friendly"] .tname i { --dot: var(--green); }
+.target-panel[data-affiliation="body"] .tname i { --dot: #a5aab0; }
+.target-panel[data-affiliation="enemy"] #targetKind { color: #ff8f8f; }
+.target-panel .tname h3 { font-size: 1.2rem; }
+.target-panel .tname p { font-size: 0.75rem; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.stats div { display: grid; gap: 0.1rem; padding: 0.4rem 0.6rem; border: 1px solid var(--edge-soft); border-radius: 0.55rem; background: rgba(9, 28, 52, 0.45); min-width: 0; }
+.stats small { font-size: 0.55rem; }
+.stats b { font-size: 0.85rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shield-block { display: grid; grid-template-columns: 7.2rem 1fr; gap: 0.7rem; align-items: center; }
+.hull-stack { min-width: 0; display: grid; gap: 0.35rem; }
+.hull-stack > small { font-size: 0.55rem; line-height: 1.3; }
+.shields { display: grid; grid-template-columns: 1fr 4.2rem 1fr; grid-template-rows: auto 4.2rem auto; grid-template-areas: ". f ." "p d s" ". a ."; align-items: center; justify-items: center; gap: 0.1rem 0.3rem; }
+.shields svg { grid-area: d; width: 100%; height: 100%; }
+.qv { display: grid; justify-items: center; line-height: 1.1; }
+.qv small { font-size: 0.5rem; }
+.qv b { font-size: 0.8rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.qv.f { grid-area: f; } .qv.s { grid-area: s; } .qv.a { grid-area: a; } .qv.p { grid-area: p; }
+.q { stroke-width: 7; stroke-linecap: round; stroke: var(--cyan); filter: drop-shadow(0 0 3px var(--cyan)); transition: stroke 0.3s; }
+.q[data-level="low"] { stroke: var(--amber); filter: drop-shadow(0 0 3px var(--amber)); }
+.q[data-level="down"] { stroke: rgba(255, 90, 90, 0.45); stroke-dasharray: 3 6; filter: none; }
+.hull-icon { fill: rgba(80, 140, 200, 0.35); stroke: #9cc3e6; stroke-width: 1.5; }
+.hull-line { display: flex; justify-content: space-between; align-items: baseline; }
+.hull-line small { font-size: 0.6rem; }
+.hull-line b { font-size: 0.9rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.hull-bar i { background: linear-gradient(90deg, #2fae6a, var(--green)); box-shadow: 0 0 0.5rem var(--green); }
+.hull-bar i.low { background: linear-gradient(90deg, #b8322e, var(--red)); box-shadow: 0 0 0.5rem var(--red); }
+#subsystemNote { font-size: 0.68rem; }
+.target-chip { position: static; display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.6rem 0.9rem; border: 1px solid var(--edge-soft); border-radius: 0.9rem; font-size: 0.68rem; letter-spacing: 0.12em; color: var(--muted); pointer-events: auto; }
+.target-chip i { width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 1.5px solid var(--muted); }
+.zoom-panel { flex: 1; min-height: 9rem; width: 100%; display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
+.zoom-panel .vslider { flex: 1; width: 100%; min-height: 6rem; }
+#zoomValue { color: var(--cyan); font-size: 0.8rem; }
+
+/* What the firing solution needs, above the bottom bar */
+.advisory {
+  position: fixed; z-index: 2; margin: 0;
+  left: calc(var(--pad) * 2 + var(--left-w)); right: calc(var(--pad) * 2 + var(--right-w));
+  bottom: calc(var(--dock-h) + 0.5rem); min-height: var(--advisory-h);
+  display: flex; align-items: center; justify-content: center; padding: 0.3rem 1rem;
+  border: 1px solid var(--edge-soft); border-radius: 2rem; background: var(--panel); pointer-events: none;
+  font-size: 0.82rem; line-height: 1.3; letter-spacing: 0.03em; text-align: center; color: #ffe04b;
+}
+.advisory[data-level="ok"] { color: var(--green); border-color: rgba(79, 224, 141, 0.55); box-shadow: 0 0 1rem rgba(79, 224, 141, 0.2); }
+.advisory[data-level="warn"] { color: var(--amber); border-color: rgba(255, 182, 72, 0.5); }
+.advisory[data-level="off"] { color: var(--muted); }
+
+/* ── Dock ───────────────────────────────────────────────────────────────────────────────────── */
+.dock button.active { color: var(--cyan); }
+.dock button.active .ring { border-color: var(--cyan); background: radial-gradient(circle, rgba(40, 120, 230, 0.75), rgba(8, 30, 60, 0.85)); box-shadow: 0 0 1.1rem var(--glow), inset 0 0 0.8rem rgba(79, 214, 255, 0.35); }
+.dock button.delegate.active { color: var(--amber); }
+.dock button.delegate.active .ring { border-color: var(--amber); background: radial-gradient(circle, rgba(150, 90, 20, 0.6), rgba(30, 18, 4, 0.85)); box-shadow: 0 0 1.1rem rgba(255, 182, 72, 0.45); }
+.dock button.blocked { opacity: 0.4; cursor: not-allowed; }
+.dock button.blocked:hover .ring { border-color: var(--edge); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
+.dock .ring { position: relative; }
+.badge { position: absolute; top: -0.3rem; right: -0.45rem; min-width: 1.2rem; height: 1.2rem; padding: 0 0.3rem; border-radius: 0.6rem; background: var(--blue); border: 1px solid #63b4ff; font-style: normal; font-size: 0.62rem; line-height: 1.1rem; text-align: center; color: #fff; }
+
+/* ── Dialogs ────────────────────────────────────────────────────────────────────────────────── */
+#historyDialog { width: min(40rem, 94vw); }
+.history { display: grid; gap: 0.5rem; max-height: 60dvh; overflow-y: auto; scrollbar-width: none; }
+.history::-webkit-scrollbar { display: none; }
+.shot { display: grid; gap: 0.2rem; padding: 0.6rem 0.9rem; border: 1px solid var(--edge-soft); border-left: 3px solid var(--tone, var(--muted)); border-radius: 0.6rem; background: rgba(9, 28, 52, 0.45); }
+.shot div { display: flex; justify-content: space-between; gap: 0.8rem; }
+.shot b { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.08em; }
+.shot em { font-style: normal; font-size: 0.68rem; letter-spacing: 0.12em; color: var(--tone, var(--muted)); }
+.shot span { font-size: 0.75rem; color: var(--muted); }
+.shot[data-result="impact"], .shot[data-result="proximity"] { --tone: var(--green); }
+.shot[data-result="miss"] { --tone: var(--amber); }
+.shot[data-result="flight"] { --tone: var(--cyan); }
+.history-actions { margin-top: 0.9rem; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.field-grid .field b, .msection .field b { font-size: 1.1rem; }
+.shot[data-result="hit"] { --tone: var(--green); }

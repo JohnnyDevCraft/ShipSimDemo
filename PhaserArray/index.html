@@ -1,13 +1,168 @@
 <!doctype html>
-<html lang="en" data-beasties-container>
-<head><script>if(!location.hash)location.hash='/demo/ebc';</script>
-  <meta charset="utf-8">
-  <title>Admin</title>
-  <base href="../Weapons/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<style>*{box-sizing:border-box}body{margin:0;background:#17212b;color:#e0e8ee;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:13px;line-height:1.5}</style><link rel="stylesheet" href="styles-IXDVMELG.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-IXDVMELG.css"></noscript></head>
-<body>
-  <app-root></app-root>
-<link rel="modulepreload" href="chunk-T6JYABCD.js"><script src="main-HNGCEZAO.js" type="module"></script></body>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EBW Control · Phaser Array · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="../Shared/scope.css?v=1">
+<link rel="stylesheet" href="../Shared/energy-weapon.css?v=1">
+</head>
+<body class="scope-page energy" data-weapon="array">
+
+<!-- The forward targeting scope fills the window: stars, the 3D models, and the targeting overlay on top. -->
+<canvas id="stars" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="scene3d" class="scope-layer" aria-hidden="true"></canvas>
+<canvas id="hud" class="scope-layer" role="img" aria-label="Forward targeting scope. Drag left or right to aim; tap a ship to select it."></canvas>
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">EBW CONTROL</div>
+    <div class="scan-caption">PHASER ARRAY · ENERGY BEAM WEAPON · 360° ACQUISITION ARC</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state weapon-state" id="stateBox" title="Weapon state"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2.5 5 13.5h6l-1 8 8-11h-6Z"/></svg><span id="state">SAFE</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Aim across the acquisition arc, with the intercept bearing in yellow -->
+<div class="aim-tape" id="aimTape">
+  <small id="aimMode">MANUAL AIM</small>
+  <div class="tape" aria-hidden="true"><i id="leadMarker" class="lead" hidden></i><i id="aimMarker" class="mark"></i></div>
+  <b id="aimValue">0.0°</b>
+</div>
+
+<!-- Left: the weapon: shot power, charge, arm and fire -->
+<div class="col left" id="weaponCol">
+  <section class="panel weapon-panel" aria-label="Phaser Array">
+    <div class="thead"><h2>PHASER ARRAY</h2><small id="fireMode" class="control-mode">LOCAL FIRE</small></div>
+    <div class="charge">
+      <div class="control power-control">
+        <small>SHOT POWER</small><b id="powerValue">65%</b><em id="powerDamage">—</em>
+        <div id="powerSlider" class="vslider range-slider" aria-label="Shot power"></div>
+      </div>
+      <div class="cells" id="cells" role="group" aria-label="Charge"></div>
+    </div>
+    <dl class="rows">
+      <div><dt>SUPPLY</dt><dd id="supply">—</dd></div>
+      <div><dt>RECHARGE</dt><dd id="recharge">—</dd></div>
+      <div><dt>BEAM</dt><dd>1 s · 100 km</dd></div>
+      <div><dt>LAST SHOT</dt><dd id="lastShot">None</dd></div>
+      <div><dt>SHOTS FIRED</dt><dd id="shotsFired">0</dd></div>
+    </dl>
+    <div class="fire-row"><button type="button" id="armBtn">ARM</button><button type="button" id="fireBtn" class="danger fire">FIRE BEAM</button></div>
+  </section>
+</div>
+
+<!-- Right: the selected target and the zoom -->
+<div class="col right" id="targetCol">
+  <section class="panel target-panel" id="targetPanel" aria-label="Selected target" hidden>
+    <div class="thead"><h2>TARGET</h2><small id="targetKind"></small></div>
+    <div class="tname"><i aria-hidden="true"></i><div><h3 id="targetName"></h3><p id="targetSub"></p></div></div>
+    <div class="stats">
+      <div><small>RANGE</small><b id="targetRange">—</b></div>
+      <div><small>BEARING</small><b id="targetBearing">—</b></div>
+      <div><small>INTERCEPT</small><b id="targetIntercept">—</b></div>
+      <div><small>SOLUTION</small><b id="targetSolution">—</b></div>
+    </div>
+    <div id="shieldBlock" class="shield-block">
+      <div class="shields" id="shieldDiagram" aria-label="Shield SEO per quadrant">
+        <span class="qv f"><small>F</small><b id="q0">50</b></span>
+        <span class="qv p"><small>P</small><b id="q3">50</b></span>
+        <svg viewBox="-60 -60 120 120" aria-hidden="true">
+          <path data-q="0" d="M-32.1-38.3A50 50 0 0 1 32.1-38.3" class="q"/>
+          <path data-q="1" d="M38.3-32.1A50 50 0 0 1 38.3 32.1" class="q"/>
+          <path data-q="2" d="M32.1 38.3A50 50 0 0 1-32.1 38.3" class="q"/>
+          <path data-q="3" d="M-38.3 32.1A50 50 0 0 1-38.3-32.1" class="q"/>
+          <path d="M0-30C6-24 8-14 8-4V26H-8V-4C-8-14-6-24 0-30Z" class="hull-icon"/>
+        </svg>
+        <span class="qv s"><small>S</small><b id="q1">50</b></span>
+        <span class="qv a"><small>A</small><b id="q2">50</b></span>
+      </div>
+      <div class="hull-stack">
+        <small>SHIELDS · SEO EACH SIDE</small>
+        <div class="hull-line"><small>HULL</small><b id="hullValue">500 / 500</b></div>
+        <div class="bar hull-bar"><i id="hullBar"></i></div>
+        <p class="mnote" id="subsystemNote"></p>
+      </div>
+    </div>
+  </section>
+  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP</div>
+  <section class="panel zoom-panel" aria-label="Zoom">
+    <div class="thead"><h2>ZOOM</h2><small id="zoomValue">1.0×</small></div>
+    <div id="zoomSlider" class="vslider range-slider" aria-label="Scope zoom"></div>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Weapon functions">
+  <button type="button" id="historyBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4.5V9H8"/><path d="M12 7.5V12l3 2"/></svg><em id="historyCount" class="badge" hidden></em></span>HISTORY</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="delegateFireBtn" class="delegate" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4.5h5.5V10"/><path d="M19.5 4.5 11 13"/><path d="M18 14v4.5a1 1 0 0 1-1 1H5.5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1H10"/></svg></span>DELEGATE FIRE</button>
+  <button type="button" id="delegateAimBtn" class="delegate" aria-pressed="false"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.2"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/></svg></span>DELEGATE AIM</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="clearTarget"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="m9 9 6 6M15 9l-6 6"/></svg></span>CLEAR TARGET</button>
+</nav>
+
+<!-- History of shots fired -->
+<dialog id="historyDialog" class="modal" aria-labelledby="historyTitle">
+  <div class="mhead"><h2 id="historyTitle">SHOTS FIRED</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="history" id="historyList" role="log" aria-label="Shot results"></div>
+  <div class="mrow history-actions"><button type="button" id="clearHistory">CLEAR HISTORY</button></div>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Ships, supply and charge times, damage, and the bridge's aim and fire</span></button>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>One training ship, an empty charge and the default settings</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>SHIPS</h3>
+        <div class="mrow"><button type="button" id="addShip">ADD RANDOM SHIP</button><button type="button" id="moveShips">PAUSE SHIP MOVEMENT</button></div>
+        <p class="mnote">Target shields: 200 SEO, 50 per quadrant, recovering 10 SEO a quadrant every 15 seconds. Hull: 500 kinetic damage.</p>
+      </div>
+      <div class="msection">
+        <h3>CHARGING</h3>
+        <div class="field" data-field="supply"><div><small>SUPPLY LEVEL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="field-grid">
+          <div class="field" data-field="fullChargeMs"><div><small>FULL-POWER CHARGE TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="slowChargeMs"><div><small>MINIMUM-POWER CHARGE TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Supply 0 pauses charging; 1 is the minimum operating supply and charges slowest; 100 is full supply.</p>
+      </div>
+      <div class="msection">
+        <h3>DAMAGE AT FULL SHOT POWER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="maxWed"><div><small>MAX WED</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="maxWkd"><div><small>MAX WKD</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mnote">Phaser array: 60 WED / 60 WKD at full shot power. The beam hits at once, lasts a second and reaches 100 km: full damage to 50 km, a tenth at 100 km.</p>
+      </div>
+      <div class="msection">
+        <h3>BRIDGE</h3>
+        <div class="field" data-field="bridgeAim"><div><small>BRIDGE AIM</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="mrow"><button type="button" id="bridgeFire" class="danger">BRIDGE FIRE</button></div>
+        <p class="mnote">Stand-ins for the bridge: they work once aim or fire control is delegated.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=5"></script>
+<script src="../Shared/scene.js?v=1"></script>
+<script src="../Shared/scope.js?v=1"></script>
+<script src="../Shared/energy-weapon.js?v=1"></script>
+</body>
 </html>

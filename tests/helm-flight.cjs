@@ -1,5 +1,5 @@
 // Flying Helm Control: the helm has to be on course, charged, at zero impulse and with the external dampener field
-// down to engage warp, and leaving warp discharges the coils and brings the field back up. Warp is set in warp factors from 0.25 up to the ship's rating.
+// down to engage warp (the coils may charge with it up), and leaving warp discharges the coils and brings the field back up. Warp is set in warp factors from 0.25 up to the ship's rating.
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -9,16 +9,17 @@ run({
     await page.locator('#warpTab').click();
     await expect(page.locator('#warpPane')).toBeVisible();
     await expect(page.locator('#impulsePane')).toBeHidden();
-    await expect(page.locator('#chargeBtn')).toBeDisabled(); // the external field is up
-    await expect(page.locator('#engineNote')).toHaveText(/external dampener field off/);
-    await page.locator('#extField').click();
-    await expect(page.locator('#extField')).toHaveAttribute('aria-pressed', 'false');
-    await page.locator('#chargeBtn').click();
+    await expect(page.locator('#extField')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#chargeBtn').click(); // the coils charge with the external field up
     await expect(page.locator('#chargeValue')).toHaveText('100%', { timeout: 15000 });
     await expect(page.locator('#engage')).toBeDisabled(); // charged, but not on course
     await page.locator('#alignBtn').click();
     await expect(page.locator('.heading')).toHaveAttribute('data-lock', 'COURSE LOCK', { timeout: 40000 });
     await expect(page.locator('#headingValue')).toHaveText('047.0°');
+    await expect(page.locator('#engage')).toBeDisabled(); // on course, but the external field is up
+    await expect(page.locator('#engineNote')).toHaveText(/external dampener field off to engage warp/);
+    await page.locator('#extField').click();
+    await expect(page.locator('#extField')).toHaveAttribute('aria-pressed', 'false');
     await expect(page.locator('#engage')).toBeEnabled();
     await page.locator('#engage').click();
     await expect(page.locator('#state')).toHaveText('AT WARP');

@@ -1,5 +1,5 @@
-// Flying Helm Control: the helm has to be on course, charged and at zero impulse to engage warp, and
-// leaving warp discharges the coils. Warp is set in warp factors from 0.25 up to the ship's rating.
+// Flying Helm Control: the helm has to be on course, charged, at zero impulse and with the external dampener field
+// down to engage warp, and leaving warp discharges the coils and brings the field back up. Warp is set in warp factors from 0.25 up to the ship's rating.
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -9,6 +9,10 @@ run({
     await page.locator('#warpTab').click();
     await expect(page.locator('#warpPane')).toBeVisible();
     await expect(page.locator('#impulsePane')).toBeHidden();
+    await expect(page.locator('#chargeBtn')).toBeDisabled(); // the external field is up
+    await expect(page.locator('#engineNote')).toHaveText(/external dampener field off/);
+    await page.locator('#extField').click();
+    await expect(page.locator('#extField')).toHaveAttribute('aria-pressed', 'false');
     await page.locator('#chargeBtn').click();
     await expect(page.locator('#chargeValue')).toHaveText('100%', { timeout: 15000 });
     await expect(page.locator('#engage')).toBeDisabled(); // charged, but not on course
@@ -24,9 +28,11 @@ run({
     await expect(page.locator('#srsBlank')).toBeVisible(); // SRS cannot scan at warp
     await page.locator('[data-mode="LRS"]').click();
     await expect(page.locator('#srsBlank')).toBeHidden();
+    await expect(page.locator('#extField')).toBeDisabled(); // cannot come up at warp
     await page.locator('#engage').click();
     await expect(page.locator('#state')).toHaveText('SUBLIGHT');
     await expect(page.locator('#chargeValue')).toHaveText('0%');
+    await expect(page.locator('#extField')).toHaveAttribute('aria-pressed', 'true'); // up again on leaving warp
     await expect(page.locator('#targetName')).toHaveText('Gliese 1061');
   },
   'warp factors run from 0.25 to the rating chosen in demo controls': async ({ open }) => {
@@ -79,6 +85,25 @@ run({
   'the heading box shows the heading and the joystick, and no status text': async ({ open }) => {
     const page = await open('/Helm/');
     assert.equal((await page.locator('.heading').innerText()).replace(/\s+/g, ' ').trim(), 'HEADING 000.0°');
+  },
+  'the external dampener field is a green toggle on the dock that impulse needs': async ({ open }) => {
+    const page = await open('/Helm/');
+    const field = page.locator('#extField');
+    await expect(field).toHaveAttribute('aria-pressed', 'true');
+    const lit = await field.locator('.ring').evaluate(ring => getComputedStyle(ring).backgroundImage);
+    assert.match(lit, /radial-gradient/);
+    await page.locator('#impulse').focus();
+    await page.keyboard.press('End');
+    await expect(page.locator('#impulse')).toHaveAttribute('aria-valuenow', '100');
+    await field.click();
+    await expect(field).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#impulse')).toHaveAttribute('aria-valuenow', '0'); // impulse stops with the field
+    await expect(page.locator('#impulse')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#engineNote')).toHaveText('EXTERNAL FIELD OFF');
+    const unlit = await field.locator('.ring').evaluate(ring => getComputedStyle(ring).backgroundImage);
+    assert.notEqual(unlit, lit);
+    await field.click();
+    await expect(page.locator('#impulse')).not.toHaveAttribute('aria-disabled', 'true');
   },
   'reverse impulse is a toggle on the dock that lights up while on': async ({ open }) => {
     const page = await open('/Helm/');

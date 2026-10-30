@@ -230,13 +230,13 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 /* ── Dock ────────────────────────────────────────────────────────────────────────────────────── */
 .dock {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2; height: var(--dock-h);
-  display: flex; align-items: flex-start; justify-content: center; gap: 0.45rem; padding: 0.75rem 2.4rem 0;
+  display: flex; align-items: flex-start; justify-content: center; gap: 0.4rem; padding: 0.75rem 2.2rem 0;
   filter: drop-shadow(0 0 0.8rem rgba(20, 110, 220, 0.3));
 }
 .dock::before, .dock::after { content: ''; position: absolute; z-index: -1; clip-path: polygon(3rem 0, calc(100% - 3rem) 0, 100% 100%, 0 100%); }
 .dock::before { inset: 0; background: var(--edge); }
 .dock::after { inset: 1px 1px 0; background: rgba(4, 14, 28, 0.92); }
-.dock button { display: grid; justify-items: center; gap: 0.4rem; min-width: 4.75rem; min-height: 0; padding: 0; border: 0; background: transparent; font-size: 0.6rem; letter-spacing: 0.06em; white-space: nowrap; }
+.dock button { display: grid; justify-items: center; gap: 0.4rem; min-width: 4.2rem; min-height: 0; padding: 0; border: 0; background: transparent; font-size: 0.6rem; letter-spacing: 0.06em; white-space: nowrap; }
 .dock button:hover:not(:disabled) { box-shadow: none; }
 .dock .ring { width: 3.25rem; height: 3.25rem; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--edge); background: radial-gradient(circle, rgba(20, 60, 110, 0.6), rgba(4, 14, 28, 0.8)); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
 .dock button:hover .ring, .dock button:focus-visible .ring { border-color: var(--cyan); box-shadow: 0 0 1.1rem var(--glow); }
@@ -251,6 +251,11 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .dock .toggle[aria-pressed="true"] { color: #ffd08a; }
 .dock .toggle[aria-pressed="true"] .ring { background: radial-gradient(circle at 50% 40%, #ffe2a8, var(--amber) 70%); border-color: #ffe2a8; color: var(--panel-solid); box-shadow: 0 0 1.2rem rgba(255, 182, 72, 0.75), 0 0 2.4rem rgba(255, 182, 72, 0.35); }
 .dock .toggle[aria-pressed="true"] .ring svg { stroke-width: 2.4; }
+/* The external inertial dampener field: a green toggle, bright green while the field is up. */
+.dock .extfield .ring { border-color: rgba(79, 224, 141, 0.6); color: #8ff0b8; box-shadow: 0 0 0.8rem rgba(79, 224, 141, 0.25), inset 0 0 0.8rem rgba(79, 224, 141, 0.15); }
+.dock .extfield:hover:not(:disabled) .ring, .dock .extfield:focus-visible .ring { border-color: var(--green); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.5); }
+.dock .extfield.toggle[aria-pressed="true"] { color: #b6f7cf; }
+.dock .extfield.toggle[aria-pressed="true"] .ring { background: radial-gradient(circle at 50% 40%, #d2ffe3, var(--green) 70%); border-color: #d2ffe3; color: var(--panel-solid); box-shadow: 0 0 1.2rem rgba(79, 224, 141, 0.75), 0 0 2.4rem rgba(79, 224, 141, 0.35); }
 @media (orientation: portrait) {
   .dock { left: 0; right: 0; transform: none; gap: 0.5rem; padding: 0.75rem 2.8rem 0; }
 }

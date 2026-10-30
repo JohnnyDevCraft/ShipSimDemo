@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Helm Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<link rel="stylesheet" href="helm.css?v=1">
+<link rel="stylesheet" href="helm.css?v=2">
 </head>
 <body>
 <canvas id="map" aria-label="Scanner map. Select a contact for its course and distance."></canvas>
@@ -98,6 +98,7 @@
   <button type="button" data-open="rangeDialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 4.5-9 4.5-9-4.5Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg></span>RANGE</button>
   <span class="dock-sep" aria-hidden="true"></span>
   <button type="button" id="reverse" class="brake toggle" aria-pressed="false" title="Reverse impulse · 10% speed cap"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M6.5 13.5 12 19l5.5-5.5"/><path d="M7 4h10"/></svg></span>REVERSE</button>
+  <button type="button" id="extField" class="extfield toggle" aria-pressed="true" title="External inertial dampener field · needed for impulse · switch it off to form a warp field"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.4"/><path d="M7.5 7.5a6.4 6.4 0 0 0 0 9M16.5 7.5a6.4 6.4 0 0 1 0 9M4.6 4.6a10.4 10.4 0 0 0 0 14.8M19.4 4.6a10.4 10.4 0 0 1 0 14.8"/></svg></span>EXT FIELD</button>
   <button type="button" id="light" class="brake" title="Hold to brake lightly"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M6 7a7.5 7.5 0 0 0 0 10M18 7a7.5 7.5 0 0 1 0 10"/></svg></span>LIGHT BRAKE</button>
   <button type="button" id="hard" class="brake hard" title="Hold to brake hard"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M7 8a6 6 0 0 0 0 8M17 8a6 6 0 0 1 0 8M3.8 5a10 10 0 0 0 0 14M20.2 5a10 10 0 0 1 0 14"/></svg></span>HARD BRAKE</button>
   <button type="button" id="stop" class="brake stop" title="Bring the ship to a full stop"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7Z"/><path d="M8 12h8"/></svg></span>FULL STOP</button>
@@ -191,7 +192,7 @@
 <script src="../Shared/nav-world.js?v=2"></script>
 <script src="../Shared/nav-computer.js?v=1"></script>
 <script src="safety.js?v=2"></script>
-<script src="helm.js?v=2"></script>
+<script src="helm.js?v=3"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

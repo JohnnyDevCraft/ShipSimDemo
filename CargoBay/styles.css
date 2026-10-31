@@ -89,7 +89,8 @@ body.cargo-bay {
 .side-by-side { display: grid; grid-template-columns: 3fr 2fr; align-items: start; gap: 0.7rem; }
 
 /* ── The delivery request ─────────────────────────────────────────────────────────────────────── */
-.request { width: 100%; flex: none; display: grid; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
+/* The request gives way before the log does: it scrolls on a short window, and the log keeps room for its heading and an entry. */
+.request { width: 100%; flex: 0 1 auto; min-height: 0; overflow-y: auto; display: grid; gap: 0.6rem; padding: 0.9rem 1rem 1rem; }
 .receiver { display: grid; gap: 0.15rem; }
 .receiver b { font-size: 1.05rem; font-weight: 500; }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; }
@@ -101,14 +102,21 @@ body.cargo-bay {
 .steps li[data-current="true"]::before { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 0.6rem var(--cyan); }
 .steps li[data-refused="true"] { color: #ff8f9b; }
 .steps li[data-refused="true"]::before { background: var(--red); border-color: var(--red); box-shadow: 0 0 0.6rem var(--red); }
-.answer { margin: 0; padding: 0.55rem 0.7rem; border: 1px solid var(--edge-soft); border-radius: 0.6rem; font-size: 0.75rem; line-height: 1.45; color: var(--cyan); max-height: 7rem; overflow: auto; }
+.answer { margin: 0; padding: 0.55rem 0.7rem; border: 1px solid var(--edge-soft); border-radius: 0.6rem; font-size: 0.75rem; line-height: 1.45; color: var(--cyan); max-height: 4.8rem; overflow: auto; }
 .answer[data-level="good"] { color: var(--green); border-color: rgba(79, 224, 141, 0.45); }
 .answer[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.55); }
 .request-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .request-actions #prepareBtn { grid-column: 1 / -1; }
-.transporter-link { font-size: 0.75rem; color: var(--green); text-decoration: none; letter-spacing: 0.04em; }
-.transporter-link:hover { text-decoration: underline; }
-.log { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.9rem 1rem 1rem; }
+/* Approved: the transporter is the next step, so it takes the top row and Prepare Again takes Transmit's place. */
+.request-actions[data-approved="true"] #prepareBtn { grid-column: auto; order: 2; }
+.request-actions[data-approved="true"] #cancelBtn { order: 3; }
+.transporter-link {
+  grid-column: 1 / -1; order: 1; display: flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(79, 224, 141, 0.6); border-radius: 0.5rem; background: rgba(14, 70, 44, 0.6); box-shadow: 0 0 0.8rem rgba(79, 224, 141, 0.25);
+  color: var(--green); font-size: 0.8rem; letter-spacing: 0.09em; text-align: center; text-decoration: none;
+}
+.transporter-link:hover { border-color: var(--green); box-shadow: 0 0 1rem rgba(79, 224, 141, 0.45); }
+.log { flex: 1 0 8rem; min-height: 8rem; width: 100%; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.9rem 1rem 1rem; }
 .log-list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 0.4rem; }
 .log-list > * { flex: none; }
 .log-entry { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.5rem; padding: 0.45rem 0.6rem; border: 1px solid rgba(255, 182, 72, 0.35); border-radius: 0.55rem; background: rgba(40, 26, 6, 0.35); font-size: 0.75rem; }

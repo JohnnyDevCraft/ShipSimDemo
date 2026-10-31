@@ -6,7 +6,7 @@
 <title>Cargo Bay · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body class="cargo-bay">
 
@@ -72,12 +72,12 @@
       <div><dt>DISCREPANCIES LOGGED</dt><dd id="requestLog">—</dd></div>
     </dl>
     <p id="answer" class="answer" role="status" aria-live="polite" hidden></p>
-    <div class="request-actions">
+    <div class="request-actions" id="requestActions">
       <button type="button" id="prepareBtn" class="primary">PREPARE REQUEST</button>
       <button type="button" id="transmitBtn">TRANSMIT</button>
       <button type="button" id="cancelBtn" class="danger">CANCEL</button>
+      <button type="button" id="transporterLink" class="transporter-link" hidden>SEND THE CARGO BY TRANSPORTER ›</button>
     </div>
-    <button type="button" id="transporterLink" class="transporter-link" hidden>SEND THE CARGO BY TRANSPORTER ›</button>
   </section>
   <section class="panel log" aria-label="Discrepancy log">
     <div class="thead"><h2>DISCREPANCY LOG</h2><small id="logCount">0</small></div>
@@ -162,7 +162,7 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=4"></script>
-<script src="cargobay.js?v=1"></script>
+<script src="cargobay.js?v=2"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 // Cargo Bay fits any landscape window from an iPad to a 4K monitor: the top bar, the hold, the manifests, the delivery request and
 // the discrepancy log, and the bottom bar stay on screen and apart, nothing spills sideways out of a panel, panel headings clear
-// their values, and the dialogs fit.
+// their values, an approved request leaves the log room to show an entry, and the dialogs fit.
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -24,6 +24,8 @@ for (const [width, height] of sizes)
     await page.locator('#prepareBtn').click();
     assert.ok(await dialogFits(page, 'prepareDialog'), 'the prepare dialog fits');
     await page.locator('#prepareSave').click();
+    await page.locator('#transmitBtn').click();
+    await expect(page.locator('#approvalState')).toHaveText('DELIVERY APPROVED', { timeout: 6000 });
     await page.locator('[data-view="compare"]').click();
     await page.waitForTimeout(150);
     const boxes = {};
@@ -39,7 +41,10 @@ for (const [width, height] of sizes)
     assert.deepEqual(spill, [], 'nothing spills sideways out of its panel');
     const heads = await page.evaluate(() => [...document.querySelectorAll('.col .thead')].filter(t => t.offsetParent).map(t => { const [a, b] = [...t.children].map(c => c.getBoundingClientRect()); return { name: t.firstElementChild.textContent, gap: b.left - a.right }; }));
     for (const head of heads) assert.ok(head.gap >= 4, `${head.name} clears its value (${head.gap})`);
-    for (const control of ['#prepareBtn', '#transmitBtn', '#inspectBtn', '#dockTransmit', '#menuBtn']) await expect(page.locator(control)).toBeInViewport({ ratio: 0.99 });
+    // Approved, the request grows by its answer and the transporter step; the log still shows its first entry whole.
+    const entry = await page.evaluate(() => { const list = document.getElementById('logList').getBoundingClientRect(), e = document.querySelector('#logList .log-entry')?.getBoundingClientRect(); return e ? Math.min(e.bottom, list.bottom) - Math.max(e.top, list.top) >= e.height - 0.5 : false; });
+    assert.ok(entry, 'the discrepancy log shows its first entry whole');
+    for (const control of ['#prepareBtn', '#transporterLink', '#cancelBtn', '#inspectBtn', '#menuBtn']) await expect(page.locator(control)).toBeInViewport({ ratio: 0.99 });
     await page.locator('#logBtn').click();
     assert.ok(await dialogFits(page, 'logDialog'), 'the log dialog fits');
     await page.locator('#logDialog [data-close]').first().click();

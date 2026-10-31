@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cargo Bay · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body class="cargo-bay">
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">CARGO BAY</div>
+    <div class="scan-caption" id="caption">CARGO BAY · MANIFESTS AND DELIVERY</div>
+  </div>
+  <div class="topright">
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="ship-state" id="ordersBox" title="Cargo orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6Z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg><span id="ordersState">NO ORDERS</span></div>
+    <div class="ship-state" id="approvalBox" title="Delivery request"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span id="approvalState">NO REQUEST</span></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- Left: what is aboard -->
+<div class="col left">
+  <section class="panel hold" aria-label="Cargo aboard">
+    <div class="thead"><h2>CARGO ABOARD</h2><small id="holdNote">—</small></div>
+    <dl class="rows hold-totals">
+      <div><dt>CRATES</dt><dd id="crateCount">0</dd></div>
+      <div><dt>MASS</dt><dd id="crateMass">0 KG</dd></div>
+      <div><dt>INSPECTED</dt><dd id="inspectedCount">0 / 0</dd></div>
+    </dl>
+    <div class="list-head"><small>BY TYPE</small></div>
+    <div id="typeList" class="type-list" role="list" aria-label="Crates aboard by type"></div>
+    <div class="list-head"><small>CRATES</small><b id="crateListCount">0</b></div>
+    <div id="crateList" class="crate-list" role="list" aria-label="Crates aboard"></div>
+  </section>
+</div>
+
+<!-- Centre: the manifests -->
+<main class="bay-main panel" aria-label="Manifests">
+  <div class="main-head">
+    <div class="seg views" role="tablist" aria-label="Manifest view">
+      <button type="button" role="tab" data-view="expected">EXPECTED</button>
+      <button type="button" role="tab" data-view="received">RECEIVED</button>
+      <button type="button" role="tab" data-view="compare">COMPARE</button>
+      <button type="button" role="tab" data-view="crate">CRATE</button>
+    </div>
+    <small id="viewNote"></small>
+  </div>
+  <div id="viewBody" class="view-body"></div>
+</main>
+
+<!-- Right: the delivery request and the discrepancy log -->
+<div class="col right">
+  <section class="panel request" aria-label="Delivery request">
+    <div class="thead"><h2>DELIVERY REQUEST</h2><small id="requestNote">—</small></div>
+    <div class="receiver"><small>RECEIVER</small><b id="receiverName">—</b></div>
+    <ol class="steps" id="steps" aria-label="Request status">
+      <li data-step="prepared">PREPARED</li>
+      <li data-step="transmitted">TRANSMITTED</li>
+      <li data-step="approved">APPROVED</li>
+      <li data-step="delivered">DELIVERED</li>
+    </ol>
+    <dl class="rows">
+      <div><dt>CRATES</dt><dd id="requestCrates">—</dd></div>
+      <div><dt>RECEIVED MANIFESTS</dt><dd id="requestReceived">—</dd></div>
+      <div><dt>INVENTORIED</dt><dd id="requestInventory">—</dd></div>
+      <div><dt>DISCREPANCIES LOGGED</dt><dd id="requestLog">—</dd></div>
+    </dl>
+    <p id="answer" class="answer" role="status" aria-live="polite" hidden></p>
+    <div class="request-actions">
+      <button type="button" id="prepareBtn" class="primary">PREPARE REQUEST</button>
+      <button type="button" id="transmitBtn">TRANSMIT</button>
+      <button type="button" id="cancelBtn" class="danger">CANCEL</button>
+    </div>
+    <button type="button" id="transporterLink" class="transporter-link" hidden>SEND THE CARGO BY TRANSPORTER ›</button>
+  </section>
+  <section class="panel log" aria-label="Discrepancy log">
+    <div class="thead"><h2>DISCREPANCY LOG</h2><small id="logCount">0</small></div>
+    <div id="logList" class="log-list" role="list" aria-label="Logged discrepancies"></div>
+  </section>
+</div>
+
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Cargo bay functions">
+  <button type="button" data-dock-view="expected"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6Z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span>EXPECTED</button>
+  <button type="button" data-dock-view="received"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>RECEIVED</button>
+  <button type="button" data-dock-view="compare" id="compareBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6v14H4zM14 5h6v14h-6z"/><path d="M10 12h4"/></svg></span>COMPARE</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="inspectBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 6 6"/></svg></span>INSPECT CRATE</button>
+  <button type="button" id="logBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17v.5"/></svg></span>LOG DISCREPANCY</button>
+  <span class="dock-sep" aria-hidden="true"></span>
+  <button type="button" id="dockPrepare"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M8 9l2 2 4-4M8 15h8"/></svg></span>PREPARE REQUEST</button>
+  <button type="button" id="dockTransmit"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h3M17 12h3M12 4v3M12 17v3"/><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M6.3 17.7l1.4-1.4M16.3 7.7l1.4-1.4"/></svg></span>TRANSMIT</button>
+</nav>
+
+<!-- Log a discrepancy of the crew's own -->
+<dialog id="logDialog" class="modal" aria-labelledby="logTitle">
+  <div class="mhead"><h2 id="logTitle">LOG DISCREPANCY</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <form id="logForm" class="msection" method="dialog">
+    <label class="lfield"><small>CRATE</small><select id="logCrate" required></select></label>
+    <label class="lfield"><small>ITEM</small><input id="logItem" list="logItems" required autocomplete="off"><datalist id="logItems"></datalist></label>
+    <div class="mrow">
+      <label class="lfield"><small>MANIFEST STATES</small><input id="logStated" type="number" min="0" step="1" inputmode="numeric"></label>
+      <label class="lfield"><small>COUNTED</small><input id="logActual" type="number" min="0" step="1" inputmode="numeric" required></label>
+    </div>
+    <label class="lfield"><small>NOTE</small><input id="logNote" maxlength="240" autocomplete="off" placeholder="What the crew found"></label>
+    <p class="mnote" id="logError" data-error></p>
+    <div class="mrow"><button type="button" data-close>CANCEL</button><button type="submit" class="primary" id="logSave">LOG</button></div>
+  </form>
+</dialog>
+
+<!-- Prepare the delivery request: who receives the cargo -->
+<dialog id="prepareDialog" class="modal" aria-labelledby="prepareTitle">
+  <div class="mhead"><h2 id="prepareTitle">PREPARE DELIVERY REQUEST</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div class="msection">
+    <h3>RECEIVER</h3>
+    <div id="receiverList" class="place-list" role="list" aria-label="Receivers"></div>
+  </div>
+  <div class="msection">
+    <h3>THE REQUEST CARRIES</h3>
+    <dl class="rows" id="prepareSummary"></dl>
+    <p class="mnote">The receiver reviews the manifests received with the crates, your inventory and the discrepancies you logged. It approves only cargo that is aboard, consigned to it, inventoried, and whose discrepancies are logged — within 100,000 km.</p>
+  </div>
+  <div class="mrow"><button type="button" data-close>CANCEL</button><button type="button" class="primary" id="prepareSave">PREPARE</button></div>
+</dialog>
+
+<!-- Menu and demo controls -->
+<dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Cargo orders, the communications array, the ship's position, more cargo and reset</span></button>
+    <a href="../Transporter/index.html"><b>Transporter Control</b><span>Beam cargo aboard, or to its receiver once approved</span></a>
+    <a href="../Communications/index.html"><b>Communications</b><span>Hail your organization for a mission; delivery answers arrive here too</span></a>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>ORDERS AND SHIP</h3>
+        <label class="switch"><input type="checkbox" id="ordersActive"><span></span>Cargo orders active (Atlas Bulk Transport)</label>
+        <label class="switch"><input type="checkbox" id="commsPowered"><span></span>Communications array powered</label>
+        <label class="switch"><input type="checkbox" id="shipFar"><span></span>Ship far from Earth (every receiver out of reach)</label>
+      </div>
+      <div class="msection">
+        <h3>CARGO</h3>
+        <div class="mrow"><button type="button" id="addCrate">BEAM ANOTHER CRATE ABOARD</button></div>
+        <p class="mnote">A crate that is not on the orders, brought aboard with its own manifest. Some crates hold a little more or less than their manifest says.</p>
+      </div>
+      <div class="msection">
+        <h3>DEMO</h3>
+        <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
+        <p class="mnote">Reset puts the original four crates back aboard, restores the orders and clears inspections, the log and the request.</p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=4"></script>
+<script src="cargobay.js?v=1"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
+</body>
+</html>

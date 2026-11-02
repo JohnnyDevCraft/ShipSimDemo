@@ -100,6 +100,11 @@
           <button type="button" class="field channel-field" id="channelField"><div><small>CHANNEL</small><b id="channelValue"></b></div><span>SET</span></button>
           <p class="mnote">Unicast uses channel 0. Multicast and point to point need a specific channel other than 0.</p>
           <label class="switch" id="encryptRow"><input type="checkbox" id="encryptComm"><span></span>Encrypt point-to-point communication</label>
+          <div class="cgroup route-group" id="routeGroup">
+            <div class="route-head"><small>RELAY ROUTE</small><b id="routeState" class="route-state"></b></div>
+            <ol id="routeHops" class="route-hops" aria-label="Route hops"></ol>
+            <div class="mrow route-actions"><button type="button" id="addRelay">ADD RELAY</button><button type="button" id="removeRelay">REMOVE LAST</button><button type="button" id="clearRoute">DIRECT</button></div>
+          </div>
           <button type="button" class="primary wide" id="saveComm">OPEN COMMUNICATION</button>
         </div>
       </div>
@@ -109,6 +114,20 @@
         <div class="composer"><input id="messageInput" class="list-search" placeholder="Compose a hail or reply" aria-label="Message" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="sendMessage">SEND</button></div>
       </div>
       <div id="commPad" hidden></div>
+      <div id="relayPicker" class="relay-picker" hidden>
+        <div class="route-head"><small id="relayFrom"></small><button type="button" id="relayCancel">CANCEL</button></div>
+        <div id="relayChoose">
+          <div id="relayList" class="scroll-list relay-list" role="list" aria-label="Communications buoys"></div>
+          <p class="mnote">A buoy relays subspace up to 20 LY each way. Each hop must be within the sender's transmit reach and the receiver's receive reach, both ways.</p>
+        </div>
+        <div id="relayCodeStep" hidden>
+          <small id="relayCodeTitle" class="code-title"></small>
+          <input id="relayCode" class="list-search code-input" placeholder="XXXX-XXXX" aria-label="Access code" autocomplete="off" spellcheck="false">
+          <p id="relayCodeHint" class="mnote"></p>
+          <p class="mnote status" id="relayStatus" role="alert"></p>
+          <div class="mrow"><button type="button" id="relayCodeBack">BACK</button><button type="button" class="primary" id="relayCodeAdd">ADD TO ROUTE</button></div>
+        </div>
+      </div>
       <p class="mnote status" id="commStatus" role="status"></p>
     </div>
   </div>
@@ -155,7 +174,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Detect a sample transmission and set the RF detection range</span></button>
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Detect a sample transmission, set the RF detection range and our array's reach, and see whose buoys are whose</span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>The seven sample transmissions and no communications</span></button>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
   </div>
@@ -164,6 +183,9 @@
       <div class="mrow"><button type="button" id="detectSample">DETECT SAMPLE TRANSMISSION</button></div>
       <div class="field" data-field="rfRange"><div><small>RF DETECTION RANGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
       <p class="mnote">RF transmissions further away than this are not detected. Subspace has no range limit. Detections drop off the list five minutes after they are heard.</p>
+      <div class="cgroup"><small>OUR COMMUNICATIONS ARRAY · TX AND RX REACH</small><div class="seg" role="group" aria-label="Array reach"><button type="button" data-array="3">MARK I · 3 LY</button><button type="button" data-array="6">MARK II · 6 LY</button><button type="button" data-array="10">MARK III · 10 LY</button></div></div>
+      <div class="cgroup"><small>BUOYS · OUR SHIP SERVES TERRAN SPACE COMMAND, ALLIED WITH THE TERRAN FEDERATION</small><ul id="codeBook" class="code-book"></ul></div>
+      <p class="mnote">The computer holds the access codes of our organization's buoys and our allies'. Any other buoy asks for its code, and there is no way to learn one yet.</p>
       <p class="mnote" data-error role="alert"></p>
     </div>
   </div>
@@ -172,7 +194,7 @@
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/view-screen-settings.js?v=2"></script>
 <script src="gto-data.js"></script>
-<script src="comms.js?v=4"></script>
+<script src="comms.js?v=6"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

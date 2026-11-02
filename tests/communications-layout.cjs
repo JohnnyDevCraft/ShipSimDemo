@@ -37,6 +37,8 @@ for (const [width, height] of sizes)
     await expect(page.locator('#frequencyDialog .search-keys [data-key="DONE"]')).toBeInViewport({ ratio: 1 });
     await page.locator('#frequencyDialog .search-keys [data-key="DONE"]').click();
     await page.locator('#frequencyDialog [data-close]').click();
+    // Ross Orbital Station is in reach of our array (the cargo ship selected first is out of reach).
+    await page.locator('#transmissions .tx', { hasText: 'Ross Orbital Station' }).click();
     await page.locator('#contactBtn').click();
     await page.locator('#saveComm').click();
     assert.ok(await dialogFits(page, 'commsDialog'), 'communications fit');
@@ -44,6 +46,27 @@ for (const [width, height] of sizes)
     await expect(page.locator('#commChat .search-keys [data-key="DONE"]')).toBeInViewport({ ratio: 1 });
     await expect(page.locator('#sendMessage')).toBeInViewport({ ratio: 1 });
     await page.locator('#commChat .search-keys [data-key="DONE"]').click();
+    // A setup with a two-buoy route still fits, its Open Communication button within reach (the fields scroll).
+    await page.locator('#newComm').click();
+    await page.locator('#recipientInput').click();
+    for (const key of 'EARTH ORBITAL STATION') await page.locator(`#commSetup .search-keys [data-key="${key === ' ' ? 'SPACE' : key}"]`).first().click();
+    await page.locator('#commSetup .search-keys [data-key="DONE"]').click();
+    // The code step of a buoy we hold no code for fits too (a buoy handed to Ash Corsairs for the test).
+    await page.evaluate(() => CommsControl.set({ relayOwner: ['relay-gj-905', 'Ash Corsairs'] }));
+    await page.locator('#addRelay').click();
+    await page.locator('[data-relay="relay-gj-905"]').click();
+    await page.locator('#relayCode').click();
+    await expect(page.locator('#relayCodeAdd')).toBeInViewport({ ratio: 0.99 });
+    await page.locator('#relayCodeBack').click();
+    await page.locator('#relayCancel').click();
+    for (const relay of ['relay-ross-128', 'relay-sol']) {
+      await page.locator('#addRelay').click();
+      await page.locator(`[data-relay="${relay}"]`).click();
+    }
+    await expect(page.locator('#routeState')).toHaveText('ROUTE OPEN');
+    assert.ok(await dialogFits(page, 'commsDialog'), 'communications with a route fit');
+    await page.locator('#saveComm').scrollIntoViewIfNeeded();
+    await expect(page.locator('#saveComm')).toBeInViewport({ ratio: 0.99 });
     await page.locator('#commsDialog [data-close]').click();
     for (const [button, dialog] of [['#contactSettingsBtn', 'contactDialog'], ['#viewScreenBtn', 'viewScreenDialog']]) {
       await page.locator(button).click();

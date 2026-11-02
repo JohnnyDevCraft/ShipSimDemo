@@ -150,7 +150,7 @@ run({
     await expect(page.locator('#commList .comm-item.active b')).toHaveText('KEPLER');
     await page.locator('#saveComm').click();
     await expect(page.locator('#conversation .bubble')).toHaveCount(4);
-    await expect(page.locator('#commDetails')).toHaveText('KEPLER · Point to point · Subspace · Channel 33.3 SSC · Encrypted');
+    await expect(page.locator('#commDetails')).toHaveText('KEPLER · Point to point · Subspace · Channel 33.3 SSC · Encrypted · direct');
     await expect(page.locator('#commsCount')).toHaveText('1');
     await page.locator('#messageInput').click();
     await expect(page.locator('#conversation')).toBeHidden();
@@ -175,6 +175,8 @@ run({
       window.say = (text, isFinal = true) => window.recognizer.onresult({ resultIndex: 0, results: [Object.assign([{ transcript: text }], { isFinal })] });
     });
     const page = await open('/Communications/');
+    // Ross Orbital Station is beside us, in reach of our array (the cargo ship first selected is 8 LY off: out of reach).
+    await page.locator('#transmissions .tx', { hasText: 'Ross Orbital Station' }).click();
     await page.locator('#contactBtn').click();
     await page.locator('#saveComm').click();
     await expect(page.locator('[data-input-mode="keyboard"]')).toHaveClass(/active/);
@@ -222,6 +224,8 @@ run({
       delete window.webkitSpeechRecognition;
     });
     const page = await open('/Communications/');
+    // Ross Orbital Station is beside us, in reach of our array (the cargo ship first selected is 8 LY off: out of reach).
+    await page.locator('#transmissions .tx', { hasText: 'Ross Orbital Station' }).click();
     await page.locator('#contactBtn').click();
     await page.locator('#saveComm').click();
     await page.locator('[data-input-mode="voice"]').click();
@@ -279,5 +283,61 @@ run({
     await page.locator('#viewScreenBtn').click();
     await expect(page.locator('[data-view-mode="srs"]')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#scopeZooms button', { hasText: /^8×$/ })).toHaveAttribute('aria-pressed', 'true');
+  },
+  'a relay route carries subspace beyond our array: our buoys and our allies\' open with codes the computer holds; others ask for a code we do not have': async ({ open }) => {
+    const page = await open('/Communications/');
+    const shots = process.env.SHOTS, engine = page.context().browser().browserType().name();
+    await page.locator('#commsBtn').click();
+    await page.locator('#newComm').click();
+    await page.locator('#recipientInput').click();
+    await typeKeys(page, '#commSetup', 'TERRAN SPACE COMMAND');
+    await page.locator('#commSetup .search-keys [data-key="DONE"]').click();
+    // Terran Space Command is on Earth, 11 LY off: beyond our 3 LY array, so the link is refused until relays carry it.
+    await expect(page.locator('#routeState')).toHaveText('OUT OF REACH');
+    await expect(page.locator('#routeHops .hop.bad .why')).toHaveText("beyond TNS Discovery's Tx (3 LY)");
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commStatus')).toHaveText(/^Out of reach\. TNS Discovery → Terran Space Command: 11\.\d\d LY/);
+    await expect(page.locator('#commChat')).toBeHidden();
+    // The buoys, nearest first: only Ross 128's is in reach of our ship. Ours, so the computer fills its code in.
+    await page.locator('#addRelay').click();
+    await expect(page.locator('#relayList .relay-item').first()).toHaveAttribute('data-relay', 'relay-ross-128');
+    await expect(page.locator('[data-relay="relay-ross-128"] i')).toHaveText('IN REACH');
+    await expect(page.locator('[data-relay="relay-ross-128"] em')).toHaveText('Terran Space Command · ours · CODE KNOWN');
+    await expect(page.locator('[data-relay="relay-sol"] i')).toHaveText('OUT OF REACH');
+    // A rival's buoy asks for its code; our computer does not hold it, and a guess is refused. (Every buoy is Terran Space
+    // Command's today; the test hands one to the Velari Concord.)
+    await page.evaluate(() => CommsControl.set({ relayOwner: ['relay-gj-699', 'Velari Concord'] }));
+    await page.locator('#relayCancel').click();
+    await page.locator('#addRelay').click();
+    await expect(page.locator('[data-relay="relay-gj-699"] em')).toHaveText('Velari Concord · rival · CODE NEEDED');
+    if (shots) await page.screenshot({ path: `${shots}/relay-${engine}-picker.png` });
+    await page.locator('[data-relay="relay-gj-699"]').click();
+    await expect(page.locator('#relayCodeHint')).toContainText('Our computer does not hold its access code');
+    await typeKeys(page, '#relayCodeStep', '1234-5678');
+    await page.locator('#relayCodeAdd').click();
+    await expect(page.locator('#relayStatus')).toHaveText('Access code refused by GJ 699 Buoy.');
+    if (shots) await page.screenshot({ path: `${shots}/relay-${engine}-code.png` });
+    await page.locator('#relayCodeBack').click();
+    await page.locator('[data-relay="relay-ross-128"]').click();
+    await expect(page.locator('#commSetup')).toBeVisible();
+    // Then Sol's buoy, 11 LY from Ross's: in reach buoy to buoy (20 LY each way), and ours too.
+    await page.locator('#addRelay').click();
+    await expect(page.locator('#relayFrom')).toHaveText('NEXT HOP FROM ROSS 128 BUOY');
+    await expect(page.locator('[data-relay="relay-sol"] i')).toHaveText('IN REACH');
+    await page.locator('[data-relay="relay-sol"]').click();
+    await expect(page.locator('#routeState')).toHaveText('ROUTE OPEN');
+    await expect(page.locator('#routeHops .hop.good')).toHaveCount(3);
+    if (shots) await page.screenshot({ path: `${shots}/relay-${engine}-route.png` });
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commDetails')).toHaveText(/via Ross 128 Buoy → Sol Buoy$/);
+    if (shots) {
+      await page.locator('#commsDialog [data-close]').first().click();
+      await page.evaluate(() => CommsControl.set({ range: 30 * 9460730472580.8 }));
+      await page.screenshot({ path: `${shots}/relay-${engine}-map.png` });
+    }
+    // RF takes no relays.
+    const route = await page.evaluate(() => CommsControl.route());
+    assert.equal(route.open, true);
+    assert.deepEqual(route.route.map(h => h.key), ['relay-ross-128', 'relay-sol']);
   },
 });

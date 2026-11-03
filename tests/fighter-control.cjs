@@ -8,8 +8,9 @@ const advance = (page, ms) => page.evaluate(value => FighterControl.advance(valu
 const stick = (page, x, y) => page.evaluate(([a, b]) => FighterControl.stick(a, b), [x, y]);
 const near = (a, b, tolerance = 0.5) => Math.abs(a - b) <= tolerance;
 // Opens the page with the clock stopped (the tests run it by hand) and, if asked, the engines lit.
-async function open(openPage, { lit = false } = {}) {
-  const page = await openPage('/Fighter/?models=0');
+// `quiet` switches the demo's engagement off, for the cases that count on the training ship alone.
+async function open(openPage, { lit = false, quiet = false } = {}) {
+  const page = await openPage('/Fighter/?models=0' + (quiet ? '&battle=0' : ''));
   await page.evaluate(() => FighterControl.pause(true));
   if (lit) {
     await page.evaluate(() => document.getElementById('engineBtn').click());
@@ -430,7 +431,7 @@ run({
   },
 
   'the short-range scan: the slider sets its range from 2 to 500 km, ships show inside it, and a tap targets one': async ({ open: openPage }) => {
-    const page = await open(openPage, { lit: true });
+    const page = await open(openPage, { lit: true, quiet: true });
     await page.evaluate(() => {
       const scope = FighterControl.scope;
       if (scope.moving) scope.toggleMoving();
@@ -497,7 +498,7 @@ run({
   },
 
   'the default keys: half and full turns, half throttle, full stop, max forward and reverse, and the weapon and system toggles': async ({ open: openPage }) => {
-    const page = await open(openPage, { lit: true });
+    const page = await open(openPage, { lit: true, quiet: true });
     await page.evaluate(() => document.activeElement.blur());
     const hold = async (key, ms) => {
       await page.keyboard.down(key);

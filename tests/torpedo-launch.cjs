@@ -188,7 +188,8 @@ run({
     await expect(page.locator('#launchMode')).toHaveText('LOCAL LAUNCH');
   },
   'demo controls: load power, ready capacity, prepared torpedoes and ships': async ({ open }) => {
-    const page = await open(URL);
+    // The training ships alone: the demo's engagement (four more contacts) is switched off.
+    const page = await open(URL + (URL.includes('?') ? '&' : '?') + 'battle=0');
     await demo(page, () => setField(page, 'availablePower', '5'));
     await expect(page.locator('#loadCycle')).toHaveText('PAUSED');
     await page.locator('#prepared .round button').first().click({ force: true });

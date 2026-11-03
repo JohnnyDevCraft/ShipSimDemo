@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Helm Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<link rel="stylesheet" href="helm.css?v=20261103c">
+<link rel="stylesheet" href="helm.css?v=20261103d">
 </head>
 <body>
 <canvas id="map" aria-label="Scanner map. Select a contact for its course and distance."></canvas>
@@ -189,10 +189,12 @@
   <div id="headingPad"></div>
 </dialog>
 
-<!-- Keyboard commands: each helm action's key, changed per device -->
+<!-- Keyboard and controller: each helm action's key and controller button, changed per device -->
 <dialog id="keysDialog" class="modal" aria-labelledby="keysTitle">
-  <div class="mhead"><h2 id="keysTitle">KEYBOARD COMMANDS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
-  <p class="mnote">Click a key, then press the new one. Backspace clears it; Escape keeps it. Saved on this device. Keys work while no window is open, and not with Ctrl, Cmd or Alt held.</p>
+  <div class="mhead"><h2 id="keysTitle">KEYBOARD AND CONTROLLER</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <p class="mnote">Click a key, then press the new one; click a controller button, then press the new one on the controller. Backspace clears it; Escape keeps it. A key and a button both work. Saved on this device. They work while no window is open; keys not with Ctrl, Cmd or Alt held.</p>
+  <p class="mnote pad-status" id="padStatus" role="status">No controller connected: plug one in and press a button.</p>
+  <p class="mnote">Controller sticks: left stick across turns the ship, as the on-screen joystick does; left stick up and down raises and lowers impulse (on the warp drive, the warp factor); right stick up and down zooms the scanner.</p>
   <div id="keysList" class="keys-list" role="list"></div>
   <p class="mnote" id="keysNote" role="status"></p>
   <div class="mrow"><button type="button" id="keysDefaults">RESTORE DEFAULTS</button></div>
@@ -203,7 +205,7 @@
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
     <button type="button" id="openDemoControls"><b>Demo controls</b><span>Ship rating, navigation computer, ship position and reset</span></button>
-    <button type="button" id="openKeys"><b>Keyboard commands</b><span>See and change the helm's keys</span></button>
+    <button type="button" id="openKeys"><b>Keyboard and controller</b><span>See and change the helm's keys and controller buttons</span></button>
     <a href="../Navigation/index.html" target="_blank" rel="noopener"><b>Navigation Control ↗</b><span>Set destinations in another tab; they appear here</span></a>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
   </div>
@@ -241,7 +243,8 @@
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
-<script src="helm.js?v=20261103c"></script>
+<script src="../Shared/game-pad.js?v=20261103d"></script>
+<script src="helm.js?v=20261103d"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
 </body>

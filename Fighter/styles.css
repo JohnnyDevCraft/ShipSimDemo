@@ -150,6 +150,12 @@
 .key-cap.unbound { color: var(--dim); }
 .key-cap.listening { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
 .binding-note { min-height: 1.2em; color: var(--cyan); }
+.binding .caps { display: flex; gap: 0.35rem; flex: none; }
+.pad-cap { display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; min-width: 5.6rem; padding: 0.35rem 0.5rem; font-size: 0.7rem; letter-spacing: 0.06em; }
+.pad-cap b { font-weight: 600; }
+.pad-cap svg { width: 1rem; height: 1rem; flex: none; stroke-width: 1.8; }
+.pad-cap.unbound { color: var(--dim); }
+.pad-cap.listening { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
 
 /* Short-range scan (bottom right): the View Screen's radar, with a range slider under it */
 .srs-panel { flex: 1 1 auto; min-height: 11rem; display: flex; flex-direction: column; gap: 0.4rem; }

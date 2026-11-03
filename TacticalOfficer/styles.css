@@ -1,6 +1,5 @@
 /* Tactical Officer Control. The shared console look is in ../Shared/console.css; this adds the weapons, shields
-   and target panels, the dialogs (with the weapon set-up overlay) and the view screen camera's two-axis joystick
-   (drawn like the Helm's).
+   and target panels, the dialogs and the view screen camera's two-axis joystick (drawn like the Helm's).
    Used in landscape, from an iPad to a 4K monitor. */
 :root { --left-w: 18rem; --right-w: 18.5rem; --advisory-h: 2.4rem; }
 .thead h2, .thead small { white-space: nowrap; }
@@ -32,7 +31,6 @@
 .weapon[data-level="busy"] .wstate { color: var(--cyan); }
 .weapon[data-level="busy"] .wcool i { background: var(--amber); }
 .weapon[data-level="warn"] .wstate { color: var(--amber); }
-.weapon[data-level="off"] .wcool i { background: rgba(120, 160, 200, 0.45); }
 .weapon:disabled { opacity: 0.75; cursor: default; }
 
 /* ── Shields ────────────────────────────────────────────────────────────────────────────────── */
@@ -101,13 +99,8 @@
 .advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
 .advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
 .advisory[data-level="off"] { color: var(--muted); }
-/* Nine commands: the columns end above the bottom bar so it can run wider than the gap between them. */
-.col.left, .col.right { bottom: calc(var(--dock-h) + 0.5rem); }
 .dock { padding: 0.75rem 2.1rem 0; }
 .dock button { min-width: 5.1rem; }
-/* TORPEDOES, EPW and EBW glow red while any weapon of theirs is armed. */
-.dock button[data-weapons][data-armed="true"] { color: #ffd0d4; }
-.dock button[data-weapons][data-armed="true"] .ring { border-color: rgba(255, 90, 90, 0.75); box-shadow: 0 0 1rem rgba(255, 70, 85, 0.4), inset 0 0 0.8rem rgba(255, 70, 85, 0.25); }
 .dock .shields-toggle { color: var(--green); }
 .dock .shields-toggle .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
 .dock .shields-toggle[aria-pressed="false"] { color: #ff8f9b; }
@@ -187,73 +180,3 @@
 .field-grid .field b { font-size: 1rem; }
 .field-select { display: grid; gap: 0.3rem; align-content: center; }
 .switch.compact { min-height: 0; }
-
-/* ── Weapon set-up overlay: torpedo launchers, EPW and EBW ──────────────────────────────────────── */
-.weapons-modal { width: min(60rem, 94vw); }
-.weapons-modal .mhead .chip { white-space: nowrap; }
-.weapons-modal .mhead .chip[data-level="bad"] { color: #ff8f9b; }
-.weapon-cards { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); gap: 0.8rem; padding: 0.2rem 0 1rem; }
-.wcard { display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; min-height: 9.5rem; padding: 0.9rem 1rem 1rem; text-align: left; border-radius: 0.8rem; background: rgba(9, 28, 52, 0.6); border-color: var(--edge-soft); letter-spacing: 0.02em; }
-.wc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
-.wc-head b { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.08em; white-space: nowrap; }
-.wc-head small { font-size: 0.62rem; white-space: nowrap; }
-.wc-state { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.1em; color: var(--muted); }
-.wc-line { font-size: 0.72rem; line-height: 1.4; color: var(--muted); font-variant-numeric: tabular-nums; }
-.wc-flags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.wc-flags i { font-style: normal; font-size: 0.56rem; letter-spacing: 0.1em; padding: 0.2rem 0.45rem; border: 1px solid var(--edge-soft); border-radius: 0.4rem; color: var(--dim); }
-.wc-flags i[data-on="true"] { color: #d4ffe6; border-color: var(--green); background: rgba(30, 120, 80, 0.45); }
-.wcard .bar { margin-top: auto; }
-.wcard[data-armed="true"] { border-color: rgba(255, 90, 90, 0.6); }
-.wcard[data-armed="true"] .wc-state { color: #ff9aa5; }
-.wcard[data-level="ok"] { background: linear-gradient(180deg, rgba(120, 28, 36, 0.7), rgba(60, 12, 18, 0.8)); box-shadow: 0 0 0.9rem rgba(255, 70, 85, 0.3); }
-.wcard[data-level="ok"] .wc-state { color: #ffd0d4; }
-.wcard[data-level="busy"] .bar i { background: var(--amber); box-shadow: none; }
-
-.wdetail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0.9rem 1.6rem; padding: 0.2rem 0 0.8rem; }
-.wpart { display: grid; align-content: start; gap: 0.65rem; min-width: 0; }
-.wpart h3 { margin: 0; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.16em; color: var(--muted); }
-.yield-box { display: grid; grid-template-columns: minmax(0, 1fr) 7.5rem; align-items: stretch; gap: 0.8rem; min-height: 13rem; padding: 0.7rem 0.9rem; border: 1px solid var(--edge-soft); border-radius: 0.7rem; background: rgba(9, 28, 52, 0.45); }
-.yield-box .range-slider { min-height: 11.5rem; }
-.wread { display: grid; align-content: center; gap: 0.25rem; }
-.wread b { font-size: 2.4rem; font-weight: 500; color: var(--cyan); font-variant-numeric: tabular-nums; }
-.wread span { font-size: 0.72rem; color: var(--muted); }
-.wread em { margin-top: 0.4rem; font-style: normal; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--text); font-variant-numeric: tabular-nums; }
-.wfield { display: grid; gap: 0.35rem; }
-.wfield .seg button { min-height: 2.75rem; font-size: 0.74rem; letter-spacing: 0.08em; }
-.cfield { display: grid; gap: 0.15rem; justify-items: start; min-height: 3.1rem; padding: 0.4rem 0.8rem; text-align: left; letter-spacing: 0.02em; background: rgba(9, 28, 52, 0.55); border-color: var(--edge-soft); }
-.cfield[hidden] { display: none; }
-.cfield small { font-size: 0.58rem; letter-spacing: 0.14em; }
-.cfield b { font-size: 1.05rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--cyan); }
-.wbox { display: grid; gap: 0.4rem; padding: 0.6rem 0.8rem; border: 1px solid var(--edge-soft); border-radius: 0.7rem; background: rgba(9, 28, 52, 0.45); }
-.wline { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
-.wline small { white-space: nowrap; }
-.wline b { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-align: right; font-variant-numeric: tabular-nums; }
-.wsub { font-size: 0.7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.rack-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
-.rslot { display: grid; gap: 0.1rem; align-content: center; min-height: 2.6rem; padding: 0.3rem 0.5rem; border: 1px dashed var(--edge-soft); border-radius: 0.5rem; color: var(--dim); font-size: 0.6rem; letter-spacing: 0.1em; }
-.rslot[data-filled="true"] { border-style: solid; border-color: rgba(255, 140, 90, 0.55); background: rgba(80, 36, 18, 0.45); color: #ffd7c2; }
-.rslot b { font-size: 0.7rem; font-weight: 600; }
-.rslot span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tube-box[data-state="loading"] .bar i { background: var(--amber); box-shadow: none; }
-.tube-box[data-state="loading"] #tdTubeTitle { color: var(--amber); }
-.tube-box[data-state="loaded"] #tdTubeTitle { color: var(--cyan); }
-.tube-box[data-state="armed"] { border-color: rgba(255, 90, 90, 0.6); }
-.tube-box[data-state="armed"] #tdTubeTitle { color: #ff9aa5; }
-.tube-box[data-state="armed"] .bar i { background: #ff5968; box-shadow: 0 0 0.5rem #ff5968; }
-.wpart .rows div { padding: 0.35rem 0; }
-.wpart .rows dd { font-size: 0.8rem; }
-.wpart .rows dd[data-level="ok"] { color: #ff9aa5; font-weight: 600; }
-.wpart .rows dd[data-level="busy"] { color: var(--cyan); }
-.wpart .rows dd[data-level="warn"] { color: var(--amber); }
-.wpart .rows dd[data-level="off"] { color: var(--muted); }
-.wactions { grid-column: 1 / -1; display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 0.6rem; padding-top: 0.2rem; }
-.wactions button, .arm-btn { min-height: 3.2rem; font-weight: 600; letter-spacing: 0.12em; }
-/* The auto switches: a light that shows green when on, as the console switches do. */
-.toggle { display: flex; align-items: center; justify-content: center; gap: 0.55rem; }
-.toggle::before { content: ''; flex: none; width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #3d4f63; }
-.toggle[aria-pressed="true"] { color: #d4ffe6; border-color: var(--green); background: radial-gradient(circle at 50% 0%, rgba(30, 120, 80, 0.75), rgba(4, 28, 18, 0.9)); box-shadow: 0 0 0.9rem rgba(79, 224, 141, 0.35); }
-.toggle[aria-pressed="true"]::before { background: var(--green); box-shadow: 0 0 0.5rem var(--green); }
-.arm-btn { color: #ffd0d4; border-color: rgba(255, 90, 90, 0.6); background: rgba(70, 16, 22, 0.75); }
-.arm-btn[aria-pressed="true"] { background: linear-gradient(180deg, #c0303f, #7c1520); border-color: #ff6b78; box-shadow: 0 0 1rem rgba(255, 70, 85, 0.45); }
-button.blocked { opacity: 0.45; }
-.weapons-modal .mstatus { margin: 0 0 0.4rem; min-height: 1.2em; }

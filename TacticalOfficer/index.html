@@ -6,7 +6,7 @@
 <title>Tactical Officer Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body class="tactical">
 
@@ -85,10 +85,6 @@
   <button type="button" id="subsystemsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg></span>SUBSYSTEMS</button>
   <button type="button" id="clearBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="m8.5 8.5 7 7M15.5 8.5l-7 7"/></svg></span>CLEAR TARGET</button>
   <span class="dock-sep" aria-hidden="true"></span>
-  <button type="button" id="torpedoesBtn" data-weapons="TPD" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="9.5" width="10" height="5" rx="1"/><path d="M15.5 9.5h1.8c1.9 0 3.1 1.2 3.5 2.5-.4 1.3-1.6 2.5-3.5 2.5h-1.8"/><path d="M5.5 12 3 8.5M5.5 12 3 15.5"/></svg></span>TORPEDOES</button>
-  <button type="button" id="epwBtn" data-weapons="EPW" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12h2.5"/><circle cx="8.5" cy="12" r="2.6"/><circle cx="15" cy="12" r="1.9"/><circle cx="20" cy="12" r="1.2"/></svg></span>EPW</button>
-  <button type="button" id="ebwBtn" data-weapons="EBW" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><path d="M8 12h13M8 10.3l13-1.6M8 13.7l13 1.6"/></svg></span>EBW</button>
-  <span class="dock-sep" aria-hidden="true"></span>
   <button type="button" id="shieldsBtn" class="shields-toggle" aria-pressed="true"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6Z"/><path d="M8.5 12 11 14.5 15.5 9.5"/></svg></span><span id="shieldsLabel">SHIELDS ON</span></button>
   <span class="dock-sep" aria-hidden="true"></span>
   <button type="button" id="cameraBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/><circle cx="12" cy="10.5" r="2.6"/></svg></span>VIEW SCREEN</button>
@@ -142,70 +138,6 @@
   <p class="mnote">Detailed scan within <span id="scanReach">30,000 km</span>; shields up triple the scan time. After a scan, pick a subsystem at any range: it locks within 25 km, shots aim at it only while locked, and hits within 5 km strike it alone. FQ forward · AQ aft · SQ starboard · PQ port · OD omnidirectional. Training-ship subsystem fixtures.</p>
 </dialog>
 
-<!-- Weapon set-up from Tactical: torpedo launchers, EPW (phase cannons) and EBW (phaser arrays). A list of the
-     ship's weapons of that kind, then the chosen one's set-up. -->
-<dialog id="weaponsDialog" class="modal weapons-modal" aria-labelledby="weaponsTitle">
-  <div class="mhead"><button type="button" class="icon-btn small" id="weaponsBack" aria-label="Back to the list" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="weaponsTitle">TORPEDO LAUNCHERS</h2><small id="weaponsChip" class="chip">—</small><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
-  <div id="weaponsList" class="weapon-cards" role="group" aria-label="Weapons"></div>
-  <section id="torpedoDetail" class="wdetail" aria-label="Torpedo launcher set-up" hidden>
-    <div class="wpart">
-      <h3>NEXT ROUND · WARHEAD</h3>
-      <div class="yield-box">
-        <div class="wread"><small>YIELD</small><b id="tdYield">50%</b><span>of maximum</span><em id="tdDamage">WED 15.0 · WKD 75.0</em></div>
-        <div id="tdYieldSlider" class="vslider range-slider" aria-label="Warhead yield"></div>
-      </div>
-      <div class="wfield"><small>TRIGGER</small><div class="seg" id="tdTrigger"><button type="button" data-trigger="Impact" aria-pressed="true">IMPACT</button><button type="button" data-trigger="Proximity" aria-pressed="false">PROXIMITY AND IMPACT</button></div></div>
-      <button type="button" class="cfield" id="tdProximity" hidden><small>DISTANCE FROM TARGET</small><b id="tdProximityValue">25 m</b></button>
-      <p class="mnote" id="tdTriggerNote"></p>
-    </div>
-    <div class="wpart">
-      <h3>LAUNCHER</h3>
-      <div class="wbox"><div class="wline"><small>ASSEMBLY</small><b id="tdAssembly">IDLE</b></div><div class="bar"><i id="tdAssemblyFill"></i></div></div>
-      <div class="wline"><small>READY RACK</small><b id="tdRackCount">0 / 6</b></div>
-      <div class="rack-slots" id="tdRack"></div>
-      <div class="wbox tube-box" id="tdTube" data-state="empty">
-        <div class="wline"><small>TUBE</small><b id="tdTubeTitle">TUBE EMPTY</b></div>
-        <span id="tdTubeDetail" class="wsub">—</span>
-        <div class="bar"><i id="tdTubeFill"></i></div>
-        <div class="mrow"><button type="button" id="tdLoad">LOAD</button><button type="button" id="tdArm" class="arm-btn" aria-pressed="false">ARM</button></div>
-      </div>
-      <dl class="rows">
-        <div><dt>STOCK</dt><dd id="tdStock">—</dd></div>
-        <div><dt>FIRE CONTROL</dt><dd id="tdFire">—</dd></div>
-      </dl>
-    </div>
-    <div class="wactions">
-      <button type="button" class="primary" id="tdAssemble">ASSEMBLE</button>
-      <button type="button" class="toggle" id="tdAutoAssemble" aria-pressed="false">AUTO ASSEMBLE</button>
-      <button type="button" class="toggle" id="tdAutoLoad" aria-pressed="false">AUTO LOAD</button>
-      <button type="button" class="toggle" id="tdAutoArm" aria-pressed="false">AUTO ARM</button>
-    </div>
-  </section>
-  <section id="energyDetail" class="wdetail" aria-label="Energy weapon set-up" hidden>
-    <div class="wpart">
-      <h3>SHOT</h3>
-      <div class="yield-box">
-        <div class="wread"><small>SHOT POWER</small><b id="edPower">100%</b><span id="edPowerNote">per pulse</span><em id="edDamage">WED · WKD</em></div>
-        <div id="edPowerSlider" class="vslider range-slider" aria-label="Shot power"></div>
-      </div>
-    </div>
-    <div class="wpart">
-      <h3>WEAPON</h3>
-      <div class="wbox"><div class="wline"><small id="edChargeLabel">CHARGE</small><b id="edCharge">READY</b></div><div class="bar"><i id="edChargeFill"></i></div></div>
-      <dl class="rows">
-        <div><dt>FIRING ARC</dt><dd id="edFacing">—</dd></div>
-        <div><dt>RANGE</dt><dd id="edRange">—</dd></div>
-        <div><dt>RECHARGE</dt><dd id="edRecharge">—</dd></div>
-        <div><dt>FIRE CONTROL</dt><dd id="edFire">—</dd></div>
-      </dl>
-      <button type="button" id="edArm" class="arm-btn wide" aria-pressed="false">ARM</button>
-    </div>
-  </section>
-  <div id="weaponsPad" hidden></div>
-  <p class="mstatus" id="weaponsStatus" role="status" aria-live="polite"></p>
-  <p class="mnote" id="weaponsNote"></p>
-</dialog>
-
 <!-- Ship destroyed -->
 <dialog id="destroyedDialog" class="modal narrow destroyed" aria-labelledby="destroyedTitle">
   <h2 id="destroyedTitle">SHIP DESTROYED</h2>
@@ -237,11 +169,6 @@
             <label class="switch"><input type="checkbox" id="demoKnown"><span></span>Enemies known on entry</label>
             <p class="mnote">Unknown contacts stay green; enemies are identified within 100 km and stay red. Coils charge in 10 seconds and only show the preparation.</p>
           </div>
-          <div class="msection">
-            <h3>OUR WEAPONS</h3>
-            <label class="switch"><input type="checkbox" id="demoWeaponsReady"><span></span>Weapons ready on entry</label>
-            <p class="mnote">On: every energy weapon armed, and each torpedo tube loaded and armed with three rounds in its rack and auto load and auto arm on. Turning it on readies them now; Reset demo starts from it.</p>
-          </div>
         </div>
         <div class="demo-col">
           <div class="msection">
@@ -261,11 +188,6 @@
               <label class="switch compact"><input type="checkbox" id="demoArmed"><span></span>Target armed</label>
             </div>
             <p class="mnote">Armed and people aboard are captured when a scan completes.</p>
-          </div>
-          <div class="msection">
-            <h3>WEAPONS FIRE</h3>
-            <div class="mrow"><button type="button" data-demo-volley>FIRE A TEST VOLLEY</button></div>
-            <p class="mnote">Two other ships exchange fire on the scanner (amber); ours and the training ships' are this page's own. Also every 15 seconds.</p>
           </div>
         </div>
         <div class="demo-col">
@@ -296,10 +218,8 @@
 <script src="../Shared/nav-world.js?v=2"></script>
 <script src="../Shared/view-screen-settings.js?v=2"></script>
 <script src="camera.js?v=1"></script>
-<script src="../Shared/star-field.js?v=1"></script>
-<script src="../Shared/weapons-fire.js?v=1"></script>
-<script src="tactical.js?v=7"></script>
-<script src="../Shared/habitability.js?v=2" data-watch></script>
+<script src="tactical.js?v=8"></script>
 <script src="../Shared/quick-switch.js?v=1"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

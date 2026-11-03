@@ -126,7 +126,7 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .clock b { font-size: 1rem; letter-spacing: 0.12em; font-variant-numeric: tabular-nums; }
 .ship-state { display: flex; align-items: center; gap: 0.45rem; color: var(--cyan); font-size: 0.7rem; letter-spacing: 0.14em; padding-right: 1.1rem; border-right: 1px solid var(--edge-soft); }
 .ship-state svg { width: 1.6rem; height: 1.6rem; }
-.ship-state[data-state="AT WARP"] { color: #9fd0ff; text-shadow: 0 0 0.5rem var(--blue-hi); }
+.ship-state[data-state="AT WARP"], .ship-state[data-state="QUICK JUMP"] { color: #9fd0ff; text-shadow: 0 0 0.5rem var(--blue-hi); }
 #menuBtn { border-color: transparent; background: transparent; }
 #menuBtn svg { width: 1.9rem; height: 1.9rem; }
 
@@ -230,13 +230,14 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 /* ── Dock ────────────────────────────────────────────────────────────────────────────────────── */
 .dock {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2; height: var(--dock-h);
-  display: flex; align-items: flex-start; justify-content: center; gap: 0.4rem; padding: 0.75rem 2.2rem 0;
+  display: flex; align-items: flex-start; justify-content: center; gap: 0.35rem; padding: 0.75rem 2.1rem 0;
   filter: drop-shadow(0 0 0.8rem rgba(20, 110, 220, 0.3));
 }
 .dock::before, .dock::after { content: ''; position: absolute; z-index: -1; clip-path: polygon(3rem 0, calc(100% - 3rem) 0, 100% 100%, 0 100%); }
 .dock::before { inset: 0; background: var(--edge); }
 .dock::after { inset: 1px 1px 0; background: rgba(4, 14, 28, 0.92); }
-.dock button { display: grid; justify-items: center; gap: 0.4rem; min-width: 4.2rem; min-height: 0; padding: 0; border: 0; background: transparent; font-size: 0.6rem; letter-spacing: 0.06em; white-space: nowrap; }
+/* Eleven buttons fit beside the heading panel on an iPad: each is a fixed width and a two-word label takes two lines. */
+.dock button { flex: none; display: grid; align-content: start; justify-items: center; gap: 0.4rem; width: 3.5rem; min-height: 0; padding: 0; border: 0; background: transparent; font-size: 0.6rem; line-height: 1.15; letter-spacing: 0.06em; text-align: center; white-space: normal; }
 .dock button:hover:not(:disabled) { box-shadow: none; }
 .dock .ring { width: 3.25rem; height: 3.25rem; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--edge); background: radial-gradient(circle, rgba(20, 60, 110, 0.6), rgba(4, 14, 28, 0.8)); box-shadow: 0 0 0.8rem rgba(40, 140, 255, 0.35), inset 0 0 0.8rem rgba(40, 140, 255, 0.25); }
 .dock button:hover .ring, .dock button:focus-visible .ring { border-color: var(--cyan); box-shadow: 0 0 1.1rem var(--glow); }
@@ -256,8 +257,11 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .dock .extfield:hover:not(:disabled) .ring, .dock .extfield:focus-visible .ring { border-color: var(--green); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.5); }
 .dock .extfield.toggle[aria-pressed="true"] { color: #b6f7cf; }
 .dock .extfield.toggle[aria-pressed="true"] .ring { background: radial-gradient(circle at 50% 40%, #d2ffe3, var(--green) 70%); border-color: #d2ffe3; color: var(--panel-solid); box-shadow: 0 0 1.2rem rgba(79, 224, 141, 0.75), 0 0 2.4rem rgba(79, 224, 141, 0.35); }
+/* Track: a cyan toggle, lit while the course follows a contact. */
+.dock .track.toggle[aria-pressed="true"] { color: #b9f1ff; }
+.dock .track.toggle[aria-pressed="true"] .ring { background: radial-gradient(circle at 50% 40%, #d8f7ff, var(--cyan) 70%); border-color: #d8f7ff; color: var(--panel-solid); box-shadow: 0 0 1.2rem var(--glow), 0 0 2.4rem rgba(79, 214, 255, 0.35); }
 @media (orientation: portrait) {
-  .dock { left: 0; right: 0; transform: none; gap: 0.5rem; padding: 0.75rem 2.8rem 0; }
+  .dock { left: 0; right: 0; transform: none; gap: 0.35rem; padding: 0.75rem 2.3rem 0; }
 }
 
 /* ── Map chips and notices ───────────────────────────────────────────────────────────────────── */
@@ -288,6 +292,19 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .mnote[data-error] { color: #ff8f8f; min-height: 0; }
 .mnote[data-error]:empty { display: none; }
 .mstatus { font-size: 0.8rem; color: var(--cyan); }
+/* Keyboard commands: each action and its key, two columns where the window allows. */
+.keys-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1.2rem; max-height: 55vh; overflow-y: auto; margin: 0.8rem 0; }
+.keys-list div { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; padding: 0.3rem 0; border-bottom: 1px solid var(--edge-soft); }
+.keys-list span { font-size: 0.8rem; }
+.keys-list button { min-width: 3.4rem; min-height: 2rem; padding: 0.2rem 0.6rem; font-variant-numeric: tabular-nums; }
+.keys-list button.listening { border-color: var(--amber); color: var(--amber); }
+/* Quick Jump's readiness list: amber until a condition is met, green once it is. */
+.jump-ready { margin: 0; display: grid; }
+.jump-ready div { display: flex; justify-content: space-between; gap: 0.8rem; padding: 0.4rem 0; border-bottom: 1px solid var(--edge-soft); }
+.jump-ready dt { font-size: 0.72rem; letter-spacing: 0.1em; color: var(--muted); }
+.jump-ready dd { margin: 0; font-size: 0.85rem; font-variant-numeric: tabular-nums; text-align: right; }
+.jump-ready [data-ok="false"] dd { color: var(--amber); }
+.jump-ready [data-ok="true"] dd { color: var(--green); }
 .fields-view { display: grid; gap: 0.8rem; }
 .field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.8rem; padding: 0.7rem 0.9rem; border: 1px solid var(--edge-soft); border-radius: 0.7rem; background: rgba(9, 28, 52, 0.45); }
 .field > div:not(.seg) { display: grid; gap: 0.25rem; }

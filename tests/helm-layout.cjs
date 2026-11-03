@@ -27,7 +27,11 @@ for (const [width, height] of sizes)
       const bar = Object.values(boxes.bar);
       for (let i = 0; i < bar.length; i++) for (let j = i + 1; j < bar.length; j++) assert.ok(bar[i].r <= bar[j].l + 0.5 || bar[j].r <= bar[i].l + 0.5, 'top bar items sit side by side');
     }
-    for (const control of ['#engage', '#chargeBtn', '#warp', '#joystick', '#alignBtn', '#rangeSlider', '#menuBtn', '.dock [data-open="rangeDialog"]', '#reverse', '#light', '#hard', '#stop']) await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
+    for (const control of ['#engage', '#chargeBtn', '#warp', '#joystick', '#alignBtn', '#rangeSlider', '#menuBtn', '.dock [data-open="rangeDialog"]', '#trackBtn', '#quickJumpBtn', '#reverse', '#light', '#hard', '#stop']) await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
+    // The dock's eleven buttons sit side by side, none over another.
+    const dock = await page.locator('.dock button').evaluateAll(buttons => buttons.map(button => { const b = button.getBoundingClientRect(); return { l: b.left, r: b.right }; }));
+    assert.equal(dock.length, 11);
+    for (let i = 1; i < dock.length; i++) assert.ok(dock[i].l >= dock[i - 1].r - 0.5, `dock buttons ${i} and ${i + 1} do not overlap`);
     // Text scales with the window.
     const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
     assert.ok(rem >= 9 && rem <= 46, `root size ${rem}px`);

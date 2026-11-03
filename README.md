@@ -29,7 +29,7 @@ esbuild is taken from `ESBUILD`, or from the simulator workspace's `ng-app/node_
 node --test tests/*.test.cjs        # navigation computer, world and widget rules
 node tests/helm-map.cjs             # Helm scanner maps
 node tests/helm-destination.cjs     # Helm's Selected Destination widget
-node tests/helm-flight.cjs          # align, charge, engage and exit warp
+node tests/helm-flight.cjs          # align, charge, engage and exit warp; Track, Quick Jump, keyboard commands
 node tests/helm-layout.cjs          # Helm fits iPad portrait/landscape through 4K
 node tests/navigation-control.cjs   # Navigation Control
 node tests/navigation-layout.cjs    # Navigation fits iPad portrait/landscape through 4K

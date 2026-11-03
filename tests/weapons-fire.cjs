@@ -92,10 +92,17 @@ run({
       const names = await page.evaluate(h => eval(h).state().contacts.map(c => c.name), hook);
       assert.ok(names.includes('Training ship A') && names.includes('Corsair Vex'), `${route}: training ship and the engagement's ships are contacts`);
       // Tap a raider: it is the target, with a firing solution.
-      const point = await page.evaluate(h => eval(h).tapPoint('ship:Corsair Mako') || eval(h).tapPoint('ship:Corsair Vex'), hook);
-      assert.ok(point, `${route}: a raider can be tapped`);
-      await page.mouse.click(point.x, point.y);
-      const state = await page.evaluate(h => eval(h).state(), hook);
+      // The world is flat, so ships on the horizon can stand in front of each other: tap whichever raider is in clear view.
+      let tapped = false, state = null;
+      for (const key of ['ship:Corsair Mako', 'ship:Corsair Vex']) {
+        const point = await page.evaluate(([h, k]) => eval(h).tapPoint(k), [hook, key]);
+        if (!point) continue;
+        tapped = true;
+        await page.mouse.click(point.x, point.y);
+        state = await page.evaluate(h => eval(h).state(), hook);
+        if (state.selected === key) break;
+      }
+      assert.ok(tapped, `${route}: a raider can be tapped`);
       assert.match(state.selected, /^ship:Corsair /, `${route}: the raider is selected`);
       assert.ok(state.lead, `${route}: with a firing solution`);
       await page.close();

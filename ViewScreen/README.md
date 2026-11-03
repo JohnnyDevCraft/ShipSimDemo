@@ -13,6 +13,10 @@ Files: `index.html`, `styles.css` and `view.js`, minified with `../Shared/view-s
 - **Gauges** (where the other consoles keep their commands): bus load, reactor output (with the requested load and efficiency), reactor temperature, and speed (km/s at impulse, the warp factor at warp).
 - **Menu → Demo controls:** stand-ins kept off the screen itself. With the Helm closed, a stand-in ship flies here: fly toward an object under impulse, or warp in from a set distance; all stop; reset. Also the tactical target, bus load, reactor output and temperature, docking and power sync.
 
+## Weapons fire (2026-11-02)
+
+The forward scope and the SRS and LRS panels draw weapons fire, theirs and ours. On the scope the drill ships are 19 to 29 km ahead, a little below the horizon (our eye stands above the plane they fly in), so a torpedo closing on us runs down the screen and our own fire rises from below it; nothing is drawn at warp. The demo has no simulator, so `../Shared/weapons-fire.js` fires stand-in volleys: two seconds after the page opens, every 15 seconds after that, and on demand from Demo controls → **Fire a test volley**. In each, a hostile drill ship fires a torpedo and pulses at us (red), we fire a pulse and a torpedo back (cyan) and two other drill ships exchange a beam and a pulse (amber); about eight seconds. A torpedo is a diamond with a short trail and a label, a pulse a bolt fading over 0.6 s, a beam a line held for its length then fading, a detonation an expanding ring — the look of the app's `ship-web/src/app/shared/weapons-fire.ts`. The drill ships are placed at fractions of each view's range ahead of our ship (turned to our heading when the volley starts, and moving with us), so a volley shows at any range. `?fire=0` turns the automatic volleys off; `DemoFire.drawn[view]` holds what each view drew in its latest frame (`tests/weapons-fire.cjs`).
+
 ## Rules
 
 - **Settings** live in storage that both pages read (`xmps-demo-view-screen`): view type, SRS and LRS ranges, label and object filters, scope zoom, and the camera bearing from the bow. A change on Communications reaches an open View Screen at once. The default is DUAL at 1×.

@@ -128,6 +128,11 @@
   <div id="demoControls" hidden>
     <div class="fields-view">
       <div class="msection">
+        <h3>WEAPONS FIRE</h3>
+        <div class="mrow"><button type="button" data-demo-volley>FIRE A TEST VOLLEY</button></div>
+        <p class="mnote">Stand-in fire: a hostile drill ship fires on us (red) and two other ships exchange fire (amber), beside this page's own shots. A volley also comes every 15 seconds.</p>
+      </div>
+      <div class="msection">
         <h3>SHIPS</h3>
         <div class="mrow"><button type="button" id="addShip">ADD RANDOM SHIP</button><button type="button" id="moveShips">PAUSE SHIP MOVEMENT</button></div>
         <p class="mnote">Target shields: 200 SEO, 50 per quadrant, recovering 10 SEO a quadrant every 15 seconds. Hull: 500 kinetic damage.</p>
@@ -162,8 +167,10 @@
 
 <script src="../Shared/console-ui.js?v=5"></script>
 <script src="../Shared/scene.js?v=1"></script>
-<script src="../Shared/scope.js?v=1"></script>
+<script src="../Shared/scope.js?v=4"></script>
+<script src="../Shared/weapons-fire.js?v=1"></script>
 <script src="../Shared/energy-weapon.js?v=1"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
+<script src="../Shared/quick-switch.js?v=1"></script>
 </body>
 </html>

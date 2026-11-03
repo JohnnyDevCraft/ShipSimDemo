@@ -53,6 +53,7 @@
     </div>
     <button type="button" class="jarrow" id="starboardBtn" aria-label="Turn to starboard (hold)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4 8 8-8 8"/></svg></button>
   </div>
+  <button type="button" id="autoDriftBtn" class="drift-toggle" aria-pressed="false" title="Keep the motion on the nose as the ship turns">AUTO DRIFT OFF</button>
 </section>
 </div>
 
@@ -200,6 +201,11 @@
   </div>
   <div id="demoControls" class="demo-controls" hidden>
     <div class="msection">
+      <h3>WEAPONS FIRE</h3>
+      <div class="mrow"><button type="button" data-demo-volley>FIRE A TEST VOLLEY</button></div>
+      <p class="mnote">Stand-in fire on the scanners and scopes: a hostile drill ship fires on us (red), we fire back (cyan) and two other ships exchange fire (amber). A volley also comes every 15 seconds.</p>
+    </div>
+    <div class="msection">
       <h3>SHIP RATING</h3>
       <div class="field unit"><small>MAXIMUM WARP</small><div class="seg" role="group" aria-label="Maximum warp" id="maxWarp"><button type="button" data-warp="6">WARP 6</button><button type="button" data-warp="8">WARP 8</button><button type="button" data-warp="9.9">WARP 9.9</button></div></div>
     </div>
@@ -224,7 +230,10 @@
 <script src="../Shared/nav-world.js?v=2"></script>
 <script src="../Shared/nav-computer.js?v=1"></script>
 <script src="safety.js?v=2"></script>
-<script src="helm.js?v=5"></script>
+<script src="../Shared/star-field.js?v=1"></script>
+<script src="../Shared/weapons-fire.js?v=1"></script>
+<script src="helm.js?v=6"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
+<script src="../Shared/quick-switch.js?v=1"></script>
 </body>
 </html>

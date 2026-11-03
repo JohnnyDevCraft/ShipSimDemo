@@ -184,7 +184,7 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .range-slider .vs-value { display: none; }
 
 /* ── Heading ─────────────────────────────────────────────────────────────────────────────────── */
-.heading { height: var(--heading-h); flex: none; display: grid; grid-template-rows: auto auto 1fr; justify-items: center; padding: 0.8rem 0.8rem 0.5rem; }
+.heading { height: var(--heading-h); flex: none; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; padding: 0.8rem 0.8rem 0.5rem; }
 .octa { border-radius: 0; border: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; filter: drop-shadow(0 0 0.7rem rgba(20, 110, 220, 0.3)); }
 .octa::before, .octa::after { content: ''; position: absolute; z-index: -1; --c: 2.2rem; clip-path: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c)); }
 .octa::before { inset: 0; background: var(--edge); }
@@ -200,6 +200,8 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .jbase[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
 .jarrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 1; width: 2.4rem; min-height: 2.4rem; padding: 0; border: 0; background: transparent; display: grid; place-items: center; }
 .jarrow svg { width: 1.6rem; height: 1.6rem; stroke-width: 2.4; }
+.drift-toggle { min-height: 1.9rem; margin-top: 0.3rem; padding: 0.15rem 0.9rem; border: 1px solid var(--edge); border-radius: 999px; background: rgba(6, 20, 40, 0.7); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted, #9fb6cc); }
+.drift-toggle[aria-pressed="true"] { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 0.6rem rgba(79, 216, 255, 0.35); }
 #portBtn { left: 0.2rem; }
 #starboardBtn { right: 0.2rem; }
 

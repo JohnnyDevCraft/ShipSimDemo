@@ -257,7 +257,7 @@ run({
       await expect(page.locator('#keysDialog')).toBeVisible();
     };
     await openKeys();
-    await expect(page.locator('#keysList [data-action]')).toHaveCount(25);
+    await expect(page.locator('#keysList [data-action]')).toHaveCount(26);
     await expect(keyButton('impulseUp')).toHaveText('W');
     await expect(keyButton('nextTarget')).toHaveText('.');
     await expect(keyButton('track')).toHaveText('—'); // no default key
@@ -344,7 +344,23 @@ run({
   },
   'the heading box shows the heading and the joystick, and no status text': async ({ open }) => {
     const page = await open('/Helm/');
-    assert.equal((await page.locator('.heading').innerText()).replace(/\s+/g, ' ').trim(), 'HEADING 000.0°');
+    assert.equal((await page.locator('.heading').innerText()).replace(/\s+/g, ' ').trim(), 'HEADING 000.0° AUTO DRIFT OFF');
+  },
+  'auto drift under the joystick swings a coasting ship\'s motion back onto the nose': async ({ open }) => {
+    const page = await open('/Helm/');
+    // Coasting well clear of everything at 10 km/s, the motion 30° off the nose.
+    await page.evaluate(() => { ship.x += 5e6; ship.y += 5e6; velocity = polar(10, heading + 30); setImpulse(0); });
+    await page.waitForTimeout(800);
+    const drifting = await page.evaluate(() => window.helmDriftState());
+    assert.ok(drifting.off > 2 && drifting.impulse === 0, `coasting off the nose (${JSON.stringify(drifting)})`);
+    await page.locator('#autoDriftBtn').click();
+    await expect(page.locator('#autoDriftBtn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#autoDriftBtn')).toHaveText('AUTO DRIFT ON');
+    await page.waitForFunction(() => window.helmDriftState().off <= 2.5, null, { timeout: 15000 });
+    const caught = await page.evaluate(() => window.helmDriftState());
+    assert.ok(caught.impulse > 0 && Math.abs(caught.speed - drifting.speed) / drifting.speed < 0.05, `on the nose at the same speed (${JSON.stringify(caught)})`);
+    await page.keyboard.press('v');
+    await expect(page.locator('#autoDriftBtn')).toHaveText('AUTO DRIFT OFF');
   },
   'the external dampener field is a green toggle on the dock that impulse needs': async ({ open }) => {
     const page = await open('/Helm/');

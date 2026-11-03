@@ -1,5 +1,9 @@
 # Helm Control
 
+## Weapons fire (2026-11-02)
+
+The LRS and the SRS draw weapons fire, theirs and ours, so the helm can steer away from torpedoes and see where ours are going. The demo has no simulator, so `../Shared/weapons-fire.js` fires stand-in volleys: two seconds after the page opens, every 15 seconds after that, and on demand from Demo controls → **Fire a test volley**. In each, a hostile drill ship fires a torpedo and pulses at us (red), we fire a pulse and a torpedo back (cyan) and two other drill ships exchange a beam and a pulse (amber); about eight seconds. A torpedo is a diamond with a short trail and a label, a pulse a bolt fading over 0.6 s, a beam a line held for its length then fading, a detonation an expanding ring — the look of the app's `ship-web/src/app/shared/weapons-fire.ts`. The drill ships are placed at fractions of each view's range ahead of our ship (turned to our heading when the volley starts, and moving with us), so a volley shows at any range. `?fire=0` turns the automatic volleys off; `DemoFire.drawn[view]` holds what each view drew in its latest frame (`tests/weapons-fire.cjs`).
+
 ## Track, Quick Jump and keyboard commands (2026-11-02)
 
 John's request, matching the live game's Helm console (`ship-web/src/app/consoles/helm/` in MissionProtocol).

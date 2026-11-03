@@ -9,6 +9,10 @@ Files: `index.html` (with `<body data-weapon="array">`), and in `../Shared/`: `c
 - **Bottom bar:** History, Delegate Fire, Delegate Aim and Clear Target. Fire, when it cannot be used, is dimmed and a tap says why. Space or a right-click on the scope also fires.
 - **Menu → Demo controls:** add a random ship, pause ship movement, supply level, full- and minimum-power charge times, max WED and WKD, bridge aim and bridge fire.
 
+## Weapons fire (2026-11-02)
+
+The scope adds other ships' weapons fire to the page's own beams: see `../TorpedoLaunch/README.md`. Demo controls → **Fire a test volley** fires one now.
+
 ## Rules (from the Angular EBC demo)
 
 - The capacitor charges toward the shot power. A full charge takes the minimum-power time (6 s) at 1% supply and the full-power time (2 s) at 100%; 0% supply pauses charging.

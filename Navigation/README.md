@@ -2,6 +2,10 @@
 
 The navigation officer's console. It sets destinations in the ship's navigation computer; Helm Control flies to them. Open it beside `../Helm/index.html` to see both share one computer.
 
+## Weapons fire (2026-11-02)
+
+The map draws weapons fire around our ship, theirs and ours. The demo has no simulator, so `../Shared/weapons-fire.js` fires stand-in volleys: two seconds after the page opens, every 15 seconds after that, and on demand from Demo controls → **Fire a test volley**. In each, a hostile drill ship fires a torpedo and pulses at us (red), we fire a pulse and a torpedo back (cyan) and two other drill ships exchange a beam and a pulse (amber); about eight seconds. A torpedo is a diamond with a short trail and a label, a pulse a bolt fading over 0.6 s, a beam a line held for its length then fading, a detonation an expanding ring — the look of the app's `ship-web/src/app/shared/weapons-fire.ts`. The drill ships are placed at fractions of each view's range ahead of our ship (turned to our heading when the volley starts, and moving with us), so a volley shows at any range. `?fire=0` turns the automatic volleys off; `DemoFire.drawn[view]` holds what each view drew in its latest frame (`tests/weapons-fire.cjs`).
+
 ## Full-screen layout (2026-10-28)
 
 Same design principles as Helm Control: the system map fills the window and every control floats over it, the bottom bar opens dialogs, demo-only controls sit behind the menu, and the page scales as one piece from iPad (portrait or landscape) to 4K. `tests/navigation-layout.cjs` checks those sizes, with every panel filled.

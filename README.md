@@ -1,6 +1,6 @@
 # ShipsMS demos
 
-This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all twenty-two demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Power Distribution, Communications, Transporter, Cargo Bay, Shields, Tractor Beam, Warp Field, Fighter, Command, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles and Fighter Control share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW). `Weapons/` contains the compiled assets for the one remaining Angular screen (Tactical Officer).
+This repository is the home of the standalone ShipsMS demos, separate from the simulator repository. Publish its root to GitHub Pages. `index.html` links to all twenty-two demos; each screen lives in its own folder. `Shared/` holds the scripts Helm Control and Navigation Control have in common, and the shared console look and controls (`console.css`, `console-ui.js`) that Navigation, Reactor, Battery, Power Distribution, Communications, Transporter, Cargo Bay, Shields, Tractor Beam, Warp Field, Fighter, Command, Torpedo Assembly, Torpedo Launch, EPW and EBW Control use, and the targeting scope the three weapon consoles and Fighter Control share (`scope.js`, `scope.css`, the 3D `scene.js`, and `energy-weapon.js` and `.css` for EPW and EBW), and the quick switch every page's menu carries (`quick-switch.js`: the five divisions and an overlay of their consoles), and the weapons fire drawn on every scanner and scope (`weapons-fire.js`: the app's look, and the demo's stand-in volleys, `DemoFire`). `Weapons/` contains the compiled assets for the one remaining Angular screen (Tactical Officer).
 
 ## Local preview
 
@@ -62,6 +62,8 @@ node tests/fighter-layout.cjs       # Fighter Control fits iPad landscape throug
 node tests/command-control.cjs      # Command Control
 node tests/command-layout.cjs       # Command Control fits phones from 360×640 to 430×932
 node tests/demo-index.cjs           # index link
+node tests/quick-switch.cjs         # the menu's quick switch (divisions, overlay, every page)
+node tests/weapons-fire.cjs         # weapons fire on Helm, Navigation, the View Screen, the weapon scopes, Tactical and Fighter
 ```
 
 The browser tests serve this folder themselves and run in Chromium and WebKit. Set `ENGINES=chromium` to run one engine, `PLAYWRIGHT_MODULE` to use another Playwright installation, and `DEMO_BASE` to test an already running server.

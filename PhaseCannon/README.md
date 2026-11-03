@@ -9,6 +9,10 @@ Files: `index.html` (with `<body data-weapon="cannon">`), and in `../Shared/`: `
 - **Bottom bar:** History, Delegate Fire, Delegate Aim and Clear Target. Fire, when it cannot be used, is dimmed and a tap says why. Space or a right-click on the scope also fires.
 - **Menu → Demo controls:** add a random ship, pause ship movement, supply level, full- and minimum-power charge times, max WED and WKD, pulse speed, full-power and dissipation distances, chamber count (1–3), bridge aim and bridge fire.
 
+## Weapons fire (2026-11-02)
+
+The scope adds other ships' weapons fire to the page's own pulses: see `../TorpedoLaunch/README.md`. Demo controls → **Fire a test volley** fires one now.
+
 ## Rules (from the Angular EPC demo)
 
 - Every chamber charges toward the shot power at once. A full charge (0 to 100%) takes the minimum-power time (3 s) at 1% supply and the full-power time (1.5 s) at 100%; 0% supply pauses charging.

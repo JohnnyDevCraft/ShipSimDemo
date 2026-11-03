@@ -1,6 +1,6 @@
 // Tactical Officer Control fits any landscape window from an iPad to a 4K monitor: the top bar, the weapons and
 // shields, the scanned target and the range, the advisory and the bottom bar stay on screen and apart, nothing
-// is clipped, and every overlay (camera, condition, subsystems, demo controls) fits.
+// is clipped, and every overlay (camera, condition, subsystems, the weapon set-ups, demo controls) fits.
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -77,6 +77,31 @@ for (const [width, height] of sizes)
     await page.locator('#subsystemsBtn').click();
     assert.ok(await dialogFits(page, 'subsystemsDialog'), 'the subsystems overlay fits');
     await page.locator('#subsystemsDialog [data-close]').click();
+    // The weapon set-up overlays: the launcher list, a launcher's set-up at its tallest (proximity, a round
+    // assembling and loading), and an energy weapon's set-up. The training ship stops firing so we survive.
+    await page.evaluate(() => TacticalOfficer.set({ demo: { behavior: 'run' }, hull: 500 }));
+    await page.locator('#torpedoesBtn').click();
+    assert.ok(await dialogFits(page, 'weaponsDialog'), 'the torpedo launcher list fits');
+    await page.locator('#weaponsList [data-choose="TPD1"]').click();
+    await page.locator('#tdTrigger [data-trigger="Proximity"]').click();
+    await page.locator('#tdAutoAssemble').click();
+    await page.evaluate(() => TacticalOfficer.step(105));
+    await page.locator('#tdLoad').click();
+    assert.ok(await dialogFits(page, 'weaponsDialog'), 'the launcher set-up fits');
+    const cutInDialog = () => page.evaluate(() => [...document.querySelectorAll('#weaponsDialog button, #weaponsDialog .wline > *, #weaponsDialog .rows dd, #weaponsDialog .wc-head > *')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => e.textContent));
+    assert.deepEqual(await cutInDialog(), [], 'no launcher text is cut off');
+    await page.locator('#weaponsDialog [data-close]').click();
+    await page.locator('#epwBtn').click();
+    assert.ok(await dialogFits(page, 'weaponsDialog'), 'the EPW list fits');
+    assert.deepEqual(await cutInDialog(), [], 'no EPW card text is cut off');
+    await page.locator('#weaponsList [data-choose="EPW1"]').click();
+    assert.ok(await dialogFits(page, 'weaponsDialog'), 'the EPW set-up fits');
+    assert.deepEqual(await cutInDialog(), [], 'no EPW set-up text is cut off');
+    await page.locator('#weaponsDialog [data-close]').click();
+    // The nine bottom-bar commands keep apart.
+    const commands = await page.locator('.dock button').evaluateAll(buttons => buttons.map(b => { const r = b.getBoundingClientRect(); return { l: r.left, r: r.right, cut: b.scrollWidth > b.clientWidth + 1 }; }));
+    for (let i = 1; i < commands.length; i++) assert.ok(commands[i].l >= commands[i - 1].r, `bottom-bar command ${i + 1} clears the one before`);
+    assert.ok(commands.every(c => !c.cut), 'no bottom-bar label is cut off');
     await page.locator('#menuBtn').click();
     await page.locator('#openDemoControls').click();
     assert.ok(await dialogFits(page, 'menuDialog'), 'the demo controls fit');

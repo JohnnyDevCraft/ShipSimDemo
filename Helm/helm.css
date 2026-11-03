@@ -229,6 +229,28 @@ small { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); }
 .target-chip { position: absolute; top: 0; right: 0; pointer-events: auto; display: flex; align-items: center; gap: 0.6rem; max-width: 100%; background: var(--panel); }
 .target-chip i { margin: 0; width: 0.7rem; height: 0.7rem; }
 
+/* ── Tactical's target (John, 2026-11-03): its shields and hull as Tactical Officer Control shows them ─────────────── */
+.tac-target { width: 100%; flex: none; display: grid; gap: 0.4rem; padding: 0.7rem 1rem 0.8rem; }
+.tac-target .thead { padding-bottom: 0.4rem; }
+.tac-chip { padding: 0.12rem 0.5rem; border: 1px solid var(--cyan); border-radius: 999px; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--cyan); }
+.tac-name { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6rem; align-items: center; }
+.tac-name i { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: #f45b65; box-shadow: 0 0 0.6rem #f45b65; }
+.tac-name h3 { margin: 0; font-size: 1.05rem; font-weight: 500; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tac-name span { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.tac-sub { margin: -0.2rem 0 0 1.35rem; font-size: 0.66rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tac-hull { display: flex; justify-content: space-between; align-items: baseline; }
+.tac-hull small { font-size: 0.62rem; letter-spacing: 0.1em; }
+.tac-hull b { font-size: 0.8rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tac-hull-bar[data-level="low"] i { background: linear-gradient(90deg, #d9a33a, #ffd98a); box-shadow: 0 0 0.6rem #ffd98a; }
+.tac-hull-bar[data-level="down"] i { background: linear-gradient(90deg, #c23b47, #ff8f9b); box-shadow: 0 0 0.6rem #ff8f9b; }
+.tac-shields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.3rem; margin-top: 0.15rem; }
+.tac-shields div { display: grid; justify-items: center; gap: 0.05rem; min-width: 0; padding: 0.22rem 0.2rem; border: 1px solid var(--edge-soft); border-radius: 0.45rem; }
+.tac-shields small { font-size: 0.5rem; letter-spacing: 0.08em; }
+.tac-shields b { font-size: 0.66rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tac-shields [data-level="up"] { border-color: rgba(88, 170, 255, 0.6); color: #9fd0ff; }
+.tac-shields [data-level="low"] { border-color: rgba(244, 202, 89, 0.6); color: #ffd98a; }
+.tac-shields [data-level="down"] { border-color: rgba(255, 90, 100, 0.55); color: #ff8f9b; }
+
 /* ── Dock ────────────────────────────────────────────────────────────────────────────────────── */
 .dock {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2; height: var(--dock-h);

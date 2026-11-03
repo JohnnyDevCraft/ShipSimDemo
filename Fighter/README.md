@@ -14,7 +14,7 @@ Files: `index.html`, `styles.css`, `../Shared/console.css`, `../Shared/scope.css
 - **Bottom bar:**
   - **Engines** opens the pop-up: Start or Stop Engines, the reactor (a 90 s cold start), the battery, the bus load, and every system's power, asked and given.
   - **Shields** and **Weapons** switch on and off.
-  - **Auto-Drift** keeps the motion on the nose: as you turn, the engine does Forward Thrust's work by itself, and the stick sets the speed along the nose (down through zero reverses along it).
+  - **Auto-Drift** keeps the motion on the nose: as you turn, the engine does Forward Thrust's work by itself, and the stick sets the speed along the nose (down through zero reverses along it). The speed is locked to that setting (John, 2026-11-03): the stick moves it at 500 m/s a second and the THROTTLE readout shows it; the ship gets there at its acceleration, and slows to a lower setting by braking lightly at the same rate (LIGHT BRAKING), so full speed to a quarter takes about 12 seconds.
   - **Next Target**, **Clear Target** and **Zoom**.
   - **History** (shots fired) and **Diagnostics**.
 - **Multi-touch:** steer with one finger while others fire, launch, hold Forward Thrust or press the bottom bar. The console's buttons act the moment a finger lands, so they work while the stick is held, and page pinch and zoom are off.

@@ -6,6 +6,8 @@ John: weapons fire must come from real ships on the map, reach no further than w
 
 On Helm the enemy is a contact on the **SRS** (a red arrowhead along its heading, named, with its distance): select it and **TRACK** keeps the course on it. The LRS shows neither the enemy nor any fire.
 
+**Tactical's target (John, 2026-11-03).** While an enemy is present, **TRACK** keeps the course on the target Tactical has selected, with nothing to select on the scanner, and follows it if Tactical's target changes; it ends when Tactical has none. The demo's Tactical Officer runs its own training ships, so here Tactical's target is the nearest working enemy within the targeting sensors' reach (10,000 km): Black Pearl. A **TACTICAL TARGET** panel joins the right column with its name, distance, hull (of 500, with a bar) and four shield quadrants (Forward, Starboard, Aft, Port, 50 SEO each), coloured as on Tactical Officer Control, and TRACKING while Track follows it. Our hits wear it down by Tactical's numbers: a hit drains the quadrant facing our ship by the weapon's energy damage while it is up (cannon 120, torpedo 30, array 60), else takes its kinetic damage off the hull (40, 150, 60); quadrants recover 10 SEO every 15 s. Helm keeps the score in `localStorage`, so every tab sees the same health. At hull 0 Black Pearl is disabled: it stops where it is, nobody fires at it or from it, and the panel goes. Remove and add the enemy again for a fresh one. On a short screen the Map Range panel steps aside while the target panel is shown (RANGE on the dock and the + and − keys still set the range).
+
 ## Track, Quick Jump and keyboard commands (2026-11-02)
 
 John's request, matching the live game's Helm console (`ship-web/src/app/consoles/helm/` in MissionProtocol).
@@ -83,3 +85,7 @@ Earth Orbital Station: static Sol-system station at 400 km above Earth, purple, 
 Auto Dock final approach supersedes the earlier one-kilometer stop: align bow toward station and stop with bow docking port ten meters outside station hull. Ship center stand-off includes half demo ship length. Station then engages moorings/clamps; user connects umbilical.
 
 Latest review: read-only speed gauge is linear against active-mode maximum speed, with5% ticks and25/50/75 labels, aligned with slider tracks and no text underneath. Attitude fill extends from center according to actual angular rate. Selected-object approach caps:100km25%,10km10%,5km2%,2km Auto Dock only. Automatic light braking and swept sublight collision checks apply; warp transit exception remains.
+
+## Auto drift locks the speed to impulse (John, 2026-11-03)
+
+With AUTO DRIFT ON the speed follows impulse: lowering impulse applies the light brake by itself until the speed matches, so 100 % to 25 % takes the light brake's time, as if the helmsman held LIGHT BRAKE; raising it accelerates as usual. The motion still swings onto the nose. With auto drift off, lowering impulse lets the ship coast as before. `tests/helm-flight.cjs` checks both.

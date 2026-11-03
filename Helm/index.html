@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Helm Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
-<link rel="stylesheet" href="helm.css?v=3">
+<link rel="stylesheet" href="helm.css?v=20261103c">
 </head>
 <body>
 <canvas id="map" aria-label="Scanner map. Select a contact for its course and distance."></canvas>
@@ -82,6 +82,14 @@
   </div>
 </section>
 <button type="button" id="targetChip" class="target-chip" hidden><i></i><span></span></button>
+<section id="tacTarget" class="panel tac-target" aria-label="Tactical's target" hidden>
+  <div class="thead"><h2>TACTICAL TARGET</h2><small id="tacTracking" class="tac-chip" hidden>TRACKING</small></div>
+  <div class="tac-name"><i></i><h3 id="tacName">—</h3><span id="tacDistance">—</span></div>
+  <p id="tacSub" class="tac-sub">—</p>
+  <div class="tac-hull"><small>HULL</small><b id="tacHull">—</b></div>
+  <div class="bar tac-hull-bar" aria-hidden="true"><i id="tacHullFill"></i></div>
+  <div class="tac-shields" id="tacShields" aria-label="Target shield quadrants"></div>
+</section>
 
 <section class="panel range" aria-label="Map range">
   <h2>MAP RANGE</h2>
@@ -232,8 +240,8 @@
 <script src="safety.js?v=2"></script>
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
-<script src="../Shared/demo-battle.js?v=20261103b"></script>
-<script src="helm.js?v=20261103b"></script>
+<script src="../Shared/demo-battle.js?v=20261103c"></script>
+<script src="helm.js?v=20261103c"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
 </body>

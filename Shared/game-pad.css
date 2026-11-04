@@ -1,0 +1,18 @@
+/* Controller axes (Shared/game-pad.js axisPanel): a live bar per axis, and a row per on-screen joystick direction or slider with its
+   axis, INVERT and, for a slider, POSITION or RATE. */
+.pad-axes { display: grid; gap: 0.3rem; margin: 0.4rem 0 0.6rem; }
+.pad-axes, .pad-axes * { box-sizing: border-box; min-width: 0; }
+.pad-axis-live { display: grid; grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); gap: 0.3rem 0.8rem; padding: 0.4rem 0 0.5rem; border-bottom: 1px solid rgba(70, 160, 240, 0.22); }
+.pad-axis-live span { display: grid; gap: 0.2rem; }
+.pad-axis-live small { font-size: 0.6rem; letter-spacing: 0.08em; color: #92b2cd; }
+.pad-axis-row { display: grid; grid-template-columns: minmax(0, 1fr) 8.5rem 4.6rem 4.5rem; align-items: center; gap: 0.35rem; padding: 0.25rem 0; border-bottom: 1px solid rgba(70, 160, 240, 0.22); }
+.pad-axis-label { font-size: 0.8rem; }
+.pad-axis-row button { min-height: 2rem; padding: 0.2rem 0.3rem; font-size: 0.64rem; letter-spacing: 0.05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pad-axis-cap.unbound { color: #92b2cd; }
+.pad-axis-cap.listening { border-color: #ffb648; color: #ffb648; box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
+.pad-axis-invert[aria-pressed="true"] { border-color: #4fd8ff; color: #4fd8ff; }
+.pad-axis-meter { position: relative; display: block; height: 0.45rem; border-radius: 1rem; background: rgba(90, 140, 190, 0.22); overflow: hidden; }
+.pad-axis-meter::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(190, 220, 245, 0.5); }
+[data-kind="lever"] .pad-axis-meter::after { left: 50%; background: rgba(255, 182, 72, 0.6); }
+.pad-axis-meter b { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; background: linear-gradient(90deg, #2f7dff, #4fd8ff); box-shadow: 0 0 0.5rem #4fd8ff; }
+@media (max-width: 700px) { .pad-axis-row { grid-template-columns: minmax(0, 1fr) 7.5rem 4.4rem; } }

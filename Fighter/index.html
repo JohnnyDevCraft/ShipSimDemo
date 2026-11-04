@@ -6,8 +6,9 @@
 <title>Fighter Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="../Shared/game-pad.css?v=20261103f">
 <link rel="stylesheet" href="../Shared/scope.css?v=1">
-<link rel="stylesheet" href="styles.css?v=20261103d">
+<link rel="stylesheet" href="styles.css?v=20261103f">
 </head>
 <body class="scope-page fighter">
 
@@ -162,11 +163,18 @@
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
   </div>
   <div id="controlsHelp" hidden>
-    <p class="mnote">Tap a key to change it, then press the new key; tap a controller button, then press the new button on the controller. Escape cancels; Backspace leaves the command without one. A key and a button both work. Kept in this browser.</p>
-    <div class="bindings" id="bindingList"></div>
+    <div class="seg controls-tabs" role="tablist"><button type="button" role="tab" data-ctab="keys" aria-selected="true">KEYS AND BUTTONS</button><button type="button" role="tab" data-ctab="axes" aria-selected="false">CONTROLLER AXES</button></div>
+    <div id="keysTab">
+      <p class="mnote">Tap a key to change it, then press the new key; tap a controller button, then press the new button on the controller. Escape cancels; Backspace leaves the command without one. A key and a button both work. Kept in this browser.</p>
+      <div class="bindings" id="bindingList"></div>
+    </div>
+    <div id="axesTab" hidden>
+      <p class="mnote">Tap an axis, then move the controller axis you want all the way; INVERT reverses it. Impulse increase/decrease and zoom hold while centred and change while pushed; impulse control follows the axis 0–100 %; the brake is light braking up to half its travel and hard braking beyond. The bars show what every axis is sending now.</p>
+      <div id="padAxes"></div>
+    </div>
     <p class="mnote binding-note" id="bindingNote" role="status" aria-live="polite"></p>
     <div class="mrow"><button type="button" id="resetBindings">RESET TO DEFAULTS</button></div>
-    <p class="mnote">Space also fires the cannon, and + and − zoom, unless those keys are bound here. Joystick or game controller: the left stick across turns and up and down throttles, as the on-screen stick does.</p>
+    <p class="mnote">Space also fires the cannon, and + and − zoom, unless those keys are bound here. The controller's sticks and levers are set on CONTROLLER AXES.</p>
   </div>
   <div id="demoControls" hidden>
     <div class="fields-view">
@@ -216,8 +224,8 @@
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
-<script src="../Shared/game-pad.js?v=20261103d"></script>
-<script src="fighter.js?v=20261103d"></script>
+<script src="../Shared/game-pad.js?v=20261103f"></script>
+<script src="fighter.js?v=20261103f"></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
 </body>
 </html>

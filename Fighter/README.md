@@ -39,3 +39,15 @@ On Fighter the four ships are contacts on the scope and the short-range scan (ta
 ## Joystick and game controller (John, 2026-11-03)
 
 The first connected joystick or game controller (`../Shared/game-pad.js`, the Gamepad API; 15 % dead zone): the **left stick across** turns and **up and down** throttles, as the on-screen stick does. **Every keyboard command can also have a controller button**: Menu → Controls shows a key cap and a controller-button cap for each command; tap the button cap, then press the controller button (Escape cancels, Backspace leaves it unbound; a button in use moves). A key and a button both work; hold commands (turns, throttle, forward thrust) act while the button is down. Kept in this browser (`xmps-fighter-buttons`); Reset to defaults puts keys and buttons back. Defaults on a standard (Xbox-style) pad: A fire cannon, B launch torpedo, X forward thrust (hold), Y full stop, LB / RB previous / next target, BACK weapons, START engines, D-pad ↑ / ↓ zoom in / out, ← auto-drift, → shields. Buttons act while the menu is closed. `tests/fighter-control.cjs` drives a stand-in controller.
+
+### Controller axes (John, 2026-11-03)
+
+Menu → Controls → **CONTROLLER AXES** (a tab beside KEYS AND BUTTONS) maps an axis to each of these, as on Helm (saved as `xmps-fighter-axes`):
+- **Impulse increase / decrease**: centred holds; pushed, the speed rises or falls (the on-screen stick's up and down). Default: left stick up and down.
+- **Impulse control**: 0–100 % of max forward speed along the axis's whole travel; the fighter holds that speed (with auto-drift, along the nose).
+- **Turn right / left**: in proportion. Default: left stick across.
+- **Brake**: up to half its travel light braking (half the engine's rate), beyond half hard braking (its full rate).
+- **Zoom**: centred holds; pushed, the scope zooms in or out. Default: right stick up and down.
+- **Scan range**: centred holds; pushed, the short-range scan widens or narrows.
+
+The stick only flies the fighter with the engines started, as the on-screen stick.

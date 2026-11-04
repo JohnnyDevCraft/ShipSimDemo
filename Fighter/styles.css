@@ -141,7 +141,7 @@
 .fighter .dock button.pressed .ring { filter: brightness(1.4); transform: scale(0.94); }
 
 /* Key bindings (Menu → Controls) */
-.bindings { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1rem; max-height: 52dvh; overflow-y: auto; scrollbar-width: none; }
+.bindings { display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem 1rem; max-height: 44dvh; overflow-y: auto; scrollbar-width: none; }
 .bindings::-webkit-scrollbar { display: none; }
 .bindings h3 { grid-column: 1 / -1; margin: 0.6rem 0 0.1rem; font-size: 0.68rem; letter-spacing: 0.16em; color: var(--muted); }
 .binding { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.25rem 0; border-bottom: 1px solid var(--edge-soft); }
@@ -150,6 +150,9 @@
 .key-cap.unbound { color: var(--dim); }
 .key-cap.listening { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0.8rem rgba(255, 182, 72, 0.45); }
 .binding-note { min-height: 1.2em; color: var(--cyan); }
+.pad-axes-title { margin: 0.6rem 0 0.1rem; font-size: 0.68rem; letter-spacing: 0.16em; color: var(--muted); }
+.controls-tabs { margin-bottom: 0.4rem; }
+.controls-tabs button { font-size: 0.72rem; letter-spacing: 0.1em; }
 .binding .caps { display: flex; gap: 0.35rem; flex: none; }
 .pad-cap { display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem; min-width: 5.6rem; padding: 0.35rem 0.5rem; font-size: 0.7rem; letter-spacing: 0.06em; }
 .pad-cap b { font-weight: 600; }
@@ -210,3 +213,4 @@
 .fighter .arms-panel .fire-row button { min-height: 3rem; }
 #fireBtn { padding-bottom: 0.75rem; }
 #fireBtn .charge-bar { bottom: 0.32rem; }
+#axesTab .pad-axes { max-height: 50dvh; overflow-y: auto; }

@@ -93,3 +93,15 @@ With AUTO DRIFT ON the speed follows impulse: lowering impulse applies the light
 ## Joystick and game controller (John, 2026-11-03)
 
 Helm reads the first connected joystick or game controller (`../Shared/game-pad.js`, the Gamepad API; sticks have a 15 % dead zone). Default axes: the **left stick across** turns the ship as the on-screen joystick does (in proportion, easing to a stop when let go); the **left stick up and down** moves impulse, 40 points a second at full travel (on the warp drive, the warp factor, a quarter of its range a second); the **right stick up and down** zooms the scanner. **Every keyboard command can also have a controller button**: Menu → **Keyboard and controller** shows each command's key and button; click a button cap, then press the controller button (Backspace clears it, Escape keeps it; a button in use moves to the new command). A key and a button both work. Saved on this device (`mp.helm.buttons`); Restore Defaults puts keys and buttons back. Defaults on a standard (Xbox-style) pad: A Align to course, B Full stop, X Track, Y Auto drift, LB / RB previous / next target, LT / RT warp down / up, BACK Quick jump…, START Go to warp, D-pad ↑ Charge coils, D-pad ← / → turn left / right 50 % (held). Turn buttons are held like the turn keys; the step commands repeat while held. Buttons and sticks act while no window is open. The dialog names the connected controller. `tests/helm-flight.cjs` drives a stand-in controller.
+
+### Controller axes (John, 2026-11-03)
+
+Menu → Keyboard and controller → **CONTROLLER AXES** maps an axis to each of these (click its axis, then move the controller axis all the way; INVERT reverses it; saved as `mp.helm.axes`). A bar per axis shows what the controller is sending:
+- **Impulse increase / decrease**: centred holds; pushed, impulse rises or falls, 40 points a second at full travel. Default: left stick up and down.
+- **Impulse control**: 0–100 % along the axis's whole travel (a throttle lever), applied when the lever moves.
+- **Turn right / left**: in proportion, as the on-screen joystick. Default: left stick across.
+- **Brake**: up to half its travel light braking, beyond half hard braking, released below 5 %.
+- **Zoom**: centred holds; pushed, the map range zooms in or out. Default: right stick up and down.
+- **Warp increase / decrease**: centred holds; pushed, the warp factor rises or falls.
+
+Choosing an axis takes the one pushed furthest past half travel away from the centre, so one still springing back from the last choice is not taken; an axis already in use moves to the new job. Restore Defaults puts keys, buttons and axes back.

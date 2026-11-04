@@ -123,3 +123,8 @@ body.reactor {
 .diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
 .diag-rows div:last-child { grid-column: 1 / -1; }
 .diag-rows dd { max-width: 60%; }
+
+/* Intrusion lock on fuel flow (Science Console spec A.4, O7): a badge over the slider, which refuses touches */
+#fuelControl { position: relative; }
+.flow-lock { position: absolute; left: 0; right: 0; top: 50%; z-index: 2; transform: translateY(-50%); padding: 0.45rem 0.3rem; border: 1px solid var(--red); border-radius: 0.5rem; background: rgba(58, 6, 8, 0.92); color: #ff8f8f; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-align: center; line-height: 1.35; box-shadow: 0 0 1rem rgba(255, 79, 79, 0.45); }
+.intrusion-locked b { color: var(--red); }

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Science Console · Ship Sim</title>
+<link rel="icon" type="image/x-icon" href="../favicon.ico">
+<link rel="stylesheet" href="../Shared/console.css?v=3">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body class="science" data-area="library">
+
+<header class="topbar">
+  <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
+  <div class="scan">
+    <div class="title-pill">SCIENCE</div>
+    <div class="scan-caption" id="caption">SCIENCE CONSOLE · LIBRARY · SIGNAL OPERATIONS · PROBE TELEMETRY</div>
+  </div>
+  <div class="topright">
+    <div class="sci-status" id="sciStatus" aria-label="Science components"></div>
+    <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
+    <div class="officer" id="officerBox" title="This console's officer and ship"><b id="officerId">SCI-1</b><small id="officerShip">TNS COOPER</small></div>
+    <button type="button" id="menuBtn" class="icon-btn" aria-label="Menu" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  </div>
+</header>
+
+<!-- SIGNAL CHALLENGE DETECTED (John, CL-006): nothing more than that; the officer hunts for it on Defense -->
+<div class="intrusion-banner" id="intrusionBanner" role="alert" hidden>
+  <i aria-hidden="true"></i><b>SIGNAL CHALLENGE DETECTED</b>
+  <button type="button" id="dismissIntrusion">DISMISS</button>
+</div>
+
+<!-- ── Left column ─────────────────────────────────────────────────────────────────────────────── -->
+<div class="col left" id="leftCol">
+  <section class="panel fill" data-show="library" aria-label="Library categories">
+    <div class="thead"><h2>CATEGORIES</h2><small id="libScope">PUBLIC · TSC</small></div>
+    <div class="cat-list" id="categories"></div>
+  </section>
+
+  <section class="panel fill" data-show="offense" aria-label="Targets">
+    <div class="thead"><h2>TARGETS</h2><small id="scanNote">SIGNAL OPERATIONS MODULE</small></div>
+    <button type="button" class="primary wide" id="scanBtn">SCAN FOR SHIPS</button>
+    <div class="bar scan-bar" id="scanBar" hidden><i></i></div>
+    <div class="target-list" id="targets"></div>
+    <p class="mnote" id="rangeNote"></p>
+  </section>
+
+  <section class="panel fill" data-show="defense" aria-label="Frequency history">
+    <div class="thead"><h2>FREQUENCY HISTORY</h2><small>LAST 5 MIN</small></div>
+    <div class="history" id="history" role="list"></div>
+  </section>
+
+  <section class="panel fill" data-show="telemetry" aria-label="Probes">
+    <div class="thead"><h2>PROBES</h2><small id="probeCount">0 LAUNCHED</small></div>
+    <div class="probe-list" id="probeList"></div>
+  </section>
+
+  <section class="panel fill" data-show="scanner" aria-label="Scanner">
+    <div class="thead"><h2>SCANNER</h2></div>
+    <p class="mnote">The advanced science scanner reads planets and asteroids within its range. Its screen is a later feature.</p>
+  </section>
+</div>
+
+<!-- ── Centre ──────────────────────────────────────────────────────────────────────────────────── -->
+<main id="stage" aria-label="Science stage">
+  <!-- Library -->
+  <section class="area library-area" data-show="library" aria-label="Library">
+    <div class="lib-search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="libSearch" type="search" placeholder="SEARCH WHAT THIS SHIP KNOWS" aria-label="Search the library" autocomplete="off" spellcheck="false">
+      <small id="libCount"></small>
+    </div>
+    <div class="lib-results" id="libResults"></div>
+    <article class="lib-detail" id="libDetail" hidden aria-live="polite"></article>
+  </section>
+
+  <!-- Offense -->
+  <section class="area offense-area" data-show="offense" aria-label="Offensive signal operations">
+    <ol class="stepper" id="stepper" aria-label="Signal challenge stages"></ol>
+    <div class="stage-body" id="offBody">
+      <div class="stage-view" data-view="idle"><div class="big-note"><b>NO TARGET</b><span>Scan for ships, then choose a target within the signal operations module's range.</span></div></div>
+      <div class="stage-view" data-view="progress"><div class="progress-card"><small id="progTitle">ANALYZING</small><b id="progValue">0%</b><div class="bar"><i id="progBar"></i></div><span id="progNote"></span></div></div>
+      <div class="stage-view matcher-view" data-view="match"><div class="match-head"><small>CHALLENGE FREQUENCY</small><b id="matchFreq">IF-000</b><span id="matchNote">Match the signal before the window rotates.</span></div><div class="matcher-host" id="offMatcher"></div></div>
+      <div class="stage-view" data-view="systems"><div class="systems-card"><div class="card-head"><small>CONTESTABLE SYSTEMS</small><span id="systemsNote"></span></div><div class="system-list" id="systemList"></div></div></div>
+      <div class="stage-view" data-view="command"><div class="command-card" id="commandForm"></div></div>
+      <div class="stage-view" data-view="result"><div class="result-card" id="resultCard"></div></div>
+    </div>
+  </section>
+
+  <!-- Defense -->
+  <section class="area defense-area" data-show="defense" aria-label="Defensive signal operations">
+    <div class="def-head" id="defHead"></div>
+    <div class="matcher-host" id="defMatcher"></div>
+    <div class="def-actions" id="defActions"></div>
+  </section>
+
+  <!-- Telemetry -->
+  <section class="area telemetry-area" data-show="telemetry" aria-label="Probe telemetry">
+    <div class="tel-top">
+      <div class="srs-wrap">
+        <canvas id="probeMap" aria-label="The probe's short-range scanner: the probe at the centre, what it scanned around it"></canvas>
+        <small class="srs-range" id="srsRange">SRS</small>
+        <div class="srs-zoom" role="group" aria-label="SRS range"><button type="button" class="icon-btn small" data-srs-zoom="in" aria-label="Zoom in">+</button><button type="button" class="icon-btn small" data-srs-zoom="out" aria-label="Zoom out">−</button><button type="button" data-srs-zoom="auto" aria-label="Automatic range">AUTO</button></div>
+      </div>
+      <dl class="rows tel-rows" id="probeRows"></dl>
+    </div>
+    <div class="sensor-grid" id="sensorGrid"></div>
+  </section>
+
+  <!-- Scanner -->
+  <section class="area scanner-area" data-show="scanner" aria-label="Scanner">
+    <div class="big-note"><b>SCANNER — COMING IN A LATER FEATURE</b><span>The advanced science scanner is fitted. What it reads and shows gets its own spec.</span></div>
+  </section>
+
+  <!-- Offline cover for an area whose component is not fitted or not working -->
+  <div class="offline" id="offline" hidden><b id="offlineTitle">LIBRARY OFFLINE</b><span id="offlineReason">RELAY OPEN</span></div>
+</main>
+
+<!-- ── Right column ────────────────────────────────────────────────────────────────────────────── -->
+<div class="col right" id="rightCol">
+  <section class="panel fill" data-show="library" aria-label="Ask the Computer">
+    <div class="thead"><h2>ASK THE COMPUTER</h2><small class="mock-tag">MOCK ANSWERS</small></div>
+    <div class="ask-log" id="askLog"></div>
+    <div class="ask-row"><input id="askInput" type="text" placeholder="ASK A QUESTION" aria-label="Ask the computer" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="askBtn">ASK</button></div>
+  </section>
+
+  <section class="panel fill" data-show="offense" aria-label="Connection">
+    <div class="thead"><h2>CONNECTION</h2><small id="connState">NONE</small></div>
+    <dl class="rows" id="connRows"></dl>
+    <div class="conn-log" id="connLog" aria-live="polite"></div>
+    <button type="button" class="danger wide" id="abortBtn">ABORT</button>
+  </section>
+
+  <section class="panel fill" data-show="defense" aria-label="Held controls">
+    <div class="thead"><h2>HELD CONTROLS</h2><small id="lockCount">NONE</small></div>
+    <div class="lock-list" id="lockList"></div>
+    <p class="mnote" id="lockNote"></p>
+  </section>
+
+  <section class="panel fill" data-show="telemetry" aria-label="Probe link">
+    <div class="thead"><h2>LINK</h2><small id="linkState">—</small></div>
+    <dl class="rows" id="linkRows"></dl>
+    <div class="pulse" id="pulse" aria-hidden="true"><i></i><span>SNAPSHOT</span></div>
+    <p class="mnote">Receive only. A probe flies the program set at assembly; nothing here commands it.</p>
+  </section>
+
+  <section class="panel fill" data-show="scanner" aria-label="Scanner status">
+    <div class="thead"><h2>SCANNER</h2></div>
+    <dl class="rows" id="scannerRows"></dl>
+  </section>
+</div>
+
+<p id="advisory" class="advisory" role="status" aria-live="polite"></p>
+<div id="notice" class="toast" role="status" aria-live="polite"></div>
+
+<nav class="dock" aria-label="Science areas" id="dock">
+  <button type="button" data-area="library"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c2.5-1 5-1 8 1 3-2 5.5-2 8-1v13c-2.5-1-5-1-8 1-3-2-5.5-2-8-1Z"/><path d="M12 6.5v13"/></svg></span>LIBRARY</button>
+  <button type="button" data-area="offense"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12c1.5-4 3-4 4.5 0s3 4 4.5 0 3-4 4.5 0 3 4 4.5 0"/><path d="M17 4l3 3-3 3"/></svg></span>CHALLENGE</button>
+  <button type="button" data-area="defense"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.5 3.2 7.8 7.5 9.5 4.3-1.7 7.5-5 7.5-9.5V6Z"/><path d="M8.5 12c1-2 2-2 3 0s2 2 3 0"/></svg></span>GUARD</button>
+  <button type="button" data-area="telemetry"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14v7"/><circle cx="12" cy="11.5" r="2.5"/><path d="M7.5 7a6.5 6.5 0 0 1 9 0M5 4.5a10 10 0 0 1 14 0"/></svg></span>TELEMETRY</button>
+  <button type="button" data-area="scanner"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12 18 6"/><circle cx="12" cy="12" r="3.5"/></svg></span>SCANNER</button>
+</nav>
+
+<!-- Keypad for numbers in the command form and demo controls -->
+<dialog id="keypadDialog" class="modal narrow" aria-label="Enter a value"><div id="keypadHost"></div></dialog>
+
+<!-- Menu and demo controls (O3: every mock control lives here, never on the console's face) -->
+<dialog id="menuDialog" class="modal sci-menu" aria-labelledby="menuTitle">
+  <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <div id="menuMain" class="menu-list">
+    <button type="button" data-menu="ship"><b>Demo controls · ship and science fit</b><span>Which ship this window is aboard, its organization, science slots and components, relays, power and damage</span></button>
+    <button type="button" data-menu="ew"><b>Demo controls · signal operations</b><span>Simulated officers, scenarios, the scenario board, timing and the matcher's tolerance</span></button>
+    <button type="button" data-menu="probes"><b>Demo controls · probes</b><span>Launch a sample probe, force a probe's link lost</span></button>
+    <label class="switch menu-switch"><input type="checkbox" id="soundSwitch"><span></span>Sound <small>THE INTRUSION ALARM</small></label>
+    <button type="button" id="resetDemo"><b>Reset demo</b><span>Clears every science demo key: fit, sessions, locks and probes, in every tab</span></button>
+    <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
+  </div>
+  <div id="demoControls" hidden><div class="fields-view">
+    <p class="mnote demo-note">Local design template · mock data · no live ship connection.</p>
+
+    <div class="msection" data-view="ship">
+      <h3>ABOARD</h3>
+      <div class="seg" id="aboardSeg"><button type="button" data-aboard="escort">TNS COOPER · TSC</button><button type="button" data-aboard="cinder">CINDER VALE · RED MERIDIAN</button></div>
+      <p class="mnote">Open two windows, one aboard each ship, to play attacker against defender. More windows aboard one ship are more officers on it.</p>
+    </div>
+    <div class="msection" data-view="ship">
+      <h3>SHIP'S ORGANIZATION</h3>
+      <div class="seg" id="orgSeg"><button type="button" data-org="TSC">TSC</button><button type="button" data-org="ATLAS">ATLAS</button><button type="button" data-org="RMS">RED MERIDIAN</button></div>
+      <p class="mnote">Changes the organization entries the library shows.</p>
+    </div>
+    <div class="msection" data-view="ship">
+      <h3>SCIENCE FIT</h3>
+      <div class="mrow"><span class="label">SCIENCE SLOTS</span><div class="seg" id="slotSeg"><button type="button" data-slots="1">1</button><button type="button" data-slots="2">2</button><button type="button" data-slots="3">3</button><button type="button" data-slots="4">4</button></div></div>
+      <div class="fit-list" id="fitList"></div>
+      <p class="mnote">Only fitted components give the console its areas. Ranges: library 0, signal operations module 100,000 km, telemetry receiver 1 LY, scanner 1,000,000 km (proposals, O17).</p>
+    </div>
+
+    <div class="msection" data-view="ew">
+      <h3>SIMULATED OFFICERS</h3>
+      <div class="mrow"><button type="button" id="addAttacker">ADD SIM ATTACKER</button><button type="button" id="addDefender">ADD SIM DEFENDER</button></div>
+      <div class="mrow"><button type="button" id="scenThree">SCENARIO · THREE ON ONE</button><button type="button" id="scenShared">SCENARIO · SHARED FREQUENCY</button></div>
+      <p class="mnote">A SIM attacker works aboard the other ship against this one, with the same drawn durations. A SIM defender works aboard this ship. They run while this window stays open.</p>
+    </div>
+    <div class="msection" data-view="ew">
+      <h3>SCENARIO BOARD</h3>
+      <div class="board" id="board"></div>
+    </div>
+    <div class="msection" data-view="ew">
+      <h3>TIMING</h3>
+      <div class="seg" id="timingSeg"><button type="button" data-timing="1">×1</button><button type="button" data-timing="5">×5</button><button type="button" data-timing="20">×20</button></div>
+      <p class="mnote">Speeds the drawn durations, lock times, recovery and probe flight for the next ones started. Frequencies still rotate every 30 s.</p>
+      <div class="field-grid">
+        <div class="field" data-field="tolerance"><div><small>MATCH TOLERANCE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        <div class="field" data-field="holdMs"><div><small>HOLD TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+      </div>
+    </div>
+
+    <div class="msection" data-view="probes">
+      <h3>SAMPLE PROBE</h3>
+      <div class="mrow"><button type="button" id="sampleSsc">LAUNCH · SSC · 250 ms</button><button type="button" id="sampleRf">LAUNCH · RF · WARP 3</button></div>
+      <p class="mnote">For review without Torpedo Assembly. Torpedo Assembly's demo controls launch the probe you configure there.</p>
+    </div>
+    <div class="msection" data-view="probes">
+      <h3>PROBE LINKS</h3>
+      <div class="link-list" id="linkList"></div>
+      <p class="mnote">Auto loses the link when the probe is beyond the telemetry receiver's range. Snapshots resume with no backlog.</p>
+    </div>
+    <p class="mnote" data-error role="alert"></p>
+  </div></div>
+</dialog>
+
+<script src="../Shared/console-ui.js?v=6"></script>
+<script src="../Shared/game-pad.js?v=2"></script>
+<script src="../Shared/science-sim.js?v=1"></script>
+<script src="../Shared/signal-match.js?v=1"></script>
+<script src="library-data.js?v=2"></script>
+<script src="model-view.js?v=1"></script>
+<script src="library-view.js?v=1"></script>
+<script src="probe-view.js?v=1"></script>
+<script src="science.js?v=3"></script>
+<script src="../Shared/quick-switch.js?v=20261104"></script>
+</body>
+</html>

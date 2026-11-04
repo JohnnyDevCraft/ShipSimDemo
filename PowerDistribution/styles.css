@@ -163,3 +163,6 @@ body.power {
 .unmet[data-level="ok"] { color: var(--green); }
 .unmet[data-level="bad"] { color: #ff8f9b; }
 .gauges-modal .mnote { margin-top: 1rem; }
+/* With the science components' cards (Science Console spec O6) there can be up to 18: narrower columns keep them in
+   as few rows as before, so no card is cut short. */
+.subsystems:has(> :nth-child(16)) { grid-template-columns: repeat(auto-fill, minmax(10.8rem, 1fr)); }

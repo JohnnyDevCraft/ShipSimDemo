@@ -26,7 +26,7 @@ for (const [width, height] of sizes)
       const box = card.getBoundingClientRect(), dials = [...card.querySelectorAll('.dial')].map(d => d.getBoundingClientRect());
       return { inside: box.left >= l - 0.5 && box.top >= t - 0.5 && box.right <= r + 0.5 && box.bottom <= b + 0.5, clipped: card.scrollHeight > card.clientHeight + 1, dials: dials.every(d => d.width >= 30 && d.bottom <= box.bottom + 0.5) };
     }), boxes.subsystems);
-    assert.equal(cards.length, 14);
+    assert.equal(cards.length, 17);
     cards.forEach((c, i) => {
       assert.ok(c.inside, `card ${i} is inside the subsystem area`);
       assert.ok(!c.clipped, `card ${i} is not clipped`);

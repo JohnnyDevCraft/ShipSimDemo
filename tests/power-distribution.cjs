@@ -23,12 +23,12 @@ async function setField(page, key, text) {
 run({
   'the subsystems fill the screen and the hull bus temperature is always shown; the battery panel is gone': async ({ open }) => {
     const page = await open('/PowerDistribution/');
-    await expect(page.locator('.subsystem')).toHaveCount(14);
-    await expect(page.locator('#onCount')).toHaveText('14 / 14 ON');
+    await expect(page.locator('.subsystem')).toHaveCount(17);
+    await expect(page.locator('#onCount')).toHaveText('17 / 17 ON');
     await expect(page.locator('#thermalPanel')).toBeVisible();
     await expect(page.locator('#busTemperature')).toHaveText(/^\d+\.\d K$/);
-    await expect(page.locator('#busLoad')).toHaveText('83.0 PU');
-    await expect(page.locator('#state')).toHaveText('LOAD 83.0 / 180.0 PU');
+    await expect(page.locator('#busLoad')).toHaveText('91.0 PU');
+    await expect(page.locator('#state')).toHaveText('LOAD 91.0 / 180.0 PU');
     await expect(page.locator('text=SUPPORT BATTERY')).toHaveCount(0);
     await expect(page.locator('text=BATTERY ENGAGED')).toHaveCount(0);
     await expect(card(page, 'Shields')).toContainText('15.5');
@@ -83,7 +83,7 @@ run({
     await page.locator('#weaponsBtn').click();
     await expect(page.locator('#weaponsBtn')).toHaveAttribute('data-state', 'on');
     await page.locator('#allOffBtn').click();
-    await expect(page.locator('#onCount')).toHaveText('1 / 14 ON');
+    await expect(page.locator('#onCount')).toHaveText('1 / 17 ON');
     await expect(page.locator('#lifeBtn')).toHaveAttribute('data-state', 'on');
     // Life support off starts its outage clock.
     await page.locator('#lifeBtn').click();
@@ -124,11 +124,11 @@ run({
     await demo(page, () => setField(page, 'reactorSupply', '50'));
     await page.locator('#gaugesBtn').click();
     const b = (await state(page)).budget;
-    assert.ok(Math.abs(b.batteryDraw - 33) < 0.01, `the battery covers the 33 PU the reactor cannot (${b.batteryDraw})`);
-    await expect(page.locator('#gaugeGrid .gauge').nth(4)).toContainText('33.0');
+    assert.ok(Math.abs(b.batteryDraw - 41) < 0.01, `the battery covers the 41 PU the reactor cannot (${b.batteryDraw})`);
+    await expect(page.locator('#gaugeGrid .gauge').nth(4)).toContainText('41.0');
     await expect(page.locator('#gaugeUnmet')).toHaveText('Load supplied');
     await page.locator('#gaugesDialog [data-close]').click();
-    await expect(page.locator('#advisory')).toHaveText('The battery is covering 33.0 PU the bus cannot supply.');
+    await expect(page.locator('#advisory')).toHaveText('The battery is covering 41.0 PU the bus cannot supply.');
     // The battery's bus switch is Battery Control's; the demo stands in for it.
     await demo(page, () => page.locator('#demoBatteryBus').uncheck({ force: true }));
     await expect(page.locator('#state')).toHaveText(/^UNMET /);
@@ -143,7 +143,7 @@ run({
       await page.locator('#demoSync').check({ force: true });
     });
     assert.equal((await state(page)).budget.bus, 220);
-    await expect(page.locator('#state')).toHaveText('LOAD 83.0 / 220.0 PU');
+    await expect(page.locator('#state')).toHaveText('LOAD 91.0 / 220.0 PU');
   },
   'the hull bus heats above 150 PU, warns, and breaches above 200 PU': async ({ open }) => {
     const page = await open('/PowerDistribution/');

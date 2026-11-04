@@ -239,3 +239,10 @@ textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select
 .message-dialog textarea { min-height: 5.5rem; padding: 0.7rem 0.9rem; border: 1px solid var(--edge); border-radius: 0.6rem; background: #01060d; font-size: 1.05rem; line-height: 1.4; letter-spacing: 0.04em; resize: none; color: var(--amber); }
 .message-dialog textarea::placeholder { color: var(--dim); }
 .message-dialog .search-keys { flex: none; }
+
+/* Telemetry Transmission Interval (Science Console spec A.7): quick chips under the keypad field */
+.ipair { display: grid; grid-template-columns: minmax(6.5rem, 0.9fr) 1.6fr; gap: 0.4rem; align-items: stretch; }
+.ichips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; }
+.ichips button { min-height: 2rem; padding: 0.1rem; font-size: 0.62rem; letter-spacing: 0.02em; }
+.ichips button[aria-pressed="true"] { border-color: var(--probe); background: rgba(30, 110, 200, 0.35); }
+#intervalNote { font-size: 0.64rem; line-height: 1.35; }

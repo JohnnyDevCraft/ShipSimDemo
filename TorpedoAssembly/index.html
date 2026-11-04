@@ -6,7 +6,7 @@
 <title>Torpedo Assembly Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body class="assembly">
 
@@ -123,6 +123,10 @@
                 <button type="button" class="cfield" data-num="probe.frequency"><small>FREQUENCY</small><b data-show="probe.frequency"></b></button>
                 <div class="seg" data-seg="probe.medium"><button type="button" data-val="RF">RF</button><button type="button" data-val="SSC">SSC</button></div>
               </div>
+            </div>
+            <div class="cgroup"><small>TELEMETRY TRANSMISSION INTERVAL (ms)</small>
+              <div class="ipair"><button type="button" class="cfield" data-num="probe.telemetryIntervalMs"><small>INTERVAL</small><b data-show="probe.telemetryIntervalMs"></b></button><div class="ichips" id="intervalChips" aria-label="Quick intervals"></div></div>
+              <p class="mnote" id="intervalNote"></p>
             </div>
             <div class="cgroup"><small>BATTERY · PU</small>
               <div class="seg" data-seg="probe.battery"><button type="button" data-val="10000">10,000</button><button type="button" data-val="20000">20,000</button><button type="button" data-val="30000">30,000</button></div>
@@ -263,6 +267,8 @@
         <div class="field" data-field="rtlMax"><div><small>READY CAPACITY</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
         <button type="button" id="takeNext" class="wide">TAKE NEXT FOR LAUNCHER</button>
         <p class="mnote">Stands in for Torpedo Launch Control taking the oldest ready torpedo into a tube.</p>
+        <button type="button" id="launchProbe" class="wide">LAUNCH NEXT AS PROBE</button>
+        <p class="mnote">Stands in for Torpedo Launch: the oldest ready probe flies with its configuration fixed, and Science → Telemetry receives it.</p>
       </div>
       <div class="msection" data-view="power">
         <h3>BAY POWER</h3>
@@ -308,7 +314,8 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=5"></script>
-<script src="assembly.js?v=2"></script>
+<script src="../Shared/science-sim.js?v=1"></script>
+<script src="assembly.js?v=3"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
 </body>

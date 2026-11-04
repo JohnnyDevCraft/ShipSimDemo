@@ -6,7 +6,7 @@
 <title>Reactor Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body class="reactor">
 
@@ -115,7 +115,7 @@
     <div class="thead"><h2>REACTION CONTROL</h2><small id="sequenceNote"></small></div>
     <div class="slider-pair">
       <div class="control" id="fuelControl">
-        <small>FUEL FLOW</small><b id="flowValue">0.600</b><em>units / s</em>
+        <small>FUEL FLOW</small><b id="flowValue">0.600</b><em>units / s</em><span class="flow-lock" id="flowLock" role="status" hidden>LOCKED: INTRUSION</span>
         <div id="flowSlider" class="vslider range-slider" aria-label="Fuel flow in units per second"></div>
       </div>
       <div class="control" id="beamControl">
@@ -230,7 +230,8 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=4"></script>
-<script src="reactor.js?v=2"></script>
+<script src="../Shared/science-sim.js?v=1"></script>
+<script src="reactor.js?v=3"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
 </body>

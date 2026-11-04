@@ -6,7 +6,7 @@ const { run, expect } = require('./browser-harness.cjs');
 const DIVISIONS = {
   command: ['Command', 'ViewScreen', 'Communications'],
   engineering: ['Reactor', 'Battery', 'PowerDistribution', 'LifeSupport', 'DotBay', 'Docking', 'WarpField'],
-  science: ['Transporter', 'CargoBay', 'TractorBeam'],
+  science: ['Science', 'Transporter', 'CargoBay', 'TractorBeam'],
   tactical: ['TacticalOfficer', 'Shields', 'TorpedoAssembly', 'TorpedoLaunch', 'PhaseCannon', 'PhaserArray'],
   piloting: ['Helm', 'Navigation', 'Fighter'],
 };

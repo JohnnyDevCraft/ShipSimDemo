@@ -6,7 +6,7 @@
 <title>EPW Control · Phase Cannon · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="../Shared/scope.css?v=1">
+<link rel="stylesheet" href="../Shared/scope.css?v=20261103e">
 <link rel="stylesheet" href="../Shared/energy-weapon.css?v=1">
 </head>
 <body class="scope-page energy" data-weapon="cannon">
@@ -133,6 +133,12 @@
         <p class="mnote">Stand-in fire: a hostile drill ship fires on us (red) and two other ships exchange fire (amber), beside this page's own shots. A volley also comes every 15 seconds.</p>
       </div>
       <div class="msection">
+        <h3>SHIP MOTION</h3>
+        <div class="mrow ship-motion"><button type="button" data-ship-speed="0">AT REST</button><button type="button" data-ship-speed="2">2 KM/S</button><button type="button" data-ship-speed="20">20 KM/S</button></div>
+        <div class="mrow ship-motion"><button type="button" data-ship-course="0">AHEAD</button><button type="button" data-ship-course="90">TO STARBOARD</button><button type="button" data-ship-course="180">ASTERN</button></div>
+        <p class="mnote">Stand-in for the Helm: while the ship moves at impulse, dust drifts past on the scope (20 km/s is full impulse). Only the dust follows it; the training ships do not.</p>
+      </div>
+      <div class="msection">
         <h3>SHIPS</h3>
         <div class="mrow"><button type="button" id="addShip">ADD RANDOM SHIP</button><button type="button" id="moveShips">PAUSE SHIP MOVEMENT</button></div>
         <p class="mnote">Target shields: 200 SEO, 50 per quadrant, recovering 10 SEO a quadrant every 15 seconds. Hull: 500 kinetic damage.</p>
@@ -177,7 +183,8 @@
 
 <script src="../Shared/console-ui.js?v=5"></script>
 <script src="../Shared/scene.js?v=20261103b"></script>
-<script src="../Shared/scope.js?v=20261103b"></script>
+<script src="../Shared/space-dust.js?v=20261103e"></script>
+<script src="../Shared/scope.js?v=20261103e"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
 <script src="../Shared/energy-weapon.js?v=20261103b"></script>

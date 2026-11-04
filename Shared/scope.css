@@ -127,3 +127,5 @@ body.scope-page { background: #000; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .field-grid .field b, .msection .field b { font-size: 1.1rem; }
 .shot[data-result="hit"] { --tone: var(--green); }
+/* SHIP MOTION in the weapon consoles' demo controls: the stand-in's chosen speed and direction light up. */
+.mrow.ship-motion button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); border-color: #63b4ff; box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25); }

@@ -35,3 +35,5 @@ Files: `index.html`, `styles.css` (what only this console has), `../Shared/conso
 - State is kept in the browser's `localStorage` so the two pages can share it. It survives a refresh; Reset demo clears it.
 
 Angles are shown as on Helm: courses 000.0° to 359.9°, turn signed with starboard positive.
+
+**Map range (John, 2026-11-03):** the MAP RANGE slider is gone. The map zooms by the scroll wheel, a two-finger pinch, the dock's RANGE presets and the zoom keys (= or + in, − out). The rings show the range.

@@ -105,3 +105,5 @@ Menu → Keyboard and controller → **CONTROLLER AXES** maps an axis to each of
 - **Warp increase / decrease**: centred holds; pushed, the warp factor rises or falls.
 
 Choosing an axis takes the one pushed furthest past half travel away from the centre, so one still springing back from the last choice is not taken; an axis already in use moves to the new job. Restore Defaults puts keys, buttons and axes back.
+
+**Map range (John, 2026-11-03):** the MAP RANGE slider is gone. The map zooms by the scroll wheel, a two-finger pinch, the dock's RANGE presets, the zoom keys (= or + in, − out; changeable in Menu → Keyboard and controller, and bindable to controller buttons) and a controller's zoom axis. The rings show the range.

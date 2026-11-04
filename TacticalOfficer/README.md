@@ -32,3 +32,5 @@ Files: `index.html`, `styles.css`, `tactical.js` and `camera.js`, minified from 
 - The scanner opens at 200 km so the training ships 110 km out are in view.
 - Shields on and off moved from the shields panel to the bottom bar.
 - A subsystem can be picked as soon as the scan completes; it locks within 25 km (the Angular page refused the pick until then).
+
+**Scanner range (John, 2026-11-03):** the RANGE slider is gone. The scanner zooms by the scroll wheel, a two-finger pinch and the zoom keys (= or + in, − out); the subtitle and the rings show the range.

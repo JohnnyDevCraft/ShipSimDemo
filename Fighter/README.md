@@ -51,3 +51,5 @@ Menu → Controls → **CONTROLLER AXES** (a tab beside KEYS AND BUTTONS) maps a
 - **Scan range**: centred holds; pushed, the short-range scan widens or narrows.
 
 The stick only flies the fighter with the engines started, as the on-screen stick.
+
+**Scan range (John, 2026-11-03):** the slider under the short-range scan is gone. The scan's range follows the scroll wheel or a two-finger pinch on the scan, the scan range keys (] shorter, [ longer; changeable in Menu → Controls and bindable to controller buttons) and a controller's scan range axis; the scan's header shows it.

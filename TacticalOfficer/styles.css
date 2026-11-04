@@ -180,3 +180,6 @@
 .field-grid .field b { font-size: 1rem; }
 .field-select { display: grid; gap: 0.3rem; align-content: center; }
 .switch.compact { min-height: 0; }
+
+/* The scanner takes two-finger pinches itself (John, 2026-11-03: the range slider is gone). */
+#map { touch-action: none; }

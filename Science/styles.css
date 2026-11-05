@@ -291,6 +291,8 @@ body[data-area="scanner"] [data-show="scanner"] { display: flex !important; }
 
 .lib-card {display:flex;flex-direction:column;gap:.5rem;padding:1rem;text-align:left;flex-shrink:0;}
 .lib-card span{font-size:.75rem;color:var(--muted);}
+/* People and Starships run to hundreds of records: the list shows a page at a time (2026-11-04). */
+.lib-more{grid-column:1/-1;flex-shrink:0;padding:.8rem;letter-spacing:.14em;}
 .science [hidden]{display:none!important;}
 /* Keep the menu reachable as the fitted-component list grows. */
 .topbar .scan {min-width:0;flex:1;overflow:hidden;}

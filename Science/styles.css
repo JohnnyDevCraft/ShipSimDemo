@@ -352,3 +352,5 @@ body[data-area="scanner"] [data-show="scanner"] { display: flex !important; }
 .model-hint { position: absolute; left: 0.7rem; bottom: 0.5rem; font-size: 0.54rem; pointer-events: none; }
 .model-status { position: absolute; inset: 0; display: grid; place-content: center; margin: 0; font-size: 0.75rem; letter-spacing: 0.14em; color: var(--dim); }
 .comp-side { display: grid; gap: 0.5rem; }
+/* A starship's hull model (John, 2026-11-05): wide, above its crew. */
+.ship-model .model-box { aspect-ratio: 16 / 9; max-height: 24rem; }

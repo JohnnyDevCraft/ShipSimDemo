@@ -6,6 +6,13 @@ const { run, expect } = require('./browser-harness.cjs');
 const state = page => page.evaluate(() => FighterControl.state());
 const advance = (page, ms) => page.evaluate(value => FighterControl.advance(value), ms);
 const stick = (page, x, y) => page.evaluate(([a, b]) => FighterControl.stick(a, b), [x, y]);
+// A stand-in game controller (standard mapping): tests set window.testPad.axes and .buttons[i].pressed.
+const PAD_SCRIPT = () => {
+  window.testPad = { id: 'Test Pad (STANDARD GAMEPAD)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+  navigator.getGamepads = () => [window.testPad];
+};
+const padButton = (page, index, pressed) => page.evaluate(([i, down]) => { window.testPad.buttons[i] = { pressed: down, value: down ? 1 : 0 }; }, [index, pressed]);
+const padAxis = (page, index, value) => page.evaluate(([i, v]) => { window.testPad.axes[i] = v; }, [index, value]);
 const near = (a, b, tolerance = 0.5) => Math.abs(a - b) <= tolerance;
 // Opens the page with the clock stopped (the tests run it by hand) and, if asked, the engines lit.
 // `quiet` switches the demo's engagement off, for the cases that count on the training ship alone.
@@ -135,13 +142,125 @@ run({
     assert.ok(swing.half < 1 && near(swing.end, 500) && near(swing.course, 0));
   },
 
+  'a game controller flies the fighter: its axes drive the stick and the sliders, mapped by moving them, and every command takes a button as well as a key': async ({ open: openPage, context }) => {
+    await context.addInitScript(PAD_SCRIPT);
+    const page = await open(openPage, { lit: true, quiet: true });
+    const tap = async index => { await padButton(page, index, true); await advance(page, 100); await padButton(page, index, false); await advance(page, 100); };
+    // The left stick across turns at the turn rate.
+    await padAxis(page, 0, 1);
+    await advance(page, 1000);
+    await padAxis(page, 0, 0);
+    await advance(page, 100);
+    assert.ok(near((await state(page)).heading, 30, 1.5), `turned to starboard (${(await state(page)).heading})`);
+    // X is forward thrust while held.
+    await padButton(page, 2, true);
+    await advance(page, 100);
+    assert.equal((await state(page)).thrust, true);
+    await padButton(page, 2, false);
+    await advance(page, 100);
+    assert.equal((await state(page)).thrust, false);
+    // D-pad ← toggles auto-drift, and so does its key.
+    await tap(14);
+    assert.equal((await state(page)).autoDrift, true);
+    await page.keyboard.press('v');
+    assert.equal((await state(page)).autoDrift, false);
+    // Rebind auto-drift to RB (Next target's default) in Menu → Controls.
+    await page.locator('#menuBtn').click();
+    await page.locator('#openControls').click();
+    const cap = id => page.locator(`.binding[data-action="${id}"] .pad-cap`);
+    await expect(cap('autoDrift')).toHaveText('D-PAD ←');
+    await cap('autoDrift').click();
+    await expect(cap('autoDrift')).toHaveText('PRESS A BUTTON…');
+    await padButton(page, 5, true);
+    await expect(page.locator('#bindingNote')).toHaveText('RB moved from “Next target” to “Auto-drift on or off”.');
+    await padButton(page, 5, false);
+    await advance(page, 100); // the frames go on while the menu is open, and see the button let go
+    await expect(cap('autoDrift')).toHaveText('RB');
+    await expect(cap('nextTarget')).toHaveText('—');
+    await cap('shields').click();
+    await page.keyboard.press('Backspace');
+    await expect(page.locator('#bindingNote')).toHaveText('“Shields up or down” has no controller button.');
+    // Axes (John's list): turn moved to the right stick by moving it; impulse control and the brake given axes.
+    const axisCap = id => page.locator(`[data-axis-fn="${id}"] .pad-axis-cap`);
+    await page.locator('[data-ctab="axes"]').click();
+    await advance(page, 100);
+    await expect(axisCap('turn')).toHaveText('LEFT STICK ↔');
+    await axisCap('turn').click();
+    await expect(axisCap('turn')).toHaveText('MOVE AN AXIS…');
+    await padAxis(page, 2, 1);
+    await advance(page, 100);
+    await expect(axisCap('turn')).toHaveText('RIGHT STICK ↔');
+    await padAxis(page, 2, 0);
+    await advance(page, 100);
+    await axisCap('speedLevel').click();
+    await padAxis(page, 1, 1);
+    await advance(page, 100);
+    await expect(axisCap('speedLevel')).toHaveText('LEFT STICK ↕');
+    await expect(axisCap('throttle')).toHaveText('—');
+    await padAxis(page, 1, -1);   // the impulse lever at rest: 0 %
+    await advance(page, 100);
+    await axisCap('brake').click();
+    await padAxis(page, 3, 1);
+    await advance(page, 100);
+    await expect(axisCap('brake')).toHaveText('RIGHT STICK ↕');
+    await page.locator('[data-axis-fn="brake"] .pad-axis-invert').click();
+    await padAxis(page, 3, 1);   // inverted, at rest
+    await advance(page, 100);
+    await page.locator('#menuDialog [data-close]').click();
+    await tap(5);
+    assert.equal((await state(page)).autoDrift, true, 'RB now toggles auto-drift');
+    const before = (await state(page)).heading;
+    await padAxis(page, 0, 1);
+    await advance(page, 1000);
+    await padAxis(page, 0, 0);
+    assert.ok(near((await state(page)).heading, before, 0.5), 'the left stick no longer turns');
+    await padAxis(page, 2, -1);
+    await advance(page, 1000);
+    await padAxis(page, 2, 0);
+    await advance(page, 100);
+    assert.ok(near((await state(page)).heading, before - 30, 1.5), `the right stick turns to port (${(await state(page)).heading})`);
+    // Impulse control at half travel: the fighter holds half its forward speed (1,250 m/s).
+    await padAxis(page, 1, 0);
+    await advance(page, 12000);
+    assert.ok(near((await state(page)).speed, 1250, 15), `holding 1,250 m/s (${(await state(page)).speed})`);
+    // The brake lever a quarter of the way: light braking, half the engine's rate (75 m/s²); three quarters: hard, 150 m/s².
+    await padAxis(page, 3, 0.5);
+    await advance(page, 2000);
+    const light = (await state(page)).speed;
+    assert.ok(near(light, 1250 - 150, 20), `light braking (${light})`);
+    await padAxis(page, 3, -0.5);
+    await advance(page, 2000);
+    assert.ok(near((await state(page)).speed, light - 300, 20), `hard braking (${(await state(page)).speed})`);
+    await padAxis(page, 3, 1);
+  },
+  'Auto-Drift locks the speed to the throttle: pulling it back brakes lightly down to the new speed': async ({ open: openPage }) => {
+    const page = await open(openPage, { lit: true, quiet: true });
+    await page.evaluate(() => FighterControl.set({ vx: 0, vz: 2500, heading: 0 }));
+    await page.locator('#autoDriftCmd').click();
+    await advance(page, 100);
+    await stick(page, 0, 1);
+    await advance(page, 3750); // the setting comes down to 625 m/s
+    await stick(page, 0, 0);
+    await advance(page, 100);
+    let now = await state(page);
+    assert.ok(now.speed > 1500, `still slowing (${now.speed})`);
+    await expect(page.locator('#throttleValue')).toHaveText('625 m/s');
+    await expect(page.locator('#flightState')).toHaveText('LIGHT BRAKING');
+    await expect(page.locator('#advisory')).toContainText('braking lightly to 625 m/s');
+    await advance(page, 9000);
+    now = await state(page);
+    assert.ok(near(now.speed, 625, 0.5), `at 625 m/s (${now.speed})`);
+    await expect(page.locator('#flightState')).toHaveText('HOLDING SPEED');
+  },
   'Auto-Drift keeps the motion on the nose through a turn, and the stick sets the speed ahead or astern': async ({ open: openPage }) => {
     const page = await open(openPage, { lit: true });
     await page.locator('#autoDriftCmd').click();
     await expect(page.locator('#autoDriftLabel')).toHaveText('AUTO-DRIFT ON');
     await expect(page.locator('#autoDriftCmd')).toHaveClass(/active/);
     await stick(page, 0, -1);
-    await advance(page, 5000); // 750 m/s ahead
+    await advance(page, 1500); // set to 750 m/s ahead (500 m/s a second at full stick)
+    await stick(page, 0, 0);
+    await advance(page, 3500); // the engine gets there at 150 m/s²
     await stick(page, -1, 0);
     await advance(page, 3000); // the nose swings 90° to port
     await stick(page, 0, 0);
@@ -165,7 +284,7 @@ run({
     await page.locator('#autoDriftCmd').click();
     await page.evaluate(() => FighterControl.set({ vx: 0, vz: 0, heading: 0 }));
     await stick(page, 0, 1);
-    await advance(page, 3000);
+    await advance(page, 900); // set to 450 m/s astern
     await stick(page, 1, 0);
     await advance(page, 1000);
     await stick(page, 0, 0);
@@ -333,6 +452,83 @@ run({
     assert.ok(near(moved.range, 6000, 1) && near(moved.bearing, 0, 0.01), '4 km closer after 4 s at 1 km/s');
   },
 
+  'Menu → Jump drive: plot along the nose, switch the external field off, charge the coils and jump; it drops out at the plot': async ({ open: openPage }) => {
+    const page = await open(openPage, { lit: true, quiet: true });
+    await page.locator('#menuBtn').click();
+    await page.locator('#openJump').click();
+    await expect(page.locator('#jumpDialog')).toBeVisible();
+    await expect(page.locator('#jumpField')).toHaveText('ON · switch it off to jump');
+    await page.locator('#jumpEngageBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Plot a jump first.');
+    await page.locator('#jumpDistance [data-km="100000"]').click();
+    await page.locator('#jumpPlotBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Jump plotted: 100,000 km along the nose.');
+    await expect(page.locator('#jumpPlot')).toHaveText('100,000 km · 0°');
+    await page.locator('#jumpChargeBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Jump coils charging.');
+    await advance(page, 5000);
+    await expect(page.locator('#jumpCoils')).toHaveText('50% · charging');
+    await expect(page.locator('#advisory')).toHaveText('Jump coils charging · 50%.');
+    await advance(page, 5100);
+    await expect(page.locator('#jumpCoils')).toHaveText('100%');
+    await page.locator('#jumpEngageBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Switch the external dampener field off to jump.');
+    await page.locator('#jumpFieldBtn').click();
+    await expect(page.locator('#jumpField')).toHaveText('OFF');
+    await page.locator('#jumpEngageBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Jumping: warp 1.0 for 100,000 km.');
+    let now = await state(page);
+    assert.equal(now.jump.atWarp, true);
+    await expect(page.locator('#state')).toHaveText('JUMPING');
+    await advance(page, 1000);
+    now = await state(page);
+    assert.equal(now.jump.atWarp, false, 'dropped out at the plot');
+    assert.ok(near(now.z, 1e8, 1) && near(now.x, 0, 1), `100,000 km along the nose (${now.x}, ${now.z})`);
+    assert.equal(now.jump.field, true, 'the external field is back on');
+    await expect(page.locator('#notice')).toHaveText('Jump complete: dropped out of warp at the plot. External field back on.');
+  },
+
+  'critical damage to the cannon: a red line in the Weapons panel, and range halved halves its reach': async ({ open: openPage }) => {
+    const page = await open(openPage, { lit: true, quiet: true });
+    await page.evaluate(() => {
+      const scope = FighterControl.scope;
+      if (scope.moving) scope.toggleMoving();
+      Object.assign(scope.contacts[0], { bearing: 0, range: 70000, yaw: 90 });
+      scope.select('ship:Training ship A');
+    });
+    await advance(page, 100);
+    assert.ok((await state(page)).lead, 'within the cannon\'s 100 km');
+    await expect(page.locator('#weaponCritical')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('EPW1', ['range-halved']));
+    await expect(page.locator('#weaponCritical')).toHaveText('CRITICAL · Range halved');
+    const now = await state(page);
+    assert.equal(now.cannonRange, 50000);
+    assert.equal(now.lead, null, 'beyond the halved reach');
+    await expect(page.locator('#advisory')).toHaveText("Training ship A: no intercept within the cannon's 50 km on this course.");
+  },
+
+  'hostile ships, and stations and settlements as targets with their shields': async ({ open: openPage }) => {
+    const page = await open(openPage, { quiet: true });
+    await page.evaluate(() => {
+      const scope = FighterControl.scope;
+      if (scope.moving) scope.toggleMoving();
+      Object.assign(scope.contacts[0], { bearing: -20, range: 5000, yaw: 90 });
+      scope.select('ship:Training ship A');
+    });
+    await advance(page, 100);
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE');
+    await page.evaluate(() => FighterControl.scope.select('body:cislunar-relay'));
+    await advance(page, 100);
+    await expect(page.locator('#targetName')).toHaveText('Cislunar Relay Station');
+    await expect(page.locator('#targetKind')).toHaveText('STATION');
+    await expect(page.locator('#placeShieldValue')).toHaveText('10,000 / 10,000');
+    await expect(page.locator('#placeShieldBlock')).toBeVisible();
+    await expect(page.locator('#shieldBlock')).toBeHidden();
+    await page.evaluate(() => DemoCombat.setPlaceShield('Cislunar Relay Station', true, 2000));
+    await expect(page.locator('#placeShieldValue')).toHaveText('2,000 / 10,000');
+    await expect(page.locator('#placeShieldBar')).toHaveClass(/low/);
+  },
+
   'our shield is four quadrants: a hit lands on the one facing the shooter, the hull takes what it cannot hold, and at zero the fighter is lost': async ({ open: openPage }) => {
     const page = await open(openPage, { lit: true });
     const hit = bearing => page.evaluate(value => FighterControl.hit(value), bearing);
@@ -430,7 +626,7 @@ run({
     }
   },
 
-  'the short-range scan: the slider sets its range from 2 to 500 km, ships show inside it, and a tap targets one': async ({ open: openPage }) => {
+  'the short-range scan: the scroll wheel and the scan range keys set its range from 2 to 500 km, ships show inside it, and a tap targets one': async ({ open: openPage }) => {
     const page = await open(openPage, { lit: true, quiet: true });
     await page.evaluate(() => {
       const scope = FighterControl.scope;
@@ -440,20 +636,18 @@ run({
     await expect(page.locator('#srsRange')).toHaveText('50 KM');
     let scan = await page.evaluate(() => FighterControl.srs());
     assert.equal(scan.hits.length, 1, 'the training ship 20 km out is on a 50 km scan');
-    // Drag the slider to the left end: 2 km, and the ship is off the scan.
-    const track = await page.locator('#srsZoom .hs-track').boundingBox();
-    await page.mouse.move(track.x + track.width * 0.5, track.y + track.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(track.x - 20, track.y + track.height / 2, { steps: 4 });
-    await page.mouse.up();
+    // No slider: the scroll wheel narrows the scan to 2 km, and the ship is off it.
+    await expect(page.locator('#srsZoom')).toHaveCount(0);
+    const scanBox = await page.locator('#srs').boundingBox();
+    await page.mouse.move(scanBox.x + scanBox.width / 2, scanBox.y + scanBox.height / 2);
+    for (let i = 0; i < 6; i++) await page.mouse.wheel(0, -400);
     await page.evaluate(() => FighterControl.advance(100));
     await expect(page.locator('#srsRange')).toHaveText('2 KM');
     assert.equal((await page.evaluate(() => FighterControl.srs())).hits.length, 0);
-    // The keyboard on the slider: End is 500 km.
-    await page.locator('#srsZoom').focus();
-    await page.keyboard.press('End');
+    // The scan range keys: "[" longer, ten times to the 500 km end.
+    await page.evaluate(() => document.activeElement.blur());
+    for (let i = 0; i < 10; i++) await page.keyboard.press('[');
     await expect(page.locator('#srsRange')).toHaveText('500 KM');
-    await expect(page.locator('#srsZoom')).toHaveAttribute('aria-valuenow', '500');
     // Back to 40 km, then tap the ship on the scan to target it.
     await page.evaluate(() => { FighterControl.setSrsRange(40000); FighterControl.advance(100); });
     scan = await page.evaluate(() => FighterControl.srs());
@@ -587,9 +781,8 @@ run({
     await page.keyboard.press('ArrowDown');
     assert.equal((await state(page)).zoom, 4);
     await expect(page.locator('#zoomLabel')).toHaveText('ZOOM 4×');
-    // On the focused scan slider the arrows move the slider, not the view's zoom.
-    await page.locator('#srsZoom').focus();
-    await page.keyboard.press('ArrowDown');
+    // "]" shortens the scan's range; the view's zoom stays.
+    await page.keyboard.press(']');
     const after = await state(page);
     assert.equal(after.zoom, 4);
     assert.ok((await page.evaluate(() => FighterControl.srs().range)) < 50000);

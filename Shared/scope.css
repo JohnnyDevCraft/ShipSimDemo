@@ -1,4 +1,4 @@
-/* The forward targeting scope shared by the weapon consoles (Torpedo Launch, EPW and EBW Control): the
+/* The forward targeting scope shared by the weapon consoles (Torpedo Launch, EPW and EBW Control, Fighter Control): the
    full-window scope, the aim tape, the target and zoom panels, the advisory line, the bottom bar's toggles and
    the history. Loaded after ./console.css; each console adds its weapon panel. Used in landscape. */
 :root { --left-w: 17rem; --right-w: 17rem; --advisory-h: 2.6rem; }
@@ -129,3 +129,16 @@ body.scope-page { background: #000; }
 .shot[data-result="hit"] { --tone: var(--green); }
 /* SHIP MOTION in the weapon consoles' demo controls: the stand-in's chosen speed and direction light up. */
 .mrow.ship-motion button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); border-color: #63b4ff; box-shadow: 0 0 0.9rem rgba(40, 130, 255, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+
+/* Combat (MissionProtocol 1.0.0-Beta9): critical damage, the targeting computer offline, the lock button, a wreck, a place's shield. */
+.critical-note { margin: 0; flex: none; padding: 0.4rem 0.6rem; border: 1px solid rgba(255, 90, 90, 0.55); border-radius: 0.55rem; background: rgba(70, 12, 12, 0.6);
+  color: #ff8f8f; font-size: 0.68rem; line-height: 1.35; letter-spacing: 0.04em; }
+.targeting-offline { position: fixed; z-index: 2; left: 50%; transform: translateX(-50%); bottom: calc(var(--dock-h) + var(--advisory-h) + 1.1rem);
+  padding: 0.35rem 1.1rem; border: 1px solid rgba(255, 90, 90, 0.7); border-radius: 2rem; background: rgba(60, 8, 8, 0.85); pointer-events: none;
+  color: #ff8f8f; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.16em; white-space: nowrap; box-shadow: 0 0 1rem rgba(255, 60, 60, 0.35); }
+.lock-btn { min-height: 2.4rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; }
+.lock-btn.active { border-color: #ffe04b; color: #ffe04b; }
+.lock-btn.blocked { opacity: 0.4; cursor: not-allowed; }
+.place-shield { padding-top: 0.2rem; }
+.target-panel[data-affiliation="wreck"] .tname i { --dot: #6b7a86; }
+.target-panel[data-affiliation="wreck"] #targetKind { color: #8d99a3; }

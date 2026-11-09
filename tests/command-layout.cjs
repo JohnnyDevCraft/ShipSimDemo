@@ -18,7 +18,7 @@ async function check({ context, engine, base }, width, height, { mobile = true, 
     const page = await ctx.newPage();
     page.on('pageerror', error => errors.push(error.message));
     await page.goto(base + '/Command/');
-    for (const tab of ['status', 'view', 'labels']) {
+    for (const tab of ['status', 'view', 'range', 'labels']) {
       await page.evaluate(t => CommandControl.showTab(t), tab);
       await page.waitForTimeout(80);
       const sideways = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);

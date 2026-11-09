@@ -13,6 +13,13 @@ async function selectContact(page, name) {
   await page.locator('#map').click({ position: { x: contact.x, y: contact.y }, force: true });
   await expect(page.locator('#contactChip')).toContainText(name);
 }
+// A stand-in game controller (standard mapping): tests set window.testPad.axes and .buttons[i].pressed.
+const PAD_SCRIPT = () => {
+  window.testPad = { id: 'Test Pad (STANDARD GAMEPAD)', mapping: 'standard', connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+  navigator.getGamepads = () => [window.testPad];
+};
+const padButton = (page, index, pressed) => page.evaluate(([i, down]) => { window.testPad.buttons[i] = { pressed: down, value: down ? 1 : 0 }; }, [index, pressed]);
+const padAxis = (page, index, value) => page.evaluate(([i, v]) => { window.testPad.axes[i] = v; }, [index, value]);
 const bearingTo = (page, name) => page.evaluate(wanted => NavWorld.bearingTo(ship, worldObjects().find(object => object.name === wanted)), name);
 const headingNow = async page => parseFloat(await page.locator('#headingValue').innerText());
 const headingOff = (heading, bearing) => Math.abs(((heading - bearing + 540) % 360) - 180);
@@ -257,7 +264,7 @@ run({
       await expect(page.locator('#keysDialog')).toBeVisible();
     };
     await openKeys();
-    await expect(page.locator('#keysList [data-action]')).toHaveCount(26);
+    await expect(page.locator('#keysList [data-action]')).toHaveCount(28);
     await expect(keyButton('impulseUp')).toHaveText('W');
     await expect(keyButton('nextTarget')).toHaveText('.');
     await expect(keyButton('track')).toHaveText('—'); // no default key
@@ -348,11 +355,11 @@ run({
   },
   'auto drift under the joystick swings a coasting ship\'s motion back onto the nose': async ({ open }) => {
     const page = await open('/Helm/');
-    // Coasting well clear of everything at 10 km/s, the motion 30° off the nose.
-    await page.evaluate(() => { ship.x += 5e6; ship.y += 5e6; velocity = polar(10, heading + 30); setImpulse(0); });
+    // Well clear of everything at 10 km/s with impulse set to that speed, the motion 30° off the nose.
+    await page.evaluate(() => { ship.x += 5e6; ship.y += 5e6; velocity = polar(10, heading + 30); setImpulse((10 / fullImpulseKmS) * 100); });
     await page.waitForTimeout(800);
     const drifting = await page.evaluate(() => window.helmDriftState());
-    assert.ok(drifting.off > 2 && drifting.impulse === 0, `coasting off the nose (${JSON.stringify(drifting)})`);
+    assert.ok(drifting.off > 2, `moving off the nose (${JSON.stringify(drifting)})`);
     await page.locator('#autoDriftBtn').click();
     await expect(page.locator('#autoDriftBtn')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#autoDriftBtn')).toHaveText('AUTO DRIFT ON');
@@ -361,6 +368,173 @@ run({
     assert.ok(caught.impulse > 0 && Math.abs(caught.speed - drifting.speed) / drifting.speed < 0.05, `on the nose at the same speed (${JSON.stringify(caught)})`);
     await page.keyboard.press('v');
     await expect(page.locator('#autoDriftBtn')).toHaveText('AUTO DRIFT OFF');
+  },
+  'a game controller flies the helm: its axes drive the joystick and every slider, mapped by moving them, and every command takes a button as well as a key': async ({ open, context }) => {
+    await context.addInitScript(PAD_SCRIPT);
+    const page = await open('/Helm/');
+    await page.evaluate(() => { ship.x += 5e6; ship.y += 5e6; });
+    const tap = async index => { await padButton(page, index, true); await page.waitForTimeout(150); await padButton(page, index, false); await page.waitForTimeout(150); };
+    await expect(page.locator('#notice')).toHaveText('Controller connected: Test Pad (STANDARD GAMEPAD).');
+    // Left stick up: impulse rises, 40 points a second at full travel.
+    await padAxis(page, 1, -1);
+    await page.waitForTimeout(700);
+    await padAxis(page, 1, 0);
+    const raised = Number(await page.locator('#impulse').getAttribute('aria-valuenow'));
+    assert.ok(raised >= 15 && raised <= 40, `impulse rose with the stick (${raised})`);
+    // Left stick across: the helm steers by hand, and lets go when the stick centres.
+    await padAxis(page, 0, 0.8);
+    await page.waitForTimeout(300);
+    assert.ok(await page.evaluate(() => steer > 50 && steerHeld), 'steering to starboard');
+    await padAxis(page, 0, 0);
+    await page.waitForTimeout(200);
+    assert.ok(await page.evaluate(() => steer === 0 && !steerHeld), 'the stick let go');
+    // Right stick up zooms the scanner in.
+    const zoomBefore = await page.evaluate(() => zoom[mode]);
+    await padAxis(page, 3, -1);
+    await page.waitForTimeout(400);
+    await padAxis(page, 3, 0);
+    assert.ok((await page.evaluate(() => zoom[mode])) > zoomBefore + 5, 'zoomed in');
+    // Y toggles auto drift, and so does its key.
+    await tap(3);
+    assert.equal((await page.evaluate(() => window.helmDriftState())).autoDrift, true);
+    await page.locator('#map').click({ position: { x: 600, y: 120 }, force: true });
+    await page.keyboard.press('v');
+    assert.equal((await page.evaluate(() => window.helmDriftState())).autoDrift, false);
+    // Rebind it to RT (Warp up's default), in Menu → Keyboard and controller.
+    await page.locator('#menuBtn').click();
+    await page.locator('#openKeys').click();
+    await expect(page.locator('#padStatus')).toHaveText('Controller: Test Pad (STANDARD GAMEPAD)');
+    await expect(page.locator('#keysList [data-pad="autoDrift"]')).toHaveText('Y');
+    await expect(page.locator('#keysList [data-pad="warpUp"]')).toHaveText('RT');
+    await page.locator('#keysList [data-pad="autoDrift"]').click();
+    await expect(page.locator('#keysList [data-pad="autoDrift"]')).toHaveText('Press a button…');
+    await tap(7);
+    await expect(page.locator('#keysNote')).toHaveText('RT moved from Warp up 5% (now no button) to Auto drift on or off.');
+    await expect(page.locator('#keysList [data-pad="autoDrift"]')).toHaveText('RT');
+    await expect(page.locator('#keysList [data-pad="warpUp"]')).toHaveText('—');
+    // Backspace clears a button; Escape keeps it.
+    await page.locator('#keysList [data-pad="track"]').click();
+    await page.keyboard.press('Backspace');
+    await expect(page.locator('#keysNote')).toHaveText('Track selected target: no controller button.');
+    await page.locator('#keysList [data-pad="align"]').click();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#keysDialog')).toBeVisible();
+    await expect(page.locator('#keysList [data-pad="align"]')).toHaveText('A');
+    await page.locator('#keysDialog [data-close]').click();
+    await tap(7);
+    assert.equal((await page.evaluate(() => window.helmDriftState())).autoDrift, true, 'RT now toggles auto drift');
+    // Axes (John's list): turn moved to the right stick by moving it; impulse control and the brake given axes too.
+    await page.locator('#menuBtn').click();
+    await page.locator('#openKeys').click();
+    const axisCap = id => page.locator(`[data-axis-fn="${id}"] .pad-axis-cap`);
+    await expect(axisCap('turn')).toHaveText('LEFT STICK ↔');
+    await expect(axisCap('impulseRate')).toHaveText('LEFT STICK ↕');
+    await expect(axisCap('zoom')).toHaveText('RIGHT STICK ↕');
+    await axisCap('turn').click();
+    await expect(axisCap('turn')).toHaveText('MOVE AN AXIS…');
+    await padAxis(page, 2, 1);
+    await expect(axisCap('turn')).toHaveText('RIGHT STICK ↔');
+    await expect(page.locator('#keysNote')).toHaveText('Turn right / left: RIGHT STICK ↔.');
+    await padAxis(page, 2, 0);
+    // Impulse control on the left stick's up and down (taking it from impulse increase/decrease), inverted so forward is 100 %.
+    await axisCap('impulseLevel').click();
+    await padAxis(page, 1, 1);
+    await expect(page.locator('#keysNote')).toHaveText('LEFT STICK ↕ moved from Impulse increase / decrease (centre holds) (now no axis) to Impulse control (0–100 %).');
+    await padAxis(page, 1, 0);
+    await page.locator('[data-axis-fn="impulseLevel"] .pad-axis-invert').click();
+    await expect(page.locator('[data-axis-fn="impulseLevel"] .pad-axis-invert')).toHaveAttribute('aria-pressed', 'true');
+    // The brake on the right stick's up and down (taking it from zoom).
+    await axisCap('brake').click();
+    await padAxis(page, 3, -1);
+    await expect(axisCap('brake')).toHaveText('RIGHT STICK ↕');
+    await expect(axisCap('zoom')).toHaveText('—');
+    await page.locator('#keysDialog [data-close]').click();
+    await padAxis(page, 0, 0.8);
+    await padAxis(page, 3, -1);   // the brake lever at rest
+    await page.waitForTimeout(300);
+    assert.ok(await page.evaluate(() => steer === 0), 'the left stick no longer turns');
+    await padAxis(page, 0, 0);
+    await padAxis(page, 2, -0.8);
+    await page.waitForTimeout(300);
+    assert.ok(await page.evaluate(() => steer < -50 && steerHeld), 'the right stick turns to port');
+    await padAxis(page, 2, 0);
+    await padAxis(page, 1, -1);   // pushed all the way forward: 100 %
+    await expect(page.locator('#impulse')).toHaveAttribute('aria-valuenow', '100');
+    await padAxis(page, 1, 0);   // the middle: 50 %
+    await expect(page.locator('#impulse')).toHaveAttribute('aria-valuenow', '50');
+    // The brake lever: a quarter of its travel is light braking, three quarters hard braking, at rest none.
+    await padAxis(page, 3, -0.5);
+    await page.waitForFunction(() => window.helmDriftState().brake === 'light');
+    await padAxis(page, 3, 0.5);
+    await page.waitForFunction(() => window.helmDriftState().brake === 'hard');
+    await padAxis(page, 3, -1);
+    await page.waitForFunction(() => window.helmDriftState().brake === null);
+    // Kept on this device; Restore Defaults puts the buttons back.
+    await page.reload();
+    await page.locator('#menuBtn').click();
+    await page.locator('#openKeys').click();
+    await expect(page.locator('#keysList [data-pad="autoDrift"]')).toHaveText('RT');
+    await expect(page.locator('[data-axis-fn="turn"] .pad-axis-cap')).toHaveText('RIGHT STICK ↔');
+    await page.locator('#keysDefaults').click();
+    await expect(page.locator('[data-axis-fn="turn"] .pad-axis-cap')).toHaveText('LEFT STICK ↔');
+    await expect(page.locator('[data-axis-fn="brake"] .pad-axis-cap')).toHaveText('—');
+    await expect(page.locator('#keysList [data-pad="autoDrift"]')).toHaveText('Y');
+    await expect(page.locator('#keysList [data-pad="warpUp"]')).toHaveText('RT');
+  },
+  'with auto drift on the speed follows impulse: lowering it brakes lightly to the new speed, not at once': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.evaluate(() => { ship.x += 5e6; ship.y += 5e6; setImpulse(100); velocity = polar(fullImpulseKmS, heading); });
+    await page.locator('#autoDriftBtn').click();
+    await page.waitForTimeout(300);
+    await page.evaluate(() => setImpulse(25));
+    await page.waitForTimeout(400);
+    const braking = await page.evaluate(() => window.helmDriftState());
+    assert.equal(braking.brake, 'light', `the light brake is on by itself (${JSON.stringify(braking)})`);
+    assert.ok(braking.speed > braking.full * 0.5, `still slowing, not at the new speed at once (${JSON.stringify(braking)})`);
+    await page.waitForFunction(() => window.helmDriftState().brake === null, null, { timeout: 5000 });
+    const settled = await page.evaluate(() => window.helmDriftState());
+    assert.ok(Math.abs(settled.speed - settled.full * 0.25) / (settled.full * 0.25) < 0.02, `at a quarter impulse's speed (${JSON.stringify(settled)})`);
+    // Off, lowering impulse lets the ship coast as before.
+    await page.keyboard.press('v');
+    await page.evaluate(() => setImpulse(10));
+    await page.waitForTimeout(600);
+    const coasting = await page.evaluate(() => window.helmDriftState());
+    assert.ok(coasting.brake === null && coasting.speed > coasting.full * 0.24, `coasting with auto drift off (${JSON.stringify(coasting)})`);
+  },
+  'with an enemy present, TRACK keeps the course on Tactical\'s target, whose shields and hull Helm shows': async ({ open }) => {
+    const page = await open('/Helm/');
+    await expect(page.locator('#tacTarget')).toBeHidden();
+    // The scene held still, so only the hits the test makes count.
+    await page.evaluate(() => { DemoBattle.hold(DemoBattle.now()); DemoBattle.addEnemy(); });
+    await expect(page.locator('#tacTarget')).toBeVisible();
+    await expect(page.locator('#tacName')).toHaveText('Black Pearl');
+    await expect(page.locator('#tacHull')).toHaveText('500 / 500');
+    await expect(page.locator('#tacShields [data-q]')).toHaveCount(4);
+    await expect(page.locator('#tacShields')).toContainText('FWD');
+    for (let i = 0; i < 4; i++) await expect(page.locator(`#tacShields [data-q="${i}"] b`)).toHaveText('50 / 50');
+    // Hits on the aft quadrant: a torpedo drains it to 20, a pulse takes it down, the next torpedo reaches the hull.
+    await page.evaluate(() => DemoBattle.hitEnemy('TPD', 2));
+    await expect(page.locator('#tacShields [data-q="2"] b')).toHaveText('20 / 50');
+    await expect(page.locator('#tacShields [data-q="2"]')).toHaveAttribute('data-level', 'low');
+    await page.evaluate(() => { DemoBattle.hitEnemy('EPW', 2); DemoBattle.hitEnemy('TPD', 2); });
+    await expect(page.locator('#tacShields [data-q="2"]')).toHaveAttribute('data-level', 'down');
+    await expect(page.locator('#tacHull')).toHaveText('350 / 500');
+    // TRACK, with nothing selected on the scanner, follows Tactical's target.
+    await page.locator('#trackBtn').click();
+    await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#tacTracking')).toBeVisible();
+    const tracking = await page.evaluate(() => window.helmTacticalTarget().tracking);
+    assert.equal(tracking.tactical, true);
+    const bearing = await page.evaluate(() => NavWorld.bearingTo(ship, worldObjects().find(object => object.battleId === 'black-pearl')));
+    const aimed = await page.evaluate(() => goal ?? heading);
+    assert.ok(Math.abs(((aimed - bearing + 540) % 360) - 180) < 0.1, `the course points at Black Pearl (${aimed} vs ${bearing})`);
+    // Disabled at hull 0, it is no longer Tactical's target: the panel goes and tracking ends.
+    await page.evaluate(() => { for (let i = 0; i < 4; i++) DemoBattle.hitEnemy('TPD', 2); });
+    await expect(page.locator('#tacTarget')).toBeHidden();
+    await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'false', { timeout: 3000 });
+    // Without enemies, TRACK goes back to the scanner's selection.
+    await page.evaluate(() => DemoBattle.removeEnemy());
+    await expect(page.locator('#trackBtn')).toBeDisabled();
   },
   'the external dampener field is a green toggle on the dock that impulse needs': async ({ open }) => {
     const page = await open('/Helm/');
@@ -420,5 +594,63 @@ run({
     await expect(page.locator('#impulse')).toHaveAttribute('aria-valuenow', '0');
     await expect(page.locator('#speed')).toHaveText('0 km/s', { timeout: 5000 });
     await expect(page.locator('#state')).toHaveText('SUBLIGHT');
+  },
+  'critical damage to the impulse drive halves its top speed, says so under the speed and in the banner': async ({ open }) => {
+    const page = await open('/Helm/');
+    await expect(page.locator('#driveLimit')).toHaveText('MAX IMPULSE 20 km/s');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('impulse', ['max-speed-halved']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Impulse drive: Maximum impulse halved');
+    await expect(page.locator('#driveLimit')).toHaveText('MAX IMPULSE 10 km/s (HALVED)');
+    await expect(page.locator('#driveLimit')).toHaveClass(/crit/);
+    await page.evaluate(() => { ship.x += 1e7; setImpulse(100); }); // out in open space, where nothing near caps impulse
+    await expect.poll(() => page.evaluate(() => Math.hypot(velocity.x, velocity.y)), { timeout: 20000 }).toBeGreaterThan(9.9);
+    await page.waitForTimeout(1500);
+    const speed = await page.evaluate(() => Math.hypot(velocity.x, velocity.y));
+    assert.ok(speed <= 10.01, `full impulse reaches 10 km/s at most (${speed})`);
+  },
+  'critical damage to the warp drive halves the slider\'s maximum warp and slows the coils six times': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.locator('#warpTab').click();
+    await expect(page.locator('#driveLimit')).toHaveText('MAX WARP 6.00');
+    await page.evaluate(() => DemoCombat.set('warp', ['max-warp-halved', 'coil-charge-slowed']));
+    await expect(page.locator('#driveLimit')).toHaveText('MAX WARP 3.00 (HALVED) · COILS SLOW');
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Warp drive: Maximum warp halved; Coil charge takes six times as long');
+    await page.locator('#warp').focus();
+    await page.keyboard.press('End');
+    await expect(page.locator('#driveSetting')).toHaveText('WF 3.00');
+    await page.locator('#chargeBtn').click();
+    await page.waitForTimeout(3000);
+    const charge = await page.evaluate(() => charge);
+    assert.ok(charge > 0 && charge <= 10, `the coils charge six times slower (${charge}% after 3 s, not 35%)`);
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#driveLimit')).toHaveText('MAX WARP 6.00');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+  },
+  'an enemy ship reads Hostile ship, and Wreck once disabled, drawn grey': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.locator('#menuBtn').click();
+    await page.locator('#openDemoControls').click();
+    await expect(page.locator('[data-demo-wreck]')).toBeDisabled();
+    await page.locator('[data-demo-enemy]').click();
+    const kindOf = () => page.evaluate(() => {
+      const enemy = worldObjects().find(object => object.name === 'Black Pearl');
+      return { ...describe(enemy), label: standingSuffix(enemy) };
+    });
+    assert.deepEqual(await kindOf(), { kind: 'Hostile ship · ZLX-01A', color: '#f45b65', label: ' · HOSTILE' });
+    await page.locator('[data-demo-wreck]').click();
+    await expect(page.locator('[data-demo-wreck]')).toHaveText('ENEMY SHIP DISABLED');
+    assert.deepEqual(await kindOf(), { kind: 'Wreck · ZLX-01A', color: '#6b7c8c', label: ' · WRECK' });
+  },
+  'the quick jump checklist shows the heading, Steady or Turning, and waits for it to settle': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.locator('.dock #quickJumpBtn').click();
+    await expect(page.locator('#jumpHeading')).toHaveText('Steady');
+    await expect(page.locator('#jumpReady [data-ready="heading"]')).toHaveAttribute('data-ok', 'true');
+    await page.evaluate(() => commandSteer(100));
+    await expect(page.locator('#jumpHeading')).toHaveText('Turning · wait for it to settle');
+    await expect(page.locator('#jumpReady [data-ready="heading"]')).toHaveAttribute('data-ok', 'false');
+    await expect(page.locator('#jumpGo')).toBeDisabled();
   },
 });

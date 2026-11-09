@@ -114,3 +114,17 @@ body.docking {
 .log li { display: grid; grid-template-columns: auto 1fr; gap: 0.9rem; padding: 0.5rem 0.7rem; border: 1px solid var(--edge-soft); border-radius: 0.5rem; font-size: 0.82rem; }
 .log time { color: var(--cyan); font-variant-numeric: tabular-nums; }
 .log .empty { display: block; color: var(--muted); }
+
+/* Clearance, the station's repair drones and critical damage (the live console's additions). */
+.rows dd[data-level="ok"] { color: var(--green); }
+.rows dd[data-level="warn"] { color: var(--amber); }
+.station-repair[hidden] { display: none; }
+.repair-list { margin: 0.3rem 0; padding: 0; list-style: none; display: grid; gap: 0.2rem; font-size: 0.72rem; }
+.repair-list li { display: flex; justify-content: space-between; gap: 0.5rem; color: var(--text); }
+.repair-list li b { color: var(--green); font-weight: 600; white-space: nowrap; }
+.crit-banner { margin: 0.4rem 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 0.5rem; background: rgba(255, 79, 79, 0.14); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.station-repair .sub { font-size: 0.66rem; color: var(--muted); letter-spacing: 0.04em; }
+.station-repair { border-bottom: 0; padding-bottom: 0; }
+.switch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 0.8rem; }

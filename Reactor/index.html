@@ -6,7 +6,7 @@
 <title>Reactor Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="reactor">
 
@@ -111,15 +111,16 @@
 </header>
 
 <div class="col left">
+  <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
   <section class="panel controls" aria-label="Reaction control">
     <div class="thead"><h2>REACTION CONTROL</h2><small id="sequenceNote"></small></div>
     <div class="slider-pair">
       <div class="control" id="fuelControl">
-        <small>FUEL FLOW</small><b id="flowValue">0.600</b><em>units / s</em><span class="flow-lock" id="flowLock" role="status" hidden>LOCKED: INTRUSION</span>
+        <small>FUEL FLOW</small><b id="flowValue">0.600</b><em>units / s</em><span class="flow-lock" id="flowLock" role="status" hidden>LOCKED: INTRUSION</span><span id="injectorLock" class="crit-badge lock-note" data-testid="flow-lock" hidden>LOCKED</span>
         <div id="flowSlider" class="vslider range-slider" aria-label="Fuel flow in units per second"></div>
       </div>
       <div class="control" id="beamControl">
-        <small>CONFINEMENT</small><b id="beamValue">22.0</b><em>PU beam</em>
+        <small>CONFINEMENT</small><b id="beamValue">22.0</b><em>PU beam</em><span id="beamLock" class="crit-badge lock-note" data-testid="beam-lock" hidden>LOCKED ≤ 50%</span>
         <div id="beamSlider" class="vslider range-slider" aria-label="Confinement beam power"></div>
       </div>
     </div>
@@ -136,11 +137,11 @@
     <div class="thead"><h2>COLLECTORS · COOLANT</h2></div>
     <div class="slider-pair">
       <div class="control" id="angleControl">
-        <small>COLLECTOR ANGLE</small><b id="angleValue">35.0°</b><em>0° radial</em>
+        <small>COLLECTOR ANGLE</small><b id="angleValue">35.0°</b><em>0° radial</em><span id="angleLock" class="crit-badge lock-note" data-testid="angle-lock" hidden>LOCKED ≤ 30°</span>
         <div id="angleSlider" class="vslider range-slider" aria-label="Collector angle"></div>
       </div>
       <div class="control" id="coolantControl">
-        <small>COOLANT VALVE</small><b id="coolantValue">70%</b><em id="coolantActual">actual —</em>
+        <small>COOLANT VALVE</small><b id="coolantValue">70%</b><em id="coolantActual">actual —</em><span id="coolantLock" class="crit-badge lock-note" data-testid="coolant-lock" hidden>LOCKED ≤ 50%</span>
         <div id="coolantSlider" class="vslider range-slider" aria-label="Coolant pressure valve opening"></div>
       </div>
     </div>
@@ -231,8 +232,9 @@
 
 <script src="../Shared/console-ui.js?v=4"></script>
 <script src="../Shared/science-sim.js?v=2"></script>
-<script src="reactor.js?v=3"></script>
+<script src="reactor.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
 <title>Communications Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="comms">
 
@@ -30,9 +30,9 @@
 <div class="col left">
   <section class="panel detections" aria-label="Detected transmissions">
     <div class="thead"><h2>DETECTED TRANSMISSIONS</h2><small id="txCount">0</small></div>
-    <div class="seg" role="group" aria-label="Medium"><button type="button" data-filter="all">ALL</button><button type="button" data-filter="Subspace">SUBSPACE</button><button type="button" data-filter="RF">RF</button></div>
+    <div class="seg four" role="group" aria-label="Show"><button type="button" data-filter="all">ALL</button><button type="button" data-filter="distress">DISTRESS</button><button type="button" data-filter="network" title="Traffic the array overhears between stations and ships">NETWORK</button><button type="button" data-filter="ours" title="Hails to and from our ship">OURS</button></div>
     <div id="transmissions" class="tx-list" role="list" aria-label="Detected transmissions"></div>
-    <div class="monitor"><i aria-hidden="true"></i><span>PASSIVE MONITORING</span></div>
+    <div class="monitor" id="monitor"><i aria-hidden="true"></i><span id="monitorText">SUBSPACE LISTENING</span></div>
     <p class="mnote" id="rangeNote"></p>
   </section>
 </div>
@@ -58,6 +58,17 @@
     <div id="rangeSlider" class="vslider range-slider" aria-label="Map range"></div>
   </section>
 </div>
+
+<!-- A distress call heard on the network (Space Traffic): who, where, and what the crew can do about it. -->
+<section id="distressBanner" class="distress-banner" role="alert" aria-label="Distress call" hidden>
+  <div class="distress-head"><i aria-hidden="true"></i><b>DISTRESS</b><span id="distressFrom"></span><small id="distressWhere"></small></div>
+  <p id="distressText"></p>
+  <div class="distress-actions">
+    <button type="button" class="primary" id="distressPlot">PLOT COURSE</button>
+    <button type="button" id="distressHail">HAIL</button>
+    <button type="button" id="distressDismiss">DISMISS</button>
+  </div>
+</section>
 
 <p id="advisory" class="advisory" role="status" aria-live="polite"></p>
 <div id="notice" class="toast" role="status" aria-live="polite"></div>
@@ -95,6 +106,7 @@
       <div id="commSetup" hidden>
         <input id="recipientInput" class="list-search" placeholder="Recipient: ship, station or channel" aria-label="Recipient" autocomplete="off" spellcheck="false">
         <div id="setupFields" class="setup-fields">
+          <div class="cgroup"><small>CONTACT</small><div id="recipientMatches" class="recipient-matches" role="list" aria-label="Matching contacts"></div></div>
           <div class="cgroup"><small>TRANSMISSION TYPE</small><div class="seg"><button type="button" data-comm-type="Unicast">UNICAST</button><button type="button" data-comm-type="Multicast">MULTICAST</button><button type="button" data-comm-type="Point to point">POINT TO POINT</button></div></div>
           <div class="cgroup"><small>MEDIUM</small><div class="seg"><button type="button" data-comm-medium="Subspace">SUBSPACE</button><button type="button" data-comm-medium="RF">RF</button></div></div>
           <button type="button" class="field channel-field" id="channelField"><div><small>CHANNEL</small><b id="channelValue"></b></div><span>SET</span></button>
@@ -111,7 +123,7 @@
       <div id="commChat" hidden>
         <p class="mnote" id="commDetails"></p>
         <div id="conversation" class="conversation" role="log" aria-label="Communication history"></div>
-        <div class="composer"><input id="messageInput" class="list-search" placeholder="Compose a hail or reply" aria-label="Message" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="sendMessage">SEND</button></div>
+        <div class="composer"><input id="messageInput" class="list-search" placeholder="Compose a hail or reply" aria-label="Message" autocomplete="off" spellcheck="false"><button type="button" id="editRoute" title="The relay route: straight to the contact or through relay buoys">ROUTE</button><button type="button" class="primary" id="sendMessage">SEND</button></div>
       </div>
       <div id="commPad" hidden></div>
       <div id="relayPicker" class="relay-picker" hidden>
@@ -133,13 +145,25 @@
   </div>
 </dialog>
 
-<!-- Contact settings -->
+<!-- Contact settings and the communications array -->
 <dialog id="contactDialog" class="modal narrow" aria-labelledby="contactTitle">
   <div class="mhead"><h2 id="contactTitle">CONTACT SETTINGS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div class="fields-view">
     <div class="field" data-field="ownChannel"><div><small>OUR SUBSPACE CHANNEL</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
     <p class="mnote">Advertise this return channel so other ships can contact us.</p>
     <button type="button" class="toggle light wide" id="broadcastToggle" aria-pressed="true"><i aria-hidden="true"></i>BROADCAST CHANNEL</button>
+    <div class="msection array-section">
+      <h3>COMMUNICATIONS ARRAY</h3>
+      <p class="mnote" id="arrayName">—</p>
+      <p class="mnote array-critical" id="arrayCritical" role="alert"></p>
+      <div class="stats">
+        <div><small>TX REACH</small><b id="arrayTx">—</b></div>
+        <div><small>RX REACH</small><b id="arrayRx">—</b></div>
+        <div><small>POWER</small><b id="arrayPower">—</b></div>
+        <div><small>HEALTH</small><b id="arrayHealth">—</b></div>
+      </div>
+      <button type="button" class="toggle light wide" id="arrayRelay" aria-pressed="true"><i aria-hidden="true"></i>ARRAY RELAY</button>
+    </div>
     <p class="mnote status" id="broadcastStatus" role="status"></p>
     <p class="mnote" data-error role="alert"></p>
   </div>
@@ -174,13 +198,15 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Detect a sample transmission, set the RF detection range and our array's reach, and see whose buoys are whose</span></button>
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Detect a sample transmission, hear network traffic or a distress call, set the RF detection range and our array's reach, and see whose buoys are whose</span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>The seven sample transmissions and no communications</span></button>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
   </div>
   <div id="demoControls" hidden>
     <div class="fields-view">
-      <div class="mrow"><button type="button" id="detectSample">DETECT SAMPLE TRANSMISSION</button></div>
+      <div class="mrow"><button type="button" id="detectSample">DETECT SAMPLE TRANSMISSION</button><button type="button" id="hearTraffic">HEAR NETWORK TRAFFIC</button></div>
+      <div class="mrow"><button type="button" id="demoDistress">DISTRESS CALL</button><button type="button" id="demoAllClear">ALL CLEAR</button></div>
+      <p class="mnote">Space Traffic arrives on its own about every half minute while the array listens: station notices, arrivals, warnings, a distress call and its all clear, clearances and deliveries for our ship.</p>
       <div class="field" data-field="rfRange"><div><small>RF DETECTION RANGE</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
       <p class="mnote">RF transmissions further away than this are not detected. Subspace has no range limit. Detections drop off the list five minutes after they are heard.</p>
       <div class="cgroup"><small>OUR COMMUNICATIONS ARRAY · TX AND RX REACH</small><div class="seg" role="group" aria-label="Array reach"><button type="button" data-array="3">MARK I · 3 LY</button><button type="button" data-array="6">MARK II · 6 LY</button><button type="button" data-array="10">MARK III · 10 LY</button></div></div>
@@ -194,8 +220,9 @@
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/view-screen-settings.js?v=2"></script>
 <script src="gto-data.js"></script>
-<script src="comms.js?v=6"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="comms.js?v=20261109"></script>
 </body>
 </html>

@@ -132,3 +132,8 @@ body.life {
 #diagnosticsDialog { width: min(44rem, 94vw); }
 .diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
 .seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.5); }
+
+/* Critical damage (Combat, Beta9): the banner at the top of the Systems panel (the live console's). */
+.crit-banner { margin: 0.4rem 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: rgba(255, 79, 79, 0.14); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }

@@ -28,3 +28,11 @@ The rules are the discovery preview's (see `discovery.md`), with these notes:
 - Internal transfers (pad and cargo bay) work with shields up. Any external end needs our shields down, and a ship at either end needs its shields down too. Raising a blocking shield zeros the levers and holds the batch and buffer.
 - Other locations are offered only within range and in clear line of sight: a beam may not pass through Earth or the moon. Range is measured to the surface location.
 - Clear Transport sets the source back to the pad and the destination to the cargo bay and clears selections, scan and the delivered list; nobody is moved. Reset Demo also returns everyone to their starting location.
+
+## Combat (MissionProtocol 1.0.0-Beta10)
+
+As the live console shows it; critical damage and place shields come from Menu → **Critical damage** (`../Shared/demo-combat.js`).
+
+- **Critical banner** over Target Scan. **Range halved:** the caption, Range Map (circle, list, RANGE … · HALVED), reachable locations and Diagnostics use half the range. **Pattern buffer halved:** the pad and cargo limits halve; the mass gauge reads "· HALVED".
+- **Troops:** Sgt. Dara Holt (92%) and Cpl. Ivo Brandt (18%) at Tokyo Settlement, Pvt. Tomas Reyes (64%) at Earth Orbital Station. They list with a TROOP tag and HEALTH n%; below 25% the row turns red and reads OUT OF ACTION; on the schematic a waiting row reads "TROOP · name".
+- **Place shields:** a station or settlement whose shield is raised with strength is marked SHIELDED in the source, destination and Range Map lists, its chip on the schematic reads "SHIELDED · n%", and the transport is blocked until it comes down (or is drained). Earth Orbital Station's shield is raised from the start.

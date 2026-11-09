@@ -153,6 +153,8 @@ run({
 
   'shields: internal transfers work with shields up; external ones stop, zero the levers and hold the patterns': async ({ open }) => {
     const page = await openPaused(open);
+    // Earth Orbital Station's own shield is raised from the start (place shields): lower it so only our shields matter here.
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', false));
     await configure(page, { shields: true });
     await expect(page.locator('#shieldState')).toHaveText('SHIELDS UP');
     await scanPad(page, 'Dr. Ilyra Moss');
@@ -321,5 +323,68 @@ run({
     await page.locator('#openDemoControls').click();
     await page.locator('#resetDemo').click();
     assert.equal((await state(page)).targets.find(t => t.id === 'ilyra').place, 'pad');
+  },
+  'critical damage: range halved and pattern buffer halved show in the banner, caption, gauges, range map and diagnostics': async ({ open }) => {
+    const page = await openPaused(open);
+    await page.evaluate(() => DemoCombat.set('transporter', ['buffer-halved', 'range-halved']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Transporter: Pattern buffer halved; Range halved');
+    await expect(page.locator('#caption')).toHaveText('COMPACT TRANSPORTER · MARK I · RANGE 5,000 KM (HALVED) · POWER IN PU');
+    assert.equal((await state(page)).limit, 80, 'the pad limit is halved');
+    await expect(page.locator('#massGauge .g-unit')).toHaveText('KG OF 80 · PAD · HALVED');
+    await page.locator('#rangeBtn').click();
+    await expect(page.locator('#rangeNote')).toHaveText('RANGE 5,000 KM · HALVED · ALTITUDE 1,000 KM');
+    await expect(page.locator('.range-row', { hasText: 'Delta Survey Outpost' }).locator('em')).toHaveText('OUT OF RANGE');
+    await page.locator('#rangeDialog [data-close]').click();
+    await page.locator('#diagnosticsBtn, [data-open="diagnosticsDialog"]').first().click();
+    await expect(page.locator('#diagnostics')).toContainText('5,000 km (halved from 10,000 km)');
+    await expect(page.locator('#diagnostics')).toContainText('80 kg (buffer halved)');
+    await page.locator('#diagnosticsDialog [data-close]').click();
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    assert.equal((await state(page)).limit, 160);
+  },
+
+  'troops at a settlement are listed with a TROOP tag and their health; below 25% they are out of action': async ({ open }) => {
+    const page = await openPaused(open);
+    await page.locator('[data-source="other"]').click();
+    await page.locator('#sourceOther').click();
+    await page.locator('#sourceList [data-place="earth-settlement-4"]').click();
+    await page.locator('#scan').click();
+    const troops = page.locator('[data-testid="troop-target"]');
+    await expect(troops).toHaveCount(2);
+    const holt = page.locator('.target-item', { hasText: 'Sgt. Dara Holt' });
+    await expect(holt.locator('.troop-tag')).toHaveText('TROOP');
+    await expect(holt.locator('small')).toHaveText('HEALTH 92% · 104 kg');
+    const brandt = page.locator('.target-item', { hasText: 'Cpl. Ivo Brandt' });
+    await expect(brandt).toHaveClass(/out-of-action/);
+    await expect(brandt.locator('small')).toHaveText('HEALTH 18% · OUT OF ACTION · 98 kg');
+    await holt.click();
+    await expect(page.locator('#manifest .m-name').first()).toHaveText('TROOP · Sgt. Dara Holt');
+  },
+
+  "a station's raised shield is marked SHIELDED and blocks the transport until it comes down": async ({ open }) => {
+    const page = await openPaused(open);
+    await page.locator('#destinationBtn').click();
+    await page.locator('[data-destination="other"]').click();
+    const station = page.locator('#destinationList [data-place="station"]');
+    await expect(station).toHaveClass(/shielded/);
+    await expect(station.locator('.shield-tag')).toHaveText('SHIELDED');
+    await station.click();
+    await page.locator('#destinationDialog [data-close]').click();
+    await expect(page.locator('#destinationShield')).toHaveText('SHIELDED · 100%');
+    await scanPad(page, 'Dr. Ilyra Moss');
+    await step(page, 3.1);
+    await expect(page.locator('#advisory')).toHaveText("Earth Orbital Station's shield is raised: transporters cannot beam through it. Bring it down first.");
+    await expect(page.locator('#state')).toHaveText('BLOCKED');
+    await expect(page.locator('#dematSlider')).toHaveAttribute('aria-disabled', 'true');
+    await page.locator('#rangeBtn').click();
+    await expect(page.locator('.range-row[data-place="station"] em')).toHaveText('IN RANGE · SHIELDED');
+    await page.locator('#rangeDialog [data-close]').click();
+    // Drained: the shield is up but holds nothing, so the transporter gets through.
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', true, 0));
+    await expect(page.locator('#destinationShield')).toBeHidden();
+    await step(page, 3.1);
+    await expect(page.locator('#dematSlider')).toHaveAttribute('aria-disabled', 'false');
   },
 });

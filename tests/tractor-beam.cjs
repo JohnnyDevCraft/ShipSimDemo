@@ -224,4 +224,30 @@ run({
     assert.equal((await state(page)).held, null);
     await expect(page.locator('#notice')).toHaveText('Freighter Meridian released.');
   },
+  'critical damage: Range halved shows the banner and halves the beam range, its reach, and what it can hold': async ({ open }) => {
+    const page = await openPaused(open);
+    await lockKestrel(page);
+    await stick(page, 'position', 0, -1);
+    await step(page, 20);
+    await stick(page, 'position', 0, 0);
+    assert.ok(ship(await state(page), 'Shuttle Kestrel').range > 2600, 'Kestrel pushed out past 2.5 km');
+    await page.evaluate(() => DemoCombat.set('tractor', ['range-halved']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Tractor beam: Range halved');
+    await expect(page.locator('#caption')).toHaveText('TRACTOR EMITTER · UNSHIELDED SHIPS ONLY · RANGE 2.50 KM (HALVED) · ALL-ROUND COVERAGE');
+    await expect(page.locator('#rangeLimit')).toHaveText('2.50 km · HALVED');
+    await expect(page.locator('#rangeLimit')).toHaveClass(/bad/);
+    await step(page, 0.1);
+    assert.equal((await state(page)).held, null, 'the beam lets go of a ship beyond its halved reach');
+    await expect(page.locator('#notice')).toHaveText(/Beam lost: Shuttle Kestrel is beyond the beam's 2.50 km reach./);
+    await aimAt(page, ship(await state(page), 'Shuttle Kestrel').bearing);
+    await expect(page.locator('#reticleStatus')).toHaveText('OUT OF RANGE');
+    await page.locator('[data-open="diagnosticsDialog"], #diagnosticsBtn').first().click();
+    await expect(page.locator('#diagnostics')).toContainText('2.50 km (halved from 5.00 km)');
+    await expect(page.locator('#diagnostics')).toContainText('Range halved');
+    await page.locator('#diagnosticsDialog [data-close]').click();
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('#rangeLimit')).toHaveText('5.00 km');
+  },
 });

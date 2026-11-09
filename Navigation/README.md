@@ -37,3 +37,5 @@ Files: `index.html`, `styles.css` (what only this console has), `../Shared/conso
 Angles are shown as on Helm: courses 000.0° to 359.9°, turn signed with starboard positive.
 
 **Map range (John, 2026-11-03):** the MAP RANGE slider is gone. The map zooms by the scroll wheel, a two-finger pinch, the dock's RANGE presets and the zoom keys (= or + in, − out). The rings show the range.
+
+**Combat (1.0.0-Beta10, from the live console's Beta9 additions):** Menu → **Critical damage** (Shared/demo-combat.js). A **CRITICAL** banner at the top of the right column shows the navigation computer's effect; with *Course lock takes four times as long* every plot is started at four times the calculation time (the bars fill at that pace; the Demo controls' calculation time is unchanged). Hostile ships (the demo's raiders and Ash Corsairs) are red with **HOSTILE** on the map label, the target card's kind line and Known Objects; the duel's enemy once disabled (Demo controls → **Disable enemy ship**) is a grey, dim **WRECK**. A station or settlement whose shield is raised is **SHIELDED** on the map and **SHIELD RAISED n%** in Known Objects. OUR DESTINATION's header names our ship.

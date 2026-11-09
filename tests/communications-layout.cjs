@@ -14,7 +14,7 @@ for (const [width, height] of sizes)
     const page = await open('/Communications/');
     await page.setViewportSize({ width, height });
     // The most crowded selection: an encrypted point-to-point transmission.
-    await page.locator('#transmissions .tx', { hasText: 'Space Command' }).click();
+    await page.locator('#transmissions .tx', { hasText: 'to Patrol ship Resolute' }).click();
     await page.waitForTimeout(200);
     const map = await box(page, '#map');
     assert.deepEqual([map.l, map.t, map.r, map.b], [0, 0, width, height], 'the map covers the window');

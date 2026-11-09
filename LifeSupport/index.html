@@ -6,7 +6,7 @@
 <title>Life Support Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="life">
 
@@ -108,6 +108,7 @@
 <div class="col right">
   <section class="panel systems" aria-label="Life support systems">
     <div class="thead"><h2>SYSTEMS</h2><small id="sourceChip" class="chip">—</small></div>
+    <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
     <dl class="rows">
       <div><dt>SOURCE</dt><dd id="sourceRow">—</dd></div>
       <div><dt>POWER DRAW</dt><dd id="drawRow">—</dd></div>
@@ -184,7 +185,8 @@
 
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/habitability.js?v=2"></script>
-<script src="lifesupport.js?v=4"></script>
+<script src="lifesupport.js?v=20261109"></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

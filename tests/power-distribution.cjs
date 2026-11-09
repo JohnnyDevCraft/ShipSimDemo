@@ -164,6 +164,26 @@ run({
     await expect(page.locator('#thermalStatus')).toHaveText('REACTOR BREACH · SHIP LOST');
     await expect(page.locator('#advisory')).toHaveText(/Hull bus breached/);
   },
+  'critical damage marks each affected card, lists every affected subsystem above the cards and shows in its overlay': async ({ open }) => {
+    const page = await open('/PowerDistribution/');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('[data-testid="critical-badge"]')).toHaveCount(0);
+    await page.evaluate(() => { DemoCombat.set('warp', ['max-warp-halved', 'coil-charge-slowed']); DemoCombat.set('shields', ['seo-halved']); });
+    await expect(page.locator('[data-testid="critical-badge"]')).toHaveCount(2);
+    await expect(card(page, 'Warp Drive')).toHaveAttribute('data-critical', 'true');
+    await expect(card(page, 'Warp Drive').locator('.crit-badge')).toHaveAttribute('title', 'Maximum warp halved; Coil charge takes six times as long');
+    await expect(card(page, 'Impulse Engine')).not.toHaveAttribute('data-critical', 'true');
+    await expect(page.locator('#criticalBanner > div')).toHaveText(['CRITICAL · Warp Drive: Maximum warp halved; Coil charge takes six times as long', 'CRITICAL · Shields: Shield SEO halved']);
+    await card(page, 'Shields').click();
+    await expect(page.locator('#detailCritical')).toHaveText('CRITICAL · Shields: Shield SEO halved');
+    await page.locator('#subsystemDialog [data-close]').click();
+    await card(page, 'Impulse Engine').click();
+    await expect(page.locator('#detailCritical')).toBeHidden();
+    await page.locator('#subsystemDialog [data-close]').click();
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('[data-testid="critical-badge"]')).toHaveCount(0);
+  },
   'subsystem demand and warp charging are demo controls in the menu, not on the console': async ({ open }) => {
     const page = await open('/PowerDistribution/');
     await card(page, 'Warp Drive').click();

@@ -6,7 +6,7 @@
 <title>Navigation Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=11">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="navigation">
 <canvas id="map" aria-label="System map. Tap an object to target it, tap it again to centre on it, or tap empty space to drop a pin."></canvas>
@@ -55,8 +55,9 @@
 </div>
 
 <div class="col right">
+  <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
   <section id="ownDestination" class="panel target" aria-label="Our ship's destination">
-    <div class="thead"><h2>OUR DESTINATION</h2><small>TNS VIGILANT</small></div>
+    <div class="thead"><h2>OUR DESTINATION</h2><small id="odShip">TNS VIGILANT</small></div>
     <div class="tname"><i></i><div><h3 id="odName">No destination</h3><p id="odKind"></p><p id="odNote"></p></div></div>
     <div id="odCalc" class="tcalc" hidden><small>CALCULATING NAVIGATION</small><div class="bar"><i id="odCalcFill"></i></div></div>
     <dl class="rows">
@@ -131,7 +132,7 @@
   <div id="demoControls" class="demo-controls" hidden>
     <div class="msection">
       <h3>WEAPONS FIRE</h3>
-      <div class="mrow"><button type="button" data-demo-enemy aria-pressed="false">ADD ENEMY SHIP</button></div>
+      <div class="mrow"><button type="button" data-demo-enemy aria-pressed="false">ADD ENEMY SHIP</button><button type="button" data-demo-wreck disabled>DISABLE ENEMY SHIP</button></div>
       <p class="mnote">Stand-in fire on the scanners and scopes: a hostile drill ship fires on us (red), we fire back (cyan) and two other ships exchange fire (amber). A volley also comes every 15 seconds.</p>
     </div>
     <div class="msection">
@@ -157,9 +158,10 @@
 <script src="../Shared/console-ui.js?v=4"></script>
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
-<script src="../Shared/demo-battle.js?v=20261103c"></script>
-<script src="navigation.js?v=20261103g"></script>
+<script src="../Shared/demo-battle.js?v=20261109"></script>
+<script src="navigation.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

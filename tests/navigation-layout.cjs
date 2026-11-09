@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
 const sizes = [[768, 1024], [1024, 768], [1024, 690], [1366, 1024], [1440, 900], [1920, 1080], [2560, 1440], [3840, 2160]];
-const panels = { target: '#mapTarget', destination: '#ownDestination', range: '.range', dock: '.dock' };
+const panels = { target: '#mapTarget', destination: '#ownDestination', dock: '.dock' };
 const topBar = { brand: '.brand', scan: '.scan', clock: '.topright' };
 
 const cases = {};
@@ -34,7 +34,7 @@ for (const [width, height] of sizes)
     for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) assert.ok(!overlap(boxes.panels[names[i]], boxes.panels[names[j]]), `${names[i]} and ${names[j]} do not overlap`);
     const bar = Object.values(boxes.bar);
     for (let i = 0; i < bar.length; i++) for (let j = i + 1; j < bar.length; j++) assert.ok(bar[i].r <= bar[j].l + 0.5 || bar[j].r <= bar[i].l + 0.5, 'top bar items sit side by side');
-    for (const control of ['#setOwn', '#clearOwn', '#plotForClear', '#plottedClear', '#plotForBtn', '#rangeSlider', '#systemBtn', '#menuBtn', '#centerShip', '.dock [data-open="rangeDialog"]']) await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
+    for (const control of ['#setOwn', '#clearOwn', '#plotForClear', '#plottedClear', '#plotForBtn', '#systemBtn', '#menuBtn', '#centerShip', '.dock [data-open="rangeDialog"]']) await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
     // Nothing is hidden inside a panel either.
     const clipped = await page.evaluate(selectors => selectors.filter(selector => { const panel = document.querySelector(selector); return panel.scrollHeight > panel.clientHeight + 1; }), Object.values(panels));
     assert.deepEqual(clipped, [], 'no panel has content scrolled out of sight');

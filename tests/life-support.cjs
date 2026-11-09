@@ -150,6 +150,18 @@ run({
     await step(page, 5.1);
     await expect(page.locator('#gravityRow')).toHaveText('ON · 1.00 g');
   },
+  'life support suffers no critical effect: the banner stays hidden and Diagnostics reads None while other systems are damaged': async ({ open }) => {
+    const page = await open('/LifeSupport/');
+    await page.evaluate(() => { DemoCombat.set('reactor', ['coolant-locked']); DemoCombat.set('battery', ['cannot-supply']); });
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await page.locator('#diagnosticsBtn').click();
+    await expect(page.locator('#diagnostics div', { has: page.locator('dt', { hasText: 'CRITICAL DAMAGE' }) }).locator('dd')).toHaveText('None');
+    await page.locator('#diagnosticsDialog [data-close]').click();
+    // The menu's Critical damage lists every component under Components: none of them is on this console.
+    await page.locator('#menuBtn').click();
+    await page.locator('#menuMain #openCritical').click();
+    await expect(page.locator('#criticalDialog .dc-list > h3').first()).toHaveText('COMPONENTS');
+  },
   'the demo controls live in the menu: the station feed, damage and the demo clock': async ({ open }) => {
     const page = await open('/LifeSupport/');
     await expect(page.locator('#demoControls')).toBeHidden();

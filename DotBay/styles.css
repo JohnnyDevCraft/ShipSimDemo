@@ -140,3 +140,26 @@ body.dotbay {
 .diag-rows { grid-template-columns: 1fr 1fr; column-gap: 2rem; }
 .field-select { display: grid; gap: 0.3rem; }
 .seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.5); }
+
+/* ── Combat (Beta9): critical damage, units out of action, station drones (the live console's look) ───────── */
+.crits { display: flex; flex-wrap: wrap; gap: 0.25rem; min-width: 0; }
+.crit { display: inline-block; max-width: 100%; padding: 0.1rem 0.4rem; border: 1px solid rgba(255, 79, 79, 0.7); border-radius: 0.3rem; background: rgba(110, 20, 28, 0.55); font-style: normal; font-size: 0.58rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.35; color: #ffb3bb; overflow-wrap: anywhere; }
+.crits[hidden] { display: none; }
+.component-list li[data-critical="true"] .cname { color: #ffb3bb; }
+.component-list li[data-critical="true"][data-level="ok"] { opacity: 1; }
+.assign .crits { grid-column: 1 / -1; }
+.bay-crits { padding-top: 0.2rem; }
+.cradle[data-state="disabled"] .state-text { fill: #ff8f9b; }
+.cradle[data-state="disabled"] .cradle-shell { stroke: rgba(255, 79, 79, 0.55); stroke-dasharray: 10 8; }
+.cradle[data-state="disabled"] .dot-lamp { fill: var(--red); filter: drop-shadow(0 0 4px var(--red)); }
+.cradle[data-state="disabled"] .job-text { fill: #ff8f9b; }
+.cdots i.station-chip { width: auto; padding: 0 0.25rem; color: var(--amber); background: transparent; border: 1px solid var(--amber); }
+.station-drones { width: 100%; min-width: 0; flex: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.45rem; padding: 0.8rem 1rem 0.85rem; border-color: rgba(255, 182, 72, 0.55); }
+.station-drones[hidden] { display: none; }
+.station-drones .chip { color: var(--amber); }
+.station-drones .snote { margin: 0; font-size: 0.64rem; letter-spacing: 0.03em; color: var(--amber); }
+.station-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; }
+.station-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.5rem; align-items: baseline; font-size: 0.74rem; }
+.station-list .sunits { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+.station-list b { font-size: 0.74rem; font-weight: 600; color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.station-list .sidle { display: block; font-size: 0.66rem; color: var(--muted); }

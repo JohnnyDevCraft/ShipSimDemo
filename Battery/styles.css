@@ -124,3 +124,10 @@ body.battery {
 .diag-rows dd { max-width: 60%; }
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
 .field-grid .field b, .msection .field b { font-size: 1.1rem; }
+
+/* Critical damage (Combat, Beta9): the banner over the battery panel (the live console's). */
+.crit-banner { flex: none; pointer-events: auto; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel-solid); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.crit-banner div + div { margin-top: 0.2rem; }
+.dock button:disabled { opacity: 0.4; cursor: not-allowed; }

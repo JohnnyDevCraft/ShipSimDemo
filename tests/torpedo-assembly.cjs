@@ -1,5 +1,6 @@
 // Torpedo Assembly Control: the head gallery, the configuration pages, assembly into the ready rack, the rules
-// that stop an assembly, the details overlay and the demo controls.
+// that stop an assembly, the details overlay and the demo controls; the FWD / AFT launcher choice, its critical damage and
+// ratings, and the probe's scan range and engage-after-launch time (live 1.0.0-Beta10).
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -222,7 +223,7 @@ run({
     await refill.click();
     await expect(refill).toHaveClass(/refilling/);
     await expect(page.locator('#refillLabel')).toHaveText('REFILLING');
-    await expect(page.locator('#magazineNote')).toHaveText('REFILLING');
+    await expect(page.locator('#magazineNote')).toHaveText('FWD · REFILLING');
     const stock = async () => (await state(page)).stock;
     await page.evaluate(() => TorpedoAssembly.advance(15000));
     assert.deepEqual(await stock(), { Hulls: 9, Warhead: 7, Probe: 2, Beacon: 3 }, 'heads every 15 s, no hull yet');
@@ -263,5 +264,92 @@ run({
     assert.equal((await state(page)).ready[0].beacon.powerDraw, 2, 'the beacon keeps the draw it was assembled with');
     await page.locator('.slot.ready').click();
     await expect(page.locator('#detailsRows')).toContainText('1 h 23 min 20 s');
+  },
+  'FWD / AFT picks the launcher: each has its own magazine, next round and ready rack, and both assemble': async ({ open }) => {
+    const page = await open('/TorpedoAssembly/');
+    await expect(page.locator('#launcherSeg button')).toHaveText(['FWD', 'AFT']);
+    await expect(page.locator('#launcherSeg [data-slot="TPD1"]')).toHaveClass(/active/);
+    await expect(page.locator('#magazineNote')).toHaveText('FWD · IN STOCK');
+    // A full-yield warhead assembling in the forward launcher.
+    await configure(page, 'Warhead');
+    await page.locator('#yieldSlider').focus();
+    await page.keyboard.press('End');
+    await page.locator('#assembleBtn').click();
+    await expect(page.locator('.stock-row[data-key="Warhead"] b')).toHaveText('7');
+    // The aft launcher: its own smaller magazine, its own next round, an empty rack.
+    await page.locator('#launcherSeg [data-slot="TPD2"]').click();
+    await expect(page.locator('#launcherSeg [data-slot="TPD2"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#magazineNote')).toHaveText('AFT · IN STOCK');
+    await expect(page.locator('.stock-row[data-key="Hulls"] b')).toHaveText('6');
+    await expect(page.locator('.stock-row[data-key="Warhead"] b')).toHaveText('4');
+    await expect(page.locator('.stock-row[data-key="Hulls"] .pips i')).toHaveCount(6);
+    await expect(page.locator('#yieldValue')).toHaveText('50%');
+    await expect(page.locator('.slot.ready, .slot.assembling')).toHaveCount(0);
+    await page.locator('.dock [data-type="Beacon"]').click();
+    assert.equal((await state(page)).config.type, 'Beacon');
+    // The forward assembly finishes while the aft launcher is shown, and says where.
+    await page.evaluate(() => TorpedoAssembly.advance(30000));
+    await expect(page.locator('#notice')).toHaveText('Torpedo #1 (warhead) ready for launch in FWD.');
+    let s = await state(page);
+    assert.equal(s.launcher, 'TPD2');
+    assert.equal(s.launchers.TPD1.ready.length, 1);
+    assert.equal(s.launchers.TPD1.ready[0].yield, 100);
+    assert.equal(s.launchers.TPD1.ready[0].launcher, 'TPD1');
+    assert.equal(s.ready.length, 0);
+    // Back on FWD: the warhead waits in its rack, and its next round is still a warhead.
+    await page.locator('#launcherSeg [data-slot="TPD1"]').click();
+    await expect(page.locator('.slot.ready')).toHaveCount(1);
+    await expect(page.locator('#yieldValue')).toHaveText('100%');
+    s = await state(page);
+    assert.equal(s.config.type, 'Warhead');
+    assert.equal(s.launchers.TPD2.config.type, 'Beacon');
+  },
+  "the chosen launcher's critical damage shows under the launcher choice and in Launcher ratings, with the halved range": async ({ open }) => {
+    const page = await open('/TorpedoAssembly/');
+    await expect(page.locator('#launcherCritical')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('TPD2', ['range-halved']));
+    await expect(page.locator('#launcherCritical')).toBeHidden();
+    await page.locator('#launcherSeg [data-slot="TPD2"]').click();
+    await expect(page.locator('#launcherCritical')).toBeVisible();
+    await expect(page.locator('#launcherCritical')).toHaveText('CRITICAL · Range halved');
+    await page.locator('#menuBtn').click();
+    await page.locator('[data-menu="ratings"]').click();
+    await expect(page.locator('#menuTitle')).toHaveText('LAUNCHER RATINGS');
+    const row = label => page.locator('#ratingsRows div', { has: page.locator('dt', { hasText: new RegExp(`^${label}$`) }) }).locator('dd');
+    await expect(row('LAUNCHER')).toHaveText('Terran Torpedo Launcher Mark I · AFT');
+    await expect(row('WARHEAD RANGE')).toHaveText('300 km (halved from 600)');
+    await expect(row('CRITICAL')).toHaveText('Range halved');
+    await expect(row('READY RACK')).toHaveText('6 rounds');
+    // Repaired from the menu (Critical damage): the ratings follow at once.
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(row('WARHEAD RANGE')).toHaveText('600 km');
+    await expect(row('CRITICAL')).toHaveText('None');
+    await page.locator('#menuDialog [data-close]').last().click();
+    await expect(page.locator('#launcherCritical')).toBeHidden();
+  },
+  'a probe takes a scan range up to 10,000,000 km and an engage-after-launch time for its warp': async ({ open }) => {
+    const page = await open('/TorpedoAssembly/');
+    await configure(page, 'Probe');
+    await expect(page.locator('[data-show="probe.scanRangeKm"]')).toHaveText('10,000,000 km');
+    await page.locator('[data-num="probe.scanRangeKm"]').click();
+    await keypadEnter(page, '20000000');
+    await expect(page.locator('#keypadDialog .keypad-error')).toHaveText('Enter a range above 0, up to 10,000,000 km.');
+    await keypadEnter(page, '250000');
+    await expect(page.locator('[data-show="probe.scanRangeKm"]')).toHaveText('250,000 km');
+    await expect(page.locator('[data-num="probe.warpAfterSeconds"]')).toBeHidden();
+    await page.locator('[data-check="probe.warpEnabled"]').check({ force: true });
+    await expect(page.locator('[data-show="probe.warpAfterSeconds"]')).toHaveText('30 s');
+    await page.locator('[data-num="probe.warpAfterSeconds"]').click();
+    await keypadEnter(page, '90');
+    await expect(page.locator('[data-show="probe.warpAfterSeconds"]')).toHaveText('1.5 min');
+    await expect(page.locator('#previewRows')).toContainText('after 1.5 min');
+    await page.locator('#assembleBtn').click();
+    await page.evaluate(() => TorpedoAssembly.advance(30000));
+    const probe = (await state(page)).ready[0].probe;
+    assert.equal(probe.scanRangeKm, 250000);
+    assert.equal(probe.warpDelaySeconds, 90);
+    await page.locator('.slot.ready').click();
+    await expect(page.locator('#detailsRows')).toContainText('250,000 km');
+    await expect(page.locator('#detailsRows')).toContainText('after 1.5 min on the current course');
   },
 });

@@ -19,3 +19,13 @@ Files: `index.html`, `styles.css` and `dotbay.js`, minified with `../Shared/cons
 - Each component has a repair time for one DOT (from nothing to full, 8 to 40 minutes); DOTs on it share the work, so two DOTs take half the time. A finished repair sends its DOTs home and clears their assignments.
 - Power: 1.0 PU idle while online, plus 1.5 PU for each DOT charging; 7.0 PU with all four charging. Offline the bay draws nothing, charging and the transporter stop, and a DOT whose battery runs out is stranded until the bay is back online.
 - The bay reports its components and DOTs to Command Control twice a second (`../Shared/dot-bay-report.js`, kept in this browser's storage). It does not share state with Power Distribution or the other consoles yet: component damage is a demo stand-in.
+
+## Combat (MissionProtocol 1.0.0-Beta10)
+
+As the live console shows it; critical damage comes from Menu → **Critical damage** (`../Shared/demo-combat.js`).
+
+- **Critical damage:** red badges under each component's health bar (the effect's words before the dash; the full sentence in the title) and in the assign dialog.
+- **The bay's critical damage** (half the DOT units out of action): DOTs 3 and 4 are recalled; their cradles turn dashed red, the DOT dims, OUT OF ACTION / BAY CRITICAL DAMAGE; READY adds "· 2 OUT OF ACTION"; Assign and Send Now are refused for them; badges in the BAY panel; Diagnostics rows OUT OF ACTION and BAY CRITICAL.
+- **Station drones** (Demo controls → docked at Earth Orbital Station): a STATION DRONES panel (×2, not under crew control) with the two worst components, 2 and 1 units at twice a DOT's rate; an amber S<n> chip beside our DOTs; repair times count them; Diagnostics row STATION DRONES. Off by default.
+- A stranded DOT now reads **STANDING BY** (the live word).
+- The report to Command Control (`dot-bay-report.js`) also carries each DOT's `outOfAction`, the bay's `bayCritical` and `stationRepair` (null when off).

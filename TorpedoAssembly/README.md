@@ -28,3 +28,11 @@ Files: `index.html`, `styles.css`, `../Shared/console.css` (the shared console l
 - Configuration stays selected after each assembly, so another of the same is one press.
 - A station refill needs the ship docked with the umbilical attached (the demo's Dock does both). It brings aboard one hull every 30 seconds and one warhead, probe and beacon head every 15 seconds each, all at once, up to the magazine's capacity (12 hulls, 8 warheads, 3 probes, 3 beacons), and stops when the magazine is full. Halting it, or undocking, drops the items part-way aboard.
 - Reset demo reloads the page with an empty rack, a full magazine and the default settings.
+
+## Launchers, critical damage and the probe's new settings (live 1.0.0-Beta10, 2026-11-09)
+
+- **FWD / AFT** at the top of the Magazine panel picks the launcher (TPD1 forward, TPD2 aft), as on the live console. Each has its own magazine (forward 12 hulls, 8 warheads, 3 probes, 3 beacons; aft 6, 4, 2, 2), its own next round (the configuration) and its own ready rack; an assembly in one carries on while the other is shown ("ready for launch in FWD"). The magazine note reads `FWD · IN STOCK` (or DOCKED / REFILLING); a refill fills the launcher chosen when it started. The demo menu's stock fields and Take next / Launch next as probe work on the chosen launcher.
+- **Critical damage** to the chosen launcher (`../Shared/demo-combat.js`, Menu → **Critical damage**) shows as a red line under the FWD / AFT choice.
+- **Menu → Launcher ratings:** the chosen launcher's design: firing arc, ready rack, magazine, torpedo speed and lifetime, warhead range (speed × lifetime; halved and marked so with *Range halved*), its critical damage, warhead damage at full yield, battery and power.
+- **Probe:** **SCAN RANGE** (up to 10,000,000 km, the default) and, with the warp field generator on, **ENGAGE AFTER LAUNCH** (0 to 3,600 s; 30 s to start), which the readouts, rack, details and battery figures use. The self-destruct note gives way to the timer's own settings while it is on.
+- Torpedo Launch does not read this page's rack (the two demos share no stored state).

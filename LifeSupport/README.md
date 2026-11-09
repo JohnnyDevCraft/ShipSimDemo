@@ -21,3 +21,4 @@ Files: `index.html`, `styles.css` and `lifesupport.js`, minified with `../Shared
 - Gravity ramps to 1 g or to zero at 0.2 g a second.
 - Power: the plant draws 2 PU and the gravity generator 3 PU, from the station while connected, otherwise from the ship bus.
 - This page does not yet share docking or power with Docking Control or Power Distribution: the station feed is a demo stand-in.
+- **Critical damage (MissionProtocol 1.0.0-Beta10, as the live console):** life support has no critical effect in the simulator, so the banner at the top of the Systems panel stays hidden and Diagnostics' CRITICAL DAMAGE row reads None. Menu → Critical damage still sets the other systems' effects for the other consoles.

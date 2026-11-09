@@ -375,3 +375,11 @@ select { min-height: 2.75rem; padding: 0 0.7rem; border: 1px solid var(--edge); 
 .keypad-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 .keypad-keys button { min-height: 3.3rem; font-size: 1.25rem; letter-spacing: 0; }
 .keypad-error { margin: 0; min-height: 1rem; font-size: 0.75rem; color: #ff8f8f; }
+
+/* ── Critical damage and combat (the live console's Beta9 additions) ───────────────────────────────── */
+.crit-banner { margin: 0.4rem 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: rgba(255, 79, 79, 0.14); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.col.right .crit-banner { align-self: stretch; margin: 0; flex: none; pointer-events: auto; }
+.drive-limit { margin-top: -0.55rem; text-align: center; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.drive-limit.crit { color: #ffb3b3; font-weight: 600; }

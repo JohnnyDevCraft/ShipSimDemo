@@ -21,3 +21,15 @@ On the targeting scope (`../Shared/scope.js`) the four ships are contacts beside
 - Firing needs the cannon armed, local fire control and a chamber charged to the shot power; the first such chamber fires and spends the shot power from its charge.
 - A pulse travels at 15 km/s on the aim's bearing. It does full damage (120 WED, 40 WKD at 100% shot power) out to 50,000 km, fading to none at 90,000 km, where it ends. Hits work as for torpedoes: shield damage while the quadrant is up, otherwise hull and subsystem damage.
 - The intercept is the constant-course solution at the pulse speed, within its range and 25,000 km.
+
+## Combat (as the live console in MissionProtocol 1.0.0-Beta9/Beta10)
+
+The shared demo combat state (`Shared/demo-combat.js`, Menu → Critical damage) drives these; the three chambers are the ship's phase cannons EPW1–EPW3.
+
+- **Critical damage**: a red line under the readings names each damaged cannon (`CRITICAL · CH 2: Range halved`); `range-halved` halves that cannon's reach and marks PULSE "(halved)".
+- **Targeting computer offline** (targeting sensors): a red pill over the advisory; no solution circle or lead marker; INTERCEPT Offline, SOLUTION No guidance.
+- **LOCK** on the target panel: LOCKING… for 2 s, then UNLOCK; SOLUTION reads Locked / Locking… / Aim by hand; fire control shows LOCKED FIRE and a shot goes along the solution whatever the aim.
+- **Stations and settlements** on the scope (the demo's Cislunar Relay Station and Tycho Rock Outpost, a diamond hidden behind its rock from the far side): a faint ring for a raised shield, the shield's strength on the target panel, and shots drain it.
+- **Hostile and wrecked ships**: "HOSTILE · name" in red; a ship whose hull is gone stays as a grey, dashed "WRECK · name".
+- **Shot split**: LAST SHOT and History read what the shield stopped and the hull KD (the kinetic damage reaches the hull in the share of the energy the shield could not stop).
+- **Menu → Phase cannons**: each cannon's charge, charge rate, fire power, damage, arc and range, critical damage and power.

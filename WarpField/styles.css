@@ -145,3 +145,17 @@ body.warpfield {
 .diag-rows div { padding: 0.4rem 0; }
 .diag-rows dd { max-width: 65%; }
 .rule { margin-top: 0.8rem; color: var(--text); }
+
+/* ── Critical damage and combat contacts (Combat, Beta9; the live console's) ───────────────────── */
+.crit-banner { flex: none; align-self: stretch; margin: 0; pointer-events: auto; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel-solid); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+#capNote.crit { color: #ffb3b3; }
+.ship.hostile .s-hull { stroke: var(--red); stroke-dasharray: none; }
+.ship.hostile .s-name { fill: #ff8a8a; }
+.ship.wreck { opacity: 0.45; }
+.ship.wreck .s-hull { stroke: rgba(150, 160, 170, 0.7); stroke-dasharray: 2 3; }
+.ship.wreck .s-name, .ship.wreck .s-detail { fill: var(--dim); }
+.ship-row.hostile { border-color: rgba(255, 79, 79, 0.65); }
+.ship-row.hostile b { color: #ff8a8a; }
+.ship-row.wreck { opacity: 0.55; }

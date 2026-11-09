@@ -163,6 +163,32 @@ run({
     await expect(page.locator('#busLoad')).toHaveText('120');
     await expect(page.locator('#tankUnits')).toHaveText(/^(500|499)$/);
   },
+  'critical damage shows a banner, caps confinement, collectors and coolant with LOCKED badges, and locks the fuel injectors': async ({ open }) => {
+    const page = await open('/Reactor/');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await page.evaluate(() => ReactorControl.set({ controls: { beam: 30, angle: 40, coolant: 80 } }));
+    await page.evaluate(() => DemoCombat.set('reactor', ['confinement-locked', 'collectors-locked', 'coolant-locked', 'injectors-locked']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText(/^CRITICAL · Reactor: Confinement locked below 50 %.*; Collectors locked below 30°; Coolant pressure locked below 50 %; Fuel injectors locked in place$/);
+    // Controls above their caps are pulled down to them, as the simulator does.
+    const { controls } = await state(page);
+    assert.deepEqual([controls.beam, controls.angle, controls.coolant], [22.5, 30, 50]);
+    for (const id of ['#beamLock', '#angleLock', '#coolantLock', '#injectorLock']) await expect(page.locator(id)).toBeVisible();
+    await expect(page.locator('#beamLock')).toHaveText('LOCKED ≤ 50%');
+    await expect(page.locator('#angleLock')).toHaveText('LOCKED ≤ 30°');
+    for (const id of ['#beamSlider', '#angleSlider', '#coolantSlider']) await expect(page.locator(`${id} .vs-limit`)).toBeVisible();
+    await page.locator('#coolantSlider').focus();
+    await page.keyboard.press('End');
+    await expect(page.locator('#coolantValue')).toHaveText('50%');
+    await expect(page.locator('#flowSlider')).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#flowSlider')).toHaveAttribute('title', /Fuel injectors locked in place/);
+    // Fully repaired: the locks go.
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('#beamLock')).toBeHidden();
+    await expect(page.locator('#flowSlider')).toHaveAttribute('aria-disabled', 'false');
+    await expect(page.locator('#coolantSlider .vs-limit')).toBeHidden();
+  },
   'diagnostics lists every reading': async ({ open }) => {
     const page = await open('/Reactor/');
     await page.locator('.dock [data-open="diagnosticsDialog"]').click();

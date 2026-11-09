@@ -62,8 +62,7 @@ for (const [width, height] of sizes)
     const heads = await page.evaluate(() => [...document.querySelectorAll('.col .thead')].filter(t => t.offsetParent).map(t => { const [a, b] = [...t.children].map(c => c.getBoundingClientRect()); return { name: t.firstElementChild.textContent, gap: b.left - a.right }; }));
     for (const head of heads) assert.ok(head.gap >= 4, `${head.name} clears its chip (${head.gap})`);
     const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
-    const range = await page.locator('#rangeSlider').boundingBox();
-    assert.ok(range.height >= 5 * rem, `the range slider is usable (${range.height})`);
+    await expect(page.locator('#rangeSlider')).toHaveCount(0);   // zoom by wheel, pinch and keys (John, 2026-11-03)
     for (const control of ['#weaponGrid', '#shieldDiagram', '#shieldsBtn', '#targetName', '#scanStatus', '#clearBtn', '#cameraBtn', '#menuBtn']) await expect(page.locator(control)).toBeInViewport({ ratio: 0.99 });
     // Overlays
     await page.locator('#cameraBtn').click();
@@ -80,5 +79,43 @@ for (const [width, height] of sizes)
     await page.locator('#menuBtn').click();
     await page.locator('#openDemoControls').click();
     assert.ok(await dialogFits(page, 'menuDialog'), 'the demo controls fit');
+  };
+// Combat (live Beta9/10): the targeting computer offline banner, critical damage on two weapons and the shields, and the last
+// hit on us all fit in the left column; with every effect at once its panels scroll inside the column instead of spilling.
+// Menu → Sensors fits too.
+for (const [width, height] of [[1024, 768], [1440, 900], [3840, 2160]])
+  cases[`combat panels fit at ${width}×${height}`] = async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await page.setViewportSize({ width, height });
+    const panels = () => page.evaluate(() => [...document.querySelectorAll('.col .panel')].filter(p => !p.hidden).map(p => {
+      const b = p.getBoundingClientRect(), col = p.parentElement.getBoundingClientRect();
+      return { id: p.className, clipped: p.scrollHeight > p.clientHeight + 1, inside: b.top >= col.top - 0.5 && b.bottom <= col.bottom + 0.5 };
+    }));
+    await page.evaluate(() => {
+      DemoCombat.set('targeting', ['targeting-computer-offline']);
+      DemoCombat.set('EPW1', ['range-halved']);
+      DemoCombat.set('TPD2', ['range-halved']);
+      DemoCombat.set('shields', ['seo-halved']);
+      TacticalOfficer.set({ lastHit: { at: 0, side: 'starboard', kind: 'torpedo', by: 'Training ship A', shieldStopped: 12.5, hullDamage: 75, componentSlot: 'transporter', componentDamage: 37.5, critical: 'buffer-halved' }, clock: 1 });
+    });
+    await expect(page.locator('#lastHit')).toBeVisible();
+    await expect(page.locator('#targetingOffline')).toBeVisible();
+    await expect(page.locator('#weaponCritical li')).toHaveCount(3);
+    await page.waitForTimeout(150);
+    for (const p of await panels()) {
+      assert.ok(!p.clipped, `${p.id} is not clipped`);
+      assert.ok(p.inside, `${p.id} stays in its column`);
+    }
+    await page.evaluate(() => {
+      for (const c of DemoCombat.COMPONENTS.filter(c => ['targeting', 'shields', 'EPW1', 'EPW2', 'EPW3', 'EBW1', 'TPD1', 'TPD2'].includes(c.key))) DemoCombat.set(c.key, c.effects);
+    });
+    await expect(page.locator('#weaponCritical li')).toHaveCount(8);
+    await page.waitForTimeout(150);
+    for (const p of await panels()) assert.ok(p.inside, `${p.id} stays in its column with every effect`);
+    const dock = await page.locator('.dock').boundingBox(), left = await page.locator('.col.left').boundingBox();
+    assert.ok(left.x + left.width <= dock.x + 0.5 || left.y + left.height <= dock.y + 0.5, 'the left column clears the bottom bar');
+    await page.locator('#menuBtn').click();
+    await page.locator('#openSensors').click();
+    assert.ok(await dialogFits(page, 'menuDialog'), 'the sensors view fits');
   };
 run(cases);

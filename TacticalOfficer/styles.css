@@ -34,8 +34,8 @@
 .weapon:disabled { opacity: 0.75; cursor: default; }
 
 /* ── Shields ────────────────────────────────────────────────────────────────────────────────── */
-.shields { width: 100%; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; padding: 0.85rem 0.95rem 0.95rem; }
-#shieldDiagram { flex: 0 1 auto; width: 100%; min-height: 6rem; max-height: 10rem; }
+.shields { width: 100%; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0.45rem; padding: 0.85rem 0.95rem 0.95rem; }
+#shieldDiagram { flex: 0 1 auto; width: 100%; min-height: 3.6rem; max-height: 10rem; }  /* shrinks to make room for critical damage */
 #ownQuadrants path { stroke-width: 2; stroke-linejoin: miter; fill-opacity: 0.22; }
 #ownQuadrants line { stroke: var(--panel-solid); stroke-width: 3; }
 .chip[data-level="warn"] { color: var(--amber); }
@@ -50,7 +50,7 @@
 #ownHull[data-level="bad"] { fill: #ff4655; }
 #ownHull.critical { animation: blink 0.8s steps(1, end) infinite; }
 @keyframes blink { 50% { opacity: 0.15; } }
-.shields .rows div { padding: 0.32rem 0; }
+.shields .rows div { padding: 0.26rem 0; }
 .shields .rows dd { font-size: 0.78rem; }
 .hull-bar i { background: var(--green); box-shadow: 0 0 0.5rem var(--green); }
 .hull-bar i[data-level="warn"] { background: var(--amber); box-shadow: 0 0 0.5rem var(--amber); }
@@ -99,8 +99,9 @@
 .advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
 .advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
 .advisory[data-level="off"] { color: var(--muted); }
-.dock { padding: 0.75rem 2.1rem 0; }
-.dock button { min-width: 5.1rem; }
+/* Seven commands since AUTO TARGET (Beta9): a little tighter so the bar still fits between the columns on an iPad. */
+.dock { padding: 0.75rem 1.4rem 0; gap: 0.3rem; }
+.dock button { min-width: 4.75rem; }
 .dock .shields-toggle { color: var(--green); }
 .dock .shields-toggle .ring { border-color: var(--green); background: radial-gradient(circle, rgba(30, 120, 80, 0.7), rgba(4, 28, 18, 0.85)); box-shadow: 0 0 1.1rem rgba(79, 224, 141, 0.45), inset 0 0 0.8rem rgba(79, 224, 141, 0.3); }
 .dock .shields-toggle[aria-pressed="false"] { color: #ff8f9b; }
@@ -183,3 +184,16 @@
 
 /* The scanner takes two-finger pinches itself (John, 2026-11-03: the range slider is gone). */
 #map { touch-action: none; }
+
+/* ── Combat (live 1.0.0-Beta9/10): critical damage, the last hit on us, auto target ─────────────── */
+.crit-banner { margin: 0; padding: 0.35rem 0.6rem; border: 1px solid rgba(255, 79, 79, 0.7); border-radius: 0.45rem; background: rgba(90, 14, 22, 0.75); color: #ff8f9b; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-align: center; animation: blink 1.6s steps(1, end) infinite; }
+.crit-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
+.crit-list li { font-size: 0.62rem; line-height: 1.25; color: #ff8f9b; overflow-wrap: anywhere; }
+.crit-list li b { color: #ffb3ba; font-weight: 600; letter-spacing: 0.08em; margin-right: 0.3rem; }
+.weapon[data-critical="true"]::after { content: 'CRIT'; position: absolute; top: 0.35rem; right: 0.45rem; font-size: 0.5rem; font-weight: 700; letter-spacing: 0.1em; color: #ff8f9b; }
+.last-hit { margin: 0; padding: 0.35rem 0.6rem; border: 1px solid rgba(255, 140, 60, 0.7); border-radius: 0.45rem; background: rgba(80, 30, 8, 0.8); color: #ffc48a; font-size: 0.68rem; line-height: 1.35; }
+.last-hit b { color: #fff0dc; letter-spacing: 0.1em; }
+/* Every effect at once can outgrow a short window: the panels then scroll inside the column instead of spilling. */
+.col.left .weapons { max-height: 70%; overflow-y: auto; }
+.col.left .shields { overflow-y: auto; }
+.last-hit[data-kind="shieldonly"] { border-color: rgba(88, 170, 255, 0.6); background: rgba(10, 40, 80, 0.8); color: #9fd0ff; }

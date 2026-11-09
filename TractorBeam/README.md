@@ -28,3 +28,7 @@ Files: `index.html`, `styles.css` and `tractor.js`; the plot draws ships with He
 - The Target Bearing stick turns the ship at up to the max turn rate (6°/s). Stick values have a small dead zone in the middle.
 - A held ship is ready for warp when all of its hull is within the warp field radius (500 m from our centre) and its heading is within 10° of ours.
 - The demo starts with a disabled freighter (2.4 km), a powerless shuttle (1.1 km), both shields down, and Training ship A out of range (7.8 km) with its shields up; the Training Station Halcyon (14.2 km), Earth, the Moon and the Sun can be pointed at but not tractored.
+
+## Combat (MissionProtocol 1.0.0-Beta10)
+
+Critical damage comes from Menu → **Critical damage** (`../Shared/demo-combat.js`). A red banner over the left column names the beam's effects. **Range halved:** the caption reads "RANGE … (HALVED)", BEAM RANGE "… · HALVED" in red; the plot, in-range labels, reach, Next Ship, the push limit and the power curve use half the beam range; a held ship beyond it is let go; Diagnostics shows "halved from …".

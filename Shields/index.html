@@ -6,7 +6,7 @@
 <title>Shield System Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="shields">
 
@@ -45,10 +45,11 @@
 
 <!-- Left: what the emitter puts out, and how far the shield reaches -->
 <div class="col left">
+  <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
   <section class="panel controls" aria-label="Shield emitter output">
     <div class="thead"><h2>EMITTER OUTPUT</h2><small id="emitterState">ONLINE</small></div>
     <div class="seo-pair">
-      <div><small>MAX SEO</small><b id="maxSeo">400</b></div>
+      <div><small>MAX SEO<span id="seoHalved" class="crit-badge" data-testid="seo-halved" title="Shield SEO halved" hidden>HALVED</span></small><b id="maxSeo">400</b></div>
       <div><small>AVAILABLE</small><b id="availableSeo">400.0</b></div>
     </div>
     <div class="control extension" id="extensionControl">
@@ -98,7 +99,7 @@
 <dialog id="diagnosticsDialog" class="modal" aria-labelledby="diagnosticsTitle">
   <div class="mhead"><h2 id="diagnosticsTitle">DIAGNOSTICS</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <dl class="rows diag-rows" id="diagnostics"></dl>
-  <p class="mnote">Demo tuning: a linear extension penalty; the final formula is still to be defined. Hull and subsystem damage are not simulated here.</p>
+  <p class="mnote">Demo tuning: a linear extension penalty; the final formula is still to be defined. Critical damage to the generator is set from Menu → Critical damage.</p>
 </dialog>
 
 <!-- Menu and demo controls -->
@@ -159,8 +160,9 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=4"></script>
-<script src="shields.js?v=20261103b"></script>
-<script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="shields.js?v=20261109"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

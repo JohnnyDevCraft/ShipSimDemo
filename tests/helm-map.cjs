@@ -26,14 +26,26 @@ run({
     const stars = await page.evaluate(() => mapContacts.filter(contact => contact.world.kind === 'star' && contact.labelBox).map(contact => contact.name));
     for (const star of ['Gliese 1061', 'Ross 128', 'Tau Ceti', 'Sirius', 'Wolf 359', "Barnard's Star"]) assert.ok(stars.includes(star), `${star} is labelled`);
   },
-  'the Range dialog sets the radius at once, and the range slider follows': async ({ open }) => {
+  'the Range dialog sets the radius at once; the scroll wheel and the zoom keys zoom the map, with no range slider on screen': async ({ open }) => {
     const page = await open('/Helm/');
-    await expect(page.locator('#rangeSlider')).toHaveAttribute('aria-valuetext', '20.0 LY radius');
+    await expect(page.locator('#rangeSlider')).toHaveCount(0);
+    assert.equal(await page.evaluate(() => window.helmMapRange()), '20.0 LY radius');
     await page.locator('.dock [data-open="rangeDialog"]').click();
     await expect(page.locator('#rangePresets button[aria-pressed="true"]')).toHaveText('20 LY');
     await page.locator('#rangePresets button', { hasText: /^5 LY$/ }).click();
     await expect(page.locator('#rangeDialog')).toBeHidden();
-    await expect(page.locator('#rangeSlider')).toHaveAttribute('aria-valuetext', '5.00 LY radius');
+    assert.equal(await page.evaluate(() => window.helmMapRange()), '5.00 LY radius');
+    // The scroll wheel zooms in; the "-" key back out.
+    const box = await page.locator('#map').boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, -300);
+    await page.waitForTimeout(200);
+    const wheeled = await page.evaluate(() => window.helmMapRange());
+    assert.notEqual(wheeled, '5.00 LY radius', 'the wheel zoomed the map');
+    await page.locator('#map').click({ position: { x: 600, y: 120 }, force: true });
+    await page.keyboard.press('-');
+    await page.waitForTimeout(100);
+    assert.notEqual(await page.evaluate(() => window.helmMapRange()), wheeled, 'the "-" key zoomed out');
     await page.locator('[data-mode="SRS"]').click();
     await page.locator('.dock [data-open="rangeDialog"]').click();
     assert.deepEqual((await page.locator('#rangePresets button').allInnerTexts()).slice(0, 2), ['1 BKM', '100 MKM']);

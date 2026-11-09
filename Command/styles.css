@@ -146,6 +146,11 @@ body.command {
 .view-row button[aria-pressed="true"], .mode-seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); border-color: #63b4ff; box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.45); }
 .mode-seg button { min-height: max(2.75rem, 44px); font-size: 0.8rem; letter-spacing: 0.1em; }
 
+/* ── Range ─────────────────────────────────────────────────────────────────────────────────── */
+.range-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.range-grid button { min-height: max(2.75rem, 44px); padding: 0.3rem 0.2rem; font-size: 0.74rem; letter-spacing: 0.06em; }
+.range-grid button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); border-color: #63b4ff; box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.45); }
+
 /* ── Labels ─────────────────────────────────────────────────────────────────────────────────── */
 .label-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
 .toggle { text-align: left; letter-spacing: 0.06em; font-size: 0.8rem; }
@@ -157,7 +162,7 @@ body.command {
 .label-all { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
 
 /* ── Tab bar ────────────────────────────────────────────────────────────────────────────────── */
-.tabbar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--edge-soft); background: linear-gradient(0deg, rgba(2, 8, 18, 0.95), rgba(2, 8, 18, 0.75)); }
+.tabbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; padding: 0.45rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--edge-soft); background: linear-gradient(0deg, rgba(2, 8, 18, 0.95), rgba(2, 8, 18, 0.75)); }
 .tabbar button { display: grid; justify-items: center; gap: 0.2rem; min-height: max(3.4rem, 48px); padding: 0.35rem 0.2rem; border-color: transparent; background: transparent; font-size: 0.62rem; letter-spacing: 0.14em; color: var(--muted); }
 .tabbar .ticon { position: relative; display: grid; place-items: center; width: 2.6rem; height: 1.8rem; border-radius: 0.9rem; }
 .tabbar svg { width: 1.35rem; height: 1.35rem; }
@@ -171,7 +176,75 @@ body.command {
 .msection { display: grid; gap: 0.6rem; }
 .msection h3 { margin: 0; font-size: 0.7rem; letter-spacing: 0.14em; color: var(--muted); font-weight: 600; }
 .mstatus { margin: 0; font-size: 0.8rem; color: var(--cyan); }
-.demo-buttons { display: grid; gap: 0.45rem; }
+.demo-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.45rem; }
+.demo-buttons button { min-height: max(2.75rem, 44px); padding: 0.3rem 0.35rem; font-size: 0.7rem; letter-spacing: 0.06em; }
+.demo-buttons .toggle.light { min-height: max(2.75rem, 44px); }
+#demoControls .mnote { margin: 0; font-size: 0.66rem; }
+
+/* ── Unit activities of the live repair bay (Beta9) ───────────────────────────────────────────── */
+.dot-card[data-state="maintaining"] .dnum { background: var(--green); }
+.dot-card[data-state="maintaining"] b { color: var(--green); }
+.dot-card[data-state="maintaining"] { border-color: rgba(79, 224, 141, 0.45); }
+.dot-card[data-state="standing-by"] { border-color: rgba(255, 79, 79, 0.7); }
+.dot-card[data-state="standing-by"] .dnum { background: var(--red); }
+.dot-card[data-state="standing-by"] b { color: #ff8f9b; }
+.cdots i[data-state="maintaining"] { background: var(--green); }
+.cdots i[data-state="standing-by"] { background: var(--red); }
+.dot-card[data-state="disabled"] { border-color: rgba(255, 79, 79, 0.55); border-style: dashed; opacity: 0.75; }
+.dot-card[data-state="disabled"] .dnum { background: var(--red); }
+.dot-card[data-state="disabled"] b { color: #ff8f9b; }
+.cdots i[data-state="disabled"] { background: var(--red); }
+
+/* ── Combat (Beta9): hull, hostiles, last hit, critical damage, station drones ─────────────── */
+.hull-read { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.hull-read b { font-size: 1.6rem; font-weight: 500; line-height: 1.1; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.hull-read small { font-size: 0.62rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hull-bar { height: 0.45rem; }
+.hull-panel[data-level="ok"] .hull-read b { color: var(--green); }
+.hull-panel[data-level="ok"] .hull-bar i { background: var(--green); box-shadow: 0 0 0.4rem var(--green); }
+.hull-panel[data-level="warn"] { border-color: rgba(255, 182, 72, 0.6); }
+.hull-panel[data-level="warn"] .hull-read b { color: var(--amber); }
+.hull-panel[data-level="warn"] .hull-bar i { background: var(--amber); box-shadow: 0 0 0.4rem var(--amber); }
+.hull-panel[data-level="bad"] { border-color: rgba(255, 79, 79, 0.7); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.22); }
+.hull-panel[data-level="bad"] .hull-read b { color: #ff8f9b; }
+.hull-panel[data-level="bad"] .hull-bar i { background: var(--red); box-shadow: 0 0 0.4rem var(--red); }
+.hull-panel.hit { animation: command-hit 0.9s ease-out; }
+@keyframes command-hit { 0% { box-shadow: 0 0 1.6rem rgba(255, 60, 60, 0.85); border-color: #ff4f4f; } 100% { } }
+@media (prefers-reduced-motion: reduce) { .hull-panel.hit { animation: none; } }
+.hostiles { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: baseline; gap: 0.5rem; padding: 0.35rem 0.55rem; border: 1px solid rgba(255, 79, 79, 0.7); border-radius: 0.5rem; background: rgba(110, 20, 28, 0.4); }
+.hostiles[hidden] { display: none; }
+.hostiles small { font-size: 0.58rem; color: #ff8f9b; letter-spacing: 0.12em; }
+.hostiles b { font-size: 0.9rem; color: #ff8f9b; font-variant-numeric: tabular-nums; }
+.hostiles span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.7rem; color: #ffb3bb; text-align: right; }
+.last-hit { display: grid; gap: 0.3rem; padding-top: 0.45rem; border-top: 1px solid var(--edge-soft); }
+.lhead { display: flex; justify-content: space-between; gap: 0.5rem; }
+.lhead small { font-size: 0.58rem; }
+.lhead small:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.shake { margin: 0; padding: 0.3rem 0.5rem; border: 1px solid rgba(255, 182, 72, 0.6); border-radius: 0.4rem; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em; color: var(--amber); text-align: center; }
+.shake[hidden] { display: none; }
+.hit-rows { margin: 0; display: grid; gap: 0.1rem; }
+.hit-rows div { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; padding: 0.12rem 0; }
+.hit-rows dt { flex: none; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--muted); }
+.hit-rows dd { margin: 0; min-width: 0; text-align: right; font-size: 0.74rem; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.hit-rows div[data-level="bad"] dd { color: #ff8f9b; }
+.hit-rows div[data-level="warn"] dd { color: var(--amber); }
+.hit-rows .none { margin: 0; font-size: 0.7rem; color: var(--muted); }
+.crits { display: flex; flex-wrap: wrap; gap: 0.25rem; min-width: 0; }
+.hit-critical dd { display: flex; justify-content: flex-end; }
+.crit { display: inline-block; max-width: 100%; padding: 0.1rem 0.4rem; border: 1px solid rgba(255, 79, 79, 0.7); border-radius: 0.3rem; background: rgba(110, 20, 28, 0.55); font-style: normal; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; line-height: 1.35; color: #ffb3bb; overflow-wrap: anywhere; text-align: left; }
+.component-list li[data-critical="true"] .cname { color: #ffb3bb; }
+.component-list li[data-critical="true"][data-level="ok"] { opacity: 1; }
+/* The station's drones: amber outline, never a control. */
+.cdots i.station-chip { width: auto; padding: 0 0.25rem; color: var(--amber); background: transparent; border: 1px solid var(--amber); }
+.station-panel { border-color: rgba(255, 182, 72, 0.55); }
+.station-panel[hidden] { display: none; }
+.station-panel .chip { color: var(--amber); }
+.snote { margin: 0; font-size: 0.66rem; letter-spacing: 0.03em; color: var(--amber); }
+.station-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.3rem; }
+.station-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.5rem; align-items: baseline; font-size: 0.76rem; }
+.station-list .sunits { font-size: 0.62rem; color: var(--muted); white-space: nowrap; }
+.station-list b { font-size: 0.76rem; font-weight: 600; color: var(--amber); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.station-list .sidle { display: block; font-size: 0.68rem; color: var(--muted); }
 
 /* Short phones (an iPhone SE, a small Android): a smaller stick so the View tab fits without scrolling. */
 @media (orientation: portrait) and (max-height: 720px) {
@@ -193,4 +266,6 @@ body.command {
   .camera-panel .thead { grid-column: 1 / -1; }
   .camera-panel .camera-stick { grid-row: 2 / span 2; }
   .stick2 { width: min(11rem, 48dvh); }
+  #demoControls .mnote { display: none; }
+  #demoControls .msection { gap: 0.4rem; }
 }

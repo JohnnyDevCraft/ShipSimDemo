@@ -125,6 +125,29 @@ run({
     await expect(page.locator('#busFlow')).toHaveText('86.0 PU');
     await expect(page.locator('#directStream')).toHaveClass(/idle/);
   },
+  'a battery that cannot recharge shows the critical banner, disables Recharge and takes no charge': async ({ open }) => {
+    const page = await open('/Battery/');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await demo(page, () => setField(page, 'reactorOutput', '120'));
+    await expect(page.locator('#chargingIn')).not.toHaveText('0.0 PU');
+    await page.evaluate(() => DemoCombat.set('battery', ['cannot-recharge']));
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Support battery: Battery cannot recharge');
+    await expect(page.locator('#rechargeBtn')).toBeDisabled();
+    await expect(page.locator('#rechargeBtn')).toHaveAttribute('title', 'Battery cannot recharge until it is fully repaired.');
+    await expect(page.locator('#chargingIn')).toHaveText('0.0 PU');
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('#rechargeBtn')).toBeEnabled();
+  },
+  'a battery that cannot supply gives the bus nothing and the load goes short': async ({ open }) => {
+    const page = await open('/Battery/');
+    await expect(page.locator('#busFlow')).toHaveText('18.4 PU');
+    await page.evaluate(() => DemoCombat.set('battery', ['cannot-recharge', 'cannot-supply']));
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Support battery: Battery cannot recharge; Battery cannot supply power');
+    await expect(page.locator('#busFlow')).toHaveText('0.0 PU');
+    await expect(page.locator('#busUnmet')).toHaveText('18.4');
+    await expect(page.locator('#advisory')).toHaveText(/Battery cannot supply power until it is fully repaired/);
+  },
   'diagnostics lists every reading': async ({ open }) => {
     const page = await open('/Battery/');
     await page.locator('[data-open="diagnosticsDialog"]').click();

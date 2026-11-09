@@ -20,7 +20,8 @@ Files: `index.html`, `styles.css` and `cargobay.js`, minified with `../Shared/co
   console this is Transporter Control).
 - **Discrepancy log (right):** every discrepancy logged, with a note when the crew wrote one; STRIKE removes it.
 - **Bottom bar:** the three manifest views, Inspect Crate, Log Discrepancy, Prepare Request and Transmit.
-- **Menu → Demo controls:** cargo orders on or off, the communications array powered, the ship far from Earth (every receiver out of
+- **Hold and critical damage (live 1.0.0-Beta10):** under the totals, HOLD (the hull's cargo hold, or NO LIMIT SET), ABOARD (crates and troops at 100 kg each), ROOM LEFT (red when the hold is full) and TROOPS, with "n TROOPS IN THE HOLD · soldiers, no manifest". The transporter's critical damage (menu → Critical damage, shared by every console) shows as a red banner over the hold.
+- **Menu → Demo controls:** the hold's size (6,000 kg, 12,000 kg or no limit) and the troops aboard (none, 20, 60), cargo orders on or off, the communications array powered, the ship far from Earth (every receiver out of
   reach), beam another crate aboard, and reset.
 
 ## Rules (the simulator's)

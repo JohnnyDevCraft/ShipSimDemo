@@ -166,3 +166,12 @@ body.power {
 /* With the science components' cards (Science Console spec O6) there can be up to 18: narrower columns keep them in
    as few rows as before, so no card is cut short. */
 .subsystems:has(> :nth-child(16)) { grid-template-columns: repeat(auto-fill, minmax(10.8rem, 1fr)); }
+
+/* Critical damage (Combat, Beta9): the banner over the cards and in the overlay, the badge and red edge on a damaged card (the live console's). */
+.crit-banner { flex: none; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: rgba(255, 79, 79, 0.14); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.crit-banner div + div { margin-top: 0.2rem; }
+.crit-badge { display: inline-block; padding: 0 0.35rem; border: 1px solid var(--red); border-radius: 3px; color: #ffb3b3; font-size: 0.55rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+.sub-tags { display: inline-flex; align-items: baseline; gap: 0.3rem; white-space: nowrap; }
+.subsystem[data-critical="true"] { box-shadow: inset 0 0 0 1px rgba(255, 79, 79, 0.6), 0 0 0.6rem rgba(255, 60, 60, 0.25); }

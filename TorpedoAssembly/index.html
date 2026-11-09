@@ -6,7 +6,7 @@
 <title>Torpedo Assembly Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="assembly">
 
@@ -41,6 +41,8 @@
 <div class="col left">
   <section class="panel magazine" aria-label="Magazine">
     <div class="thead"><h2>MAGAZINE</h2><small id="magazineNote">IN STOCK</small></div>
+    <div class="seg launcher-seg" id="launcherSeg" role="group" aria-label="Torpedo launcher"></div>
+    <p id="launcherCritical" class="critical-note" data-testid="launcher-critical" role="status" hidden></p>
     <div id="stock" class="stock"></div>
   </section>
   <section class="panel bay" aria-label="Assembly bay power">
@@ -133,6 +135,7 @@
             </div>
           </div>
           <div class="form-col">
+            <button type="button" class="cfield" data-num="probe.scanRangeKm"><small>SCAN RANGE</small><b data-show="probe.scanRangeKm"></b></button>
             <label class="switch"><input type="checkbox" data-check="probe.warpEnabled"><span></span>Warp field generator</label>
             <div class="option" data-when="probe.warpEnabled">
               <div class="pair even">
@@ -140,14 +143,14 @@
                 <button type="button" class="cfield" data-num="probe.warpDistance"><small>DISTANCE</small><b data-show="probe.warpDistance"></b></button>
               </div>
               <div class="seg units" data-seg="probe.warpDistanceUnit"><button type="button" data-val="M">M</button><button type="button" data-val="KM">KM</button><button type="button" data-val="MKM">MKM</button><button type="button" data-val="BKM">BKM</button><button type="button" data-val="LY">LY</button></div>
-              <p class="mnote">Engages warp 30 seconds after launch on the current course; exits after this distance.</p>
+              <button type="button" class="cfield" data-num="probe.warpAfterSeconds" title="Engages warp this long after launch on the current course; exits after the distance."><small>ENGAGE AFTER LAUNCH</small><b data-show="probe.warpAfterSeconds"></b></button>
             </div>
             <label class="switch"><input type="checkbox" data-check="probe.selfDestructEnabled"><span></span>Self-destruct timer</label>
             <div class="option" data-when="probe.selfDestructEnabled">
               <button type="button" class="cfield" data-num="probe.selfDestruct"><small>DESTRUCT AFTER LAUNCH</small><b data-show="probe.selfDestruct"></b></button>
               <div class="seg" data-seg="probe.selfDestructUnit"><button type="button" data-val="seconds">SEC</button><button type="button" data-val="minutes">MIN</button><button type="button" data-val="hours">HR</button></div>
             </div>
-            <p class="mnote">A self-destruct timer destroys the probe to prevent capture. Battery life is shown separately.</p>
+            <p class="mnote" data-when="probe.selfDestructOff">A self-destruct timer destroys the probe to prevent capture. Battery life is shown separately.</p>
           </div>
         </div>
 
@@ -239,6 +242,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
+    <button type="button" data-menu="ratings"><b>Launcher ratings</b><span>The selected launcher's design: rack, torpedo speed and range, warhead damage, battery and power</span></button>
     <button type="button" data-menu="magazine"><b>Magazine and rack</b><span>Stock, docking at a station, ready capacity and handing a torpedo to the launcher</span></button>
     <button type="button" data-menu="power"><b>Bay power and damage</b><span>Available power, the bay's power range, cycle times and warhead damage maxima</span></button>
     <button type="button" data-menu="rates"><b>Power draw rates</b><span>Probe warp, sensors and transmitters, beacons</span></button>
@@ -247,8 +251,12 @@
   </div>
   <div id="demoControls" hidden>
     <div class="fields-view">
+      <div class="msection" data-view="ratings">
+        <dl class="rows" id="ratingsRows"></dl>
+        <p class="mnote">Values from the selected launcher's design. Critical damage stays until the launcher is fully repaired (Menu → Critical damage).</p>
+      </div>
       <div class="msection" data-view="magazine">
-        <h3>MAGAZINE</h3>
+        <h3 id="magazineTitle">MAGAZINE</h3>
         <div class="field-grid">
           <div class="field" data-field="Hulls"><div><small>TORPEDO HULLS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
           <div class="field" data-field="Warhead"><div><small>WARHEAD HEADS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
@@ -315,8 +323,9 @@
 
 <script src="../Shared/console-ui.js?v=5"></script>
 <script src="../Shared/science-sim.js?v=2"></script>
-<script src="assembly.js?v=3"></script>
+<script src="assembly.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

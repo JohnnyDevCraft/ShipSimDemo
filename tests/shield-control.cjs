@@ -226,4 +226,57 @@ run({
     assert.equal(now.ships.length, 1);
     assert.equal(now.enemies.length, 0);
   },
+  'critical damage: Shield SEO halved shows the banner and a HALVED badge, and halves every SEO figure': async ({ open }) => {
+    const page = await openPaused(open);
+    await page.evaluate(() => DemoCombat.set('shields', ['seo-halved']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Shield generator: Shield SEO halved');
+    await expect(page.locator('#seoHalved')).toBeVisible();
+    await expect(page.locator('#maxSeo')).toHaveText('200');
+    await expect(page.locator('#availableSeo')).toHaveText('200.0');
+    await expect(page.locator('.l-value[data-facing="Forward"]')).toHaveText('50.0 / 50.0');
+    await page.locator('[data-open="diagnosticsDialog"]').click();
+    await expect(page.locator('#diagnostics')).toContainText('Shield SEO halved');
+    await expect(page.locator('#diagnostics')).toContainText('halved from 400');
+    await page.locator('#diagnosticsDialog [data-close]').click();
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('#seoHalved')).toBeHidden();
+    await expect(page.locator('#maxSeo')).toHaveText('400');
+  },
+
+  'critical damage: one quadrant disabled takes the side last struck, holds nothing and asks to move its allocation': async ({ open }) => {
+    const page = await openPaused(open);
+    await hit(page, 1); // Starboard struck
+    await page.locator('#menuBtn').click();
+    await page.locator('#openCritical').click();
+    await page.locator('#criticalDialog [data-component="shields"] button[data-effect="quadrant-disabled"]').click();
+    await page.locator('#criticalDialog .mhead button').click();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Shield generator: One shield quadrant disabled (Starboard)');
+    await expect(page.locator('#state')).toHaveText('FACING DISABLED');
+    const row = page.locator('#facingRows tr').nth(1);
+    await expect(row).toHaveAttribute('data-level', 'disabled');
+    await expect(row.locator('td').last()).toHaveText('DISABLED');
+    await expect(page.locator('.l-value[data-facing="Starboard"]')).toHaveText('DISABLED');
+    await expect(page.locator('#facings [data-facing="Starboard"] .f-arc.disabled')).toHaveCount(1);
+    await expect(page.locator('.facing-control').nth(1)).toHaveAttribute('data-level', 'disabled');
+    await expect(page.locator('#availableSeo')).toHaveText('300.0');
+    await expect(page.locator('#advisory')).toHaveText('Starboard facing disabled by critical damage: hits there reach the hull. Move its 25% to the other facings.');
+    await hit(page, 1);
+    await expect(page.locator('#notice')).toHaveText('Starboard facing is disabled: the hit reached the hull.');
+    assert.equal((await state(page)).quadrants[1].drain, 40, 'the hit on the disabled facing added no drain');
+  },
+
+  'the side last struck blinks outside its arc, with its table row and slider label, for 2.5 seconds': async ({ open }) => {
+    const page = await openPaused(open);
+    await hit(page, 2);
+    await expect(page.locator('.f-lasthit[data-last-hit="Aft"]')).toHaveCount(1);
+    await expect(page.locator('#facingRows tr').nth(2)).toHaveAttribute('data-last-hit', 'true');
+    await expect(page.locator('.facing-control').nth(2)).toHaveAttribute('data-last-hit', 'true');
+    await expect(page.locator('#facingRows tr').nth(0)).toHaveAttribute('data-last-hit', 'false');
+    await page.waitForTimeout(2700);
+    await step(page, 0.1);
+    await expect(page.locator('.f-lasthit')).toHaveCount(0);
+    await expect(page.locator('#facingRows tr').nth(2)).toHaveAttribute('data-last-hit', 'false');
+  },
 });

@@ -6,8 +6,8 @@
 <title>Torpedo Launch Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="../Shared/scope.css?v=20261103e">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="../Shared/scope.css?v=20261109">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="scope-page launch">
 
@@ -20,7 +20,7 @@
   <a class="brand" href="../index.html" aria-label="Back to demo selector"><img src="../brand/xelseor-emblem.png" alt="" width="64" height="64"><span title="Xelseor Mission Protocol Sim">XMPS</span></a>
   <div class="scan">
     <div class="title-pill">TORPEDO LAUNCH</div>
-    <div class="scan-caption">FORWARD TORPEDO LAUNCHER · 60° ACQUISITION ARC · MANUAL LEAD</div>
+    <div class="scan-caption" id="scanCaption">TPD1 · FORWARD TORPEDO LAUNCHER · 60° ACQUISITION ARC · MANUAL LEAD</div>
   </div>
   <div class="topright">
     <div class="clock"><small>STARDATE <span id="stardate"></span></small><b id="clock">00:00:00</b></div>
@@ -29,7 +29,7 @@
   </div>
 </header>
 
-<!-- Aim across the 60° arc, with the intercept bearing in yellow -->
+<!-- Aim across the 60° arc about the launcher's facing, with the intercept bearing in yellow -->
 <div class="aim-tape" id="aimTape">
   <small id="aimMode">MANUAL AIM</small>
   <div class="tape" aria-hidden="true">
@@ -37,11 +37,14 @@
   </div>
   <b id="aimValue">0.0°</b>
 </div>
+<!-- Critical damage to the targeting sensors: no guidance reticle -->
+<div id="targetingOffline" class="targeting-offline" data-testid="targeting-offline" role="status" hidden>TARGETING COMPUTER OFFLINE</div>
 
 <!-- Left: what is ready to launch -->
 <div class="col left" id="weaponCol">
   <section class="panel weapon-panel launcher" aria-label="Launcher">
-    <div class="thead"><h2>LAUNCHER</h2><small id="launchMode" class="control-mode">LOCAL LAUNCH</small></div>
+    <!-- The ship's launchers, TPD1 forward and TPD2 aft: the tube and rack below are the chosen launcher's, and the scope looks the way it faces -->
+    <div class="thead launcher-head"><div class="seg launcher-seg" id="launcherSeg" role="group" aria-label="Torpedo launcher"><button type="button" data-launcher="TPD1" title="TPD1 · forward torpedo launcher" aria-label="TPD1, forward launcher" aria-pressed="true">FWD</button><button type="button" data-launcher="TPD2" title="TPD2 · aft torpedo launcher" aria-label="TPD2, aft launcher" aria-pressed="false">AFT</button></div><small id="launchMode" class="control-mode">LOCAL LAUNCH</small></div>
     <div class="tube" id="tube" data-state="empty">
       <svg viewBox="0 0 240 64" class="tube-art" aria-hidden="true">
         <defs><clipPath id="boreClip"><rect x="12" y="16" width="216" height="32" rx="16"/></clipPath></defs>
@@ -64,7 +67,9 @@
     <dl class="rows">
       <div><dt>LOAD CYCLE</dt><dd id="loadCycle">—</dd></div>
       <div><dt>TORPEDO</dt><dd id="torpedoSpeed">—</dd></div>
+      <div><dt>WARHEAD RANGE</dt><dd id="warheadRange">—</dd></div>
     </dl>
+    <p id="launcherCritical" class="critical-note" data-testid="launcher-critical" role="status" hidden></p>
     <div class="thead sub"><h2>PREPARED</h2><small id="preparedCount">0 / 6</small></div>
     <div class="prepared" id="prepared"></div>
   </section>
@@ -81,6 +86,7 @@
       <div><small>INTERCEPT</small><b id="targetIntercept">—</b></div>
       <div><small>SOLUTION</small><b id="targetSolution">—</b></div>
     </div>
+    <button type="button" id="lockBtn" class="lock-btn" data-testid="lock-target">LOCK</button>
     <div id="shieldBlock" class="shield-block">
       <div class="shields" id="shieldDiagram" aria-label="Shield SEO per quadrant">
         <span class="qv f"><small>F</small><b id="q0">50</b></span>
@@ -102,8 +108,14 @@
         <p class="mnote" id="subsystemNote"></p>
       </div>
     </div>
+    <!-- A station's or settlement's shield (it has no hull) -->
+    <div id="placeShieldBlock" class="place-shield hull-stack" data-testid="place-shield" hidden>
+      <div class="hull-line"><small>SHIELD</small><b id="placeShieldValue">—</b></div>
+      <div class="bar hull-bar"><i id="placeShieldBar"></i></div>
+      <p class="mnote" id="placeShieldNote"></p>
+    </div>
   </section>
-  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP</div>
+  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP OR PLACE</div>
   <section class="panel zoom-panel" aria-label="Zoom">
     <div class="thead"><h2>ZOOM</h2><small id="zoomValue">1.0×</small></div>
     <div id="zoomSlider" class="vslider range-slider" aria-label="Scope zoom"></div>
@@ -188,11 +200,12 @@
 <script src="../Shared/console-ui.js?v=5"></script>
 <script src="../Shared/scene.js?v=20261103b"></script>
 <script src="../Shared/space-dust.js?v=20261103e"></script>
-<script src="../Shared/scope.js?v=20261103e"></script>
+<script src="../Shared/scope.js?v=20261109"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
-<script src="launch.js?v=20261103b"></script>
+<script src="launch.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

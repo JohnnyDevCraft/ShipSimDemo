@@ -6,7 +6,7 @@
 <title>Transporter Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="transporter">
 
@@ -110,6 +110,7 @@
 
 <!-- Left: what we are beaming, and from where -->
 <div class="col left">
+  <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
   <section class="panel targets" aria-label="Target scan">
     <div class="thead"><h2>TARGET SCAN</h2><small id="targetNote">01 · ACQUIRE</small></div>
     <div class="offline-screen" role="status" hidden>SYSTEM NOT AVAILABLE</div>
@@ -255,8 +256,9 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=4"></script>
-<script src="transporter.js?v=4"></script>
-<script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="transporter.js?v=20261109"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

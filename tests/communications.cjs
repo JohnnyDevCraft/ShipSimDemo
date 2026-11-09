@@ -24,13 +24,21 @@ run({
     const page = await open('/Communications/');
     const map = await page.locator('#map').boundingBox(), size = page.viewportSize();
     assert.deepEqual([map.x, map.y, map.width, map.height], [0, 0, size.width, size.height]);
-    await expect(page.locator('#txCount')).toHaveText('7');
-    await expect(page.locator('#transmissions .tx')).toHaveCount(7);
-    await page.locator('[data-filter="RF"]').click();
-    await expect(page.locator('#transmissions .tx')).toHaveCount(3);
-    for (const card of await page.locator('#transmissions .tx').all()) await expect(card).toHaveAttribute('data-medium', 'RF');
-    await page.locator('[data-filter="Subspace"]').click();
-    await expect(page.locator('#transmissions .tx')).toHaveCount(4);
+    // The seven sample detections and three network messages heard before the console opened.
+    await expect(page.locator('#txCount')).toHaveText('10');
+    await expect(page.locator('#transmissions .tx')).toHaveCount(10);
+    await expect(page.locator('#transmissions .tx[data-medium="RF"]')).toHaveCount(3);
+    // The live console's filters: distress calls, the network the array overhears, and hails to and from our ship.
+    await page.locator('[data-filter="distress"]').click();
+    await expect(page.locator('#transmissions .tx')).toHaveCount(2);
+    for (const card of await page.locator('#transmissions .tx').all()) await expect(card).toHaveAttribute('data-kind', 'distress');
+    await page.locator('[data-filter="ours"]').click();
+    await expect(page.locator('#transmissions .tx')).toHaveCount(1);
+    await expect(page.locator('#transmissions .tx b')).toHaveText('Ross Orbital Station');
+    await page.locator('[data-filter="network"]').click();
+    await expect(page.locator('#transmissions .tx')).toHaveCount(9);
+    await page.locator('[data-filter="all"]').click();
+    await expect(page.locator('#transmissions .tx')).toHaveCount(10);
     await expect(page.locator('#gridScale')).toHaveText(/^GRID \d/);
   },
   'a point-to-point transmission is drawn between the origin and destination its card names': async ({ open }) => {
@@ -54,7 +62,7 @@ run({
   'selecting a transmission shows it on the right; encrypted content stays hidden': async ({ open }) => {
     const page = await open('/Communications/');
     await expect(page.locator('#sigTitle')).toHaveText('Civil distress call');
-    await page.locator('#transmissions .tx', { hasText: 'Space Command' }).click();
+    await page.locator('#transmissions .tx', { hasText: 'to Patrol ship Resolute' }).click();
     await expect(page.locator('#sigTitle')).toHaveText('Encrypted fleet traffic');
     await expect(page.locator('#sigSecurity')).toHaveText('ENCRYPTED');
     await expect(page.locator('#sigOtherLabel')).toHaveText('DESTINATION');
@@ -94,14 +102,14 @@ run({
   'detections drop off after five minutes, and RF beyond the detection range is not heard': async ({ open }) => {
     const page = await open('/Communications/');
     await demo(page, () => page.locator('#detectSample').click());
-    await expect(page.locator('#txCount')).toHaveText('8');
+    await expect(page.locator('#txCount')).toHaveText('11');
     await demo(page, async () => {
       await page.locator('#menuDialog [data-field="rfRange"] [data-edit]').click();
       await keypadEnter(page.locator('#menuDialog .keypad'), '50000');
     });
-    await page.locator('[data-filter="RF"]').click();
-    await expect(page.locator('#transmissions .tx')).toHaveCount(1);
-    await expect(page.locator('#rangeNote')).toHaveText('RF range 50,000 KM · Subspace unlimited');
+    // The sample detected again is Kepler's RF beacon, 45,000 km off: both its detections are within 50,000 km.
+    await expect(page.locator('#transmissions .tx[data-medium="RF"]')).toHaveCount(2);
+    await expect(page.locator('#rangeNote')).toHaveText('RF range 50,000 KM · Subspace unlimited · our array Tx 3 LY · Rx 3 LY');
     await page.evaluate(() => CommsControl.set({ ageAll: 400000 }));
     await expect(page.locator('#txCount')).toHaveText('0');
   },
@@ -339,5 +347,166 @@ run({
     const route = await page.evaluate(() => CommsControl.route());
     assert.equal(route.open, true);
     assert.deepEqual(route.route.map(h => h.key), ['relay-ross-128', 'relay-sol']);
+  },
+  'Space Traffic: network messages listed with their kind, our organization\'s encrypted traffic DECRYPTED, another\'s unreadable': async ({ open }) => {
+    const page = await open('/Communications/');
+    const patrol = page.locator('#transmissions .tx[data-kind="patrol"]');
+    await expect(patrol.locator('.tx-top span')).toHaveText('10.0 SSC · PATROL REPORT');
+    await expect(patrol.locator('.tx-top em')).toHaveText('DECRYPTED');
+    await expect(patrol.locator('b')).toHaveText('Terran Space Command');
+    await expect(patrol.locator('small').first()).toHaveText(/^to TNS Resolute · Patrol report: Ross corridor clear/);
+    await patrol.click();
+    await expect(page.locator('#sigSecurity')).toHaveText('ENCRYPTED · OUR ORGANIZATION');
+    await expect(page.locator('#sigType')).toHaveText('Patrol report');
+    await expect(page.locator('#sigContent')).toHaveText(/^Patrol report: Ross corridor clear/);
+    const plan = page.locator('#transmissions .tx[data-kind="flight-plan"]');
+    await expect(plan.locator('.tx-top em')).toHaveText('ENCRYPTED');
+    await plan.click();
+    await expect(page.locator('#sigSecurity')).toHaveText('ENCRYPTED');
+    await expect(page.locator('#sigContent')).toHaveText('Encrypted transmission from Velari courier Ithis to Alpha Centauri Orbital Station on 16.0 SSC. Content not readable.');
+    // The stream: a warning, then messages to our ship (OURS) with their live names.
+    const names = [];
+    for (let i = 0; i < 13; i++) names.push((await page.evaluate(() => CommsControl.hearNext())).name);
+    assert.deepEqual(names, ['Arrival', 'Requisition', 'Docking clearance', 'Navigation warning', 'Distress call', 'Dispatch', 'Stand down', 'All clear', 'Delivery approved', 'Departure', 'Hail refused', 'Report', 'Delivery refused']);
+    await page.locator('[data-filter="ours"]').click();
+    await expect(page.locator('#transmissions .tx[data-kind="clearance"] .tx-top span')).toHaveText('SUBSPACE · DOCKING CLEARANCE');
+    await expect(page.locator('#transmissions .tx[data-kind="delivery-refused"]')).toHaveCount(1);
+    await expect(page.locator('#transmissions .tx[data-kind="refused"] small').first()).toHaveText('Ross · Direct · to TNS Discovery');
+    // A docking clearance is held in the chat with that station.
+    await page.locator('#frequenciesBtn').click();
+    await page.locator('#frequencyDialog [data-close]').click();
+    await page.evaluate(() => CommsControl.set({}));
+    await page.locator('#transmissions .tx[data-kind="clearance"]').click();
+    await page.locator('#contactBtn').click();
+    await page.locator('[data-comm-type="Unicast"]').click();
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commDetails')).toHaveText(/Docking clearance held$/);
+  },
+
+  'a distress call raises the banner: caller, GBEAR and distance, HAIL opens a chat, DISMISS until a fresh MAYDAY, gone at the all clear': async ({ open }) => {
+    const page = await open('/Communications/');
+    await expect(page.locator('#distressBanner')).toBeHidden();
+    await page.evaluate(() => CommsControl.hearTraffic({ kind: 'distress', fromName: 'Atlas Bulk Transport ABT-07', fromKey: 'ABT-07', system: 'Ross', text: 'MAYDAY, MAYDAY. ABT-07 held by a raider.' }));
+    await expect(page.locator('#distressBanner')).toBeVisible();
+    await expect(page.locator('#distressFrom')).toHaveText('Atlas Bulk Transport ABT-07 (ABT-07)');
+    await expect(page.locator('#distressWhere')).toHaveText(/^GBEAR [\d.,]+° · [\d.,]+ (KM|MKM|BKM|LY) · /);
+    await expect(page.locator('#distressText')).toHaveText('MAYDAY, MAYDAY. ABT-07 held by a raider.');
+    await page.locator('[data-filter="distress"]').click();
+    await expect(page.locator('#transmissions .tx[data-kind="distress"]').first()).toContainText('DISTRESS CALL');
+    await page.locator('#distressPlot').click();
+    await expect(page.locator('#notice')).toContainText("Navigation would plot a course to Atlas Bulk Transport ABT-07's position");
+    await page.locator('#distressHail').click();
+    await expect(page.locator('#commsDialog')).toBeVisible();
+    await expect(page.locator('#recipientInput')).toHaveValue('Atlas Bulk Transport ABT-07');
+    await expect(page.locator('#routeState')).toHaveText('DIRECT · IN REACH');
+    await page.locator('#commsDialog [data-close]').first().click();
+    await page.locator('#distressDismiss').click();
+    await expect(page.locator('#distressBanner')).toBeHidden();
+    // A repeat that is not a fresh MAYDAY stays dismissed; a fresh MAYDAY brings it back.
+    await page.evaluate(() => CommsControl.hearTraffic({ kind: 'distress', fromName: 'Atlas Bulk Transport ABT-07', fromKey: 'ABT-07', text: 'ABT-07 still waiting.' }));
+    await expect(page.locator('#distressBanner')).toBeHidden();
+    await page.evaluate(() => CommsControl.hearTraffic({ kind: 'distress', fromName: 'Atlas Bulk Transport ABT-07', fromKey: 'ABT-07', text: 'MAYDAY, MAYDAY. ABT-07 hull damaged.' }));
+    await expect(page.locator('#distressBanner')).toBeVisible();
+    await expect(page.locator('#distressText')).toHaveText('MAYDAY, MAYDAY. ABT-07 hull damaged.');
+    await page.evaluate(() => CommsControl.hearTraffic({ kind: 'all-clear', fromName: 'Atlas Bulk Transport ABT-07', fromKey: 'ABT-07', text: 'All clear.' }));
+    await expect(page.locator('#distressBanner')).toBeHidden();
+  },
+
+  'the chat\'s ROUTE goes back to the setup and keeps the conversation; the setup lists matching contacts to tap': async ({ open }) => {
+    const page = await open('/Communications/');
+    await page.locator('#commsBtn').click();
+    await page.locator('#newComm').click();
+    await page.locator('#recipientInput').click();
+    await typeKeys(page, '#commSetup', 'EARTH');
+    await page.locator('#commSetup .search-keys [data-key="DONE"]').click();
+    const chips = page.locator('#recipientMatches .match');
+    await expect(chips.first()).toHaveText(/^Earth/);
+    await page.locator('#recipientMatches [data-contact="Earth Orbital Station"]').click();
+    await expect(page.locator('#recipientInput')).toHaveValue('Earth Orbital Station');
+    await expect(page.locator('#recipientMatches [data-contact="Earth Orbital Station"]')).toHaveAttribute('aria-pressed', 'true');
+    // Earth is 11 LY from Ross: out of our 3 LY reach direct, so OPEN COMMUNICATION is refused.
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commStatus')).toHaveText(/^Out of reach\./);
+    await page.evaluate(() => document.querySelector('[data-array="10"]').click());
+    await expect(page.locator('#routeState')).toHaveText('OUT OF REACH');
+    for (const relay of ['relay-ross-128', 'relay-sol']) {
+      await page.locator('#addRelay').click();
+      await page.locator(`[data-relay="${relay}"]`).click();
+    }
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#conversation .bubble')).toHaveCount(4);
+    await page.locator('#editRoute').click();
+    await expect(page.locator('#commSetup')).toBeVisible();
+    await expect(page.locator('#saveComm')).toHaveText('BACK TO COMMUNICATION');
+    await page.locator('#clearRoute').click();
+    await page.locator('#addRelay').click();
+    await page.locator('[data-relay="relay-ross-128"]').click();
+    await page.locator('#addRelay').click();
+    await page.locator('[data-relay="relay-sol"]').click();
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#conversation .bubble')).toHaveCount(4);
+    // The reply was heard as a transmission to our ship.
+    await page.locator('#commsDialog [data-close]').first().click();
+    await page.locator('[data-filter="ours"]').click();
+    await expect(page.locator('#transmissions .tx[data-kind="reply"] .tx-top span')).toHaveText('SUBSPACE · HAIL REPLY');
+  },
+
+  'the communications array in contact settings: reach, power, health, ARRAY RELAY; off, the array hears nothing': async ({ open }) => {
+    const page = await open('/Communications/');
+    await page.locator('#contactSettingsBtn').click();
+    await expect(page.locator('#arrayName')).toHaveText('Terran Communications Array Mark I · slot COM-1');
+    await expect(page.locator('#arrayTx')).toHaveText('3 LY');
+    await expect(page.locator('#arrayRx')).toHaveText('3 LY');
+    await expect(page.locator('#arrayPower')).toHaveText('6 / 6 PU');
+    await expect(page.locator('#arrayHealth')).toHaveText('100 %');
+    await expect(page.locator('#arrayCritical')).toBeHidden();
+    await page.locator('#arrayRelay').click();
+    await expect(page.locator('#arrayRelay')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#arrayPower')).toHaveText('0 / 6 PU · OFF');
+    await page.locator('#contactDialog [data-close]').click();
+    await expect(page.locator('#state')).toHaveText('ARRAY OFFLINE');
+    await expect(page.locator('#monitorText')).toHaveText('ARRAY OFFLINE');
+    await expect(page.locator('#monitor')).toHaveClass(/off/);
+    await expect(page.locator('#rangeNote')).toContainText('· no power');
+    const before = (await state(page)).rows.length;
+    assert.equal(await page.evaluate(() => CommsControl.hearNext()), null, 'nothing is heard with the array off');
+    assert.equal((await state(page)).rows.length, before);
+    await page.locator('#contactSettingsBtn').click();
+    await page.locator('#arrayRelay').click();
+    await page.locator('#contactDialog [data-close]').click();
+    await expect(page.locator('#monitorText')).toHaveText('SUBSPACE LISTENING');
+    await expect(page.locator('#state')).toHaveText('BROADCAST 42.7 SSC');
+  },
+
+  'critical damage on the array: subspace range halved, no subspace (top bar, route, refused), no RF': async ({ open }) => {
+    const page = await open('/Communications/');
+    await page.evaluate(() => DemoCombat.set('comms', ['subspace-range-halved']));
+    await page.locator('#contactSettingsBtn').click();
+    await expect(page.locator('#arrayTx')).toHaveText('1.5 LY of 3');
+    await expect(page.locator('#arrayCritical')).toHaveText('CRITICAL: Subspace range halved');
+    await expect(page.locator('#arrayHealth')).toHaveText('45 %');
+    await page.locator('#contactDialog [data-close]').click();
+    await expect(page.locator('#rangeNote')).toContainText('Tx 1.5 LY · Rx 1.5 LY · CRITICAL: Subspace range halved');
+    await page.evaluate(() => DemoCombat.set('comms', ['no-subspace']));
+    await expect(page.locator('#state')).toHaveText('NO SUBSPACE');
+    await page.locator('#transmissions .tx', { hasText: 'Ross Orbital Station' }).click();
+    await page.locator('#contactBtn').click();
+    await expect(page.locator('#routeState')).toHaveText('NO SUBSPACE · CRITICAL DAMAGE');
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commStatus')).toHaveText('No subspace communications: the array has critical damage.');
+    assert.equal(await page.evaluate(() => CommsControl.hearNext()), null, 'no subspace traffic is heard');
+    await page.locator('#commsDialog [data-close]').first().click();
+    // No RF: RF detections are not heard and an RF communication is refused.
+    await page.evaluate(() => DemoCombat.set('comms', ['no-rf']));
+    await expect(page.locator('#transmissions .tx[data-medium="RF"]')).toHaveCount(0);
+    await expect(page.locator('#rangeNote')).toContainText('RF not heard');
+    await page.locator('#commsBtn').click();
+    await page.locator('#newComm').click();
+    await page.locator('[data-comm-medium="RF"]').click();
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commStatus')).toHaveText('No RF communications: the array has critical damage.');
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commChat')).toBeVisible();
   },
 });

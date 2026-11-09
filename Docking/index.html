@@ -6,7 +6,7 @@
 <title>Docking Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="docking">
 
@@ -89,12 +89,18 @@
     <dl class="rows">
       <div><dt>STATION</dt><dd id="stationRow">—</dd></div>
       <div><dt>PORT CONTACT</dt><dd id="contactRow">—</dd></div>
+      <div><dt>CLEARANCE</dt><dd id="clearanceRow">—</dd></div>
     </dl>
     <div class="group"><div class="ghead"><small>MOORINGS</small><b id="mooringCount">—</b></div><div class="lamps" id="mooringLamps"></div></div>
     <div class="group"><div class="ghead"><small>CLAMPS</small><b id="clampCount">—</b></div><div class="lamps" id="clampLamps"></div></div>
     <dl class="rows">
       <div><dt>GANGWAY</dt><dd id="gangwayRow">—</dd></div>
     </dl>
+    <div class="group station-repair" id="stationRepair" data-testid="station-repair" hidden>
+      <div class="ghead"><small>STATION REPAIR</small><b id="stationRepairState">—</b></div>
+      <ul class="repair-list" id="stationRepairList"></ul>
+      <small class="sub" id="stationRepairNote">The station's repair drones · not under the crew's control</small>
+    </div>
   </section>
 </div>
 
@@ -102,6 +108,7 @@
 <div class="col right">
   <section class="panel services" aria-label="Station services">
     <div class="thead"><h2>SERVICES</h2><small id="servicesState" class="chip">—</small></div>
+    <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
     <div class="service"><div class="ghead"><small>UMBILICAL</small><b id="umbilicalRow">—</b></div><div class="bar"><i id="umbilicalFill"></i></div></div>
     <div class="service"><div class="ghead"><small>FUEL</small><b id="fuelRow">—</b></div><div class="bar fuel-bar"><i id="fuelFill"></i></div><small class="sub" id="fuelSub">—</small></div>
     <div class="service"><div class="ghead"><small>STATION POWER</small><b id="powerRow">—</b></div><small class="sub" id="powerSub">—</small></div>
@@ -145,14 +152,18 @@
         <h3>SHIP</h3>
         <p class="mstatus" id="demoStatus"></p>
         <div class="mrow"><button type="button" id="demoDock">DOCK AT STATION</button><button type="button" id="demoUndock">UNDOCK NOW</button></div>
-        <button type="button" id="demoRelease" class="wide">STATION RELEASES THE SHIP</button>
-        <p class="mnote">Dock stands in for the Helm's auto dock: the ship closes on the berth and the station runs out its moorings and clamps. The station's release stands in for the comm officer's request and the station's reply; the station holds it until the umbilical is retracted and the gangway sealed. Undock now puts the ship back in free flight at once.</p>
+        <div class="mrow"><button type="button" id="demoRelease">STATION RELEASES THE SHIP</button><button type="button" id="demoClearance">STATION GRANTS CLEARANCE</button></div>
+        <p class="mnote">Dock stands in for the Helm's Auto Dock (it needs clearance while stations require it); clearance and release stand in for hails from Communications. The station holds the release until the umbilical is retracted and the gangway sealed; then the ship waits for Auto Undock. Undock now puts the ship in free flight at once.</p>
         <div class="field" data-field="fuel"><div><small>FUEL IN THE TANK</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
       </div>
       <div class="msection">
         <h3>STATION</h3>
-        <label class="switch"><input type="checkbox" id="demoStationFuel"><span></span>Fuel available at this berth</label>
-        <label class="switch"><input type="checkbox" id="demoStationPower"><span></span>Power available at this berth</label>
+        <div class="switch-grid">
+          <label class="switch"><input type="checkbox" id="demoStationFuel"><span></span>Fuel at this berth</label>
+          <label class="switch"><input type="checkbox" id="demoStationPower"><span></span>Power at this berth</label>
+          <label class="switch"><input type="checkbox" id="demoClearanceRequired"><span></span>Clearance required</label>
+          <label class="switch"><input type="checkbox" id="demoStationRepair"><span></span>Repair drones while docked</label>
+        </div>
         <div class="field" data-field="approval"><div><small>DOCK MASTER REPLY TIME</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
       </div>
       <p class="mnote" data-error role="alert"></p>
@@ -161,8 +172,9 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=6"></script>
-<script src="docking.js?v=3"></script>
-<script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="docking.js?v=20261109"></script>
+<script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

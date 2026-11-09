@@ -147,3 +147,17 @@ body.shields {
 .shot-trace { stroke: #ff7a85; stroke-width: 3; stroke-dasharray: 10 6; }
 .facing-table .threat { margin-left: 0.35rem; font-style: normal; font-size: 0.6rem; color: #ff6b78; letter-spacing: 0.04em; }
 .ruler { visibility: hidden; }
+
+/* Critical damage and the last hit (Combat, Beta9; the live console's look). */
+.crit-banner { flex: none; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 0.5rem; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.crit-badge { display: inline-block; margin: 0 0 0 0.3rem; padding: 0 0.35rem; border: 1px solid var(--red); border-radius: 3px; color: #ffb3b3; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.crit-badge[hidden] { display: none; }
+[data-level="disabled"] { --tone: #a24a58; }
+.f-arc.disabled { stroke-dasharray: 3 7; opacity: 0.9; }
+.f-lasthit { fill: none; stroke: #ff4f5e; stroke-width: 14; stroke-linecap: round; filter: drop-shadow(0 0 10px #ff4f5e); }
+.facing-table tr[data-last-hit="true"] th, .facing-control[data-last-hit="true"] small { color: #ff6b78; animation: shields-hit-blink 0.5s steps(2, jump-none) infinite; }
+@keyframes shields-hit-blink { 0% { opacity: 1; } 100% { opacity: 0.3; } }
+.seo-pair small { white-space: nowrap; }
+.seo-pair .crit-badge { font-size: 0.56rem; vertical-align: 0.05em; }

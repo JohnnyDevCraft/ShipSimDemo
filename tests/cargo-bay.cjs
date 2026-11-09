@@ -138,4 +138,38 @@ run({
     assert.equal(state.request, null);
     assert.equal(state.orders.status, 'active');
   },
+  'the hold: its size, the mass aboard with troops, the room left (red when full) and the troops with no manifest': async ({ open }) => {
+    const page = await open('/CargoBay/');
+    // Four crates aboard: 1,830 + 420 + 2,400 + 310 kg.
+    await expect(page.locator('#holdCapacity')).toHaveText('12,000 KG');
+    await expect(page.locator('#holdAboard')).toHaveText('4,960 KG');
+    await expect(page.locator('#holdRoom')).toHaveText('7,040 KG');
+    await expect(page.locator('#holdTroops')).toHaveText('0');
+    await expect(page.locator('#troopRow')).toBeHidden();
+    await demo(page, async () => {
+      await page.locator('[data-troops="20"]').click();
+      await page.locator('[data-hold="6000"]').click();
+      await expect(page.locator('[data-hold="6000"]')).toHaveAttribute('aria-pressed', 'true');
+    });
+    await expect(page.locator('#holdTroops')).toHaveText('20');
+    await expect(page.locator('#troopRow')).toHaveText('20 TROOPS IN THE HOLD · soldiers, no manifest');
+    await expect(page.locator('#holdAboard')).toHaveText('6,960 KG');
+    await expect(page.locator('#holdRoom')).toHaveText('0 KG');
+    await expect(page.locator('#holdRoom')).toHaveClass(/bad/);
+    await demo(page, () => page.locator('[data-hold="0"]').click());
+    await expect(page.locator('#holdCapacity')).toHaveText('NO LIMIT SET');
+    await expect(page.locator('#holdRoom')).toHaveText('—');
+  },
+  'critical damage on the transporter shows as a red banner over the hold': async ({ open }) => {
+    const page = await open('/CargoBay/');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('transporter', ['buffer-halved', 'range-halved']));
+    await expect(page.locator('#criticalBanner')).toBeVisible();
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Transporter: Pattern buffer halved; Range halved');
+    // From the menu, as on every console.
+    await page.locator('#menuBtn').click();
+    await page.locator('#openCritical').click();
+    await page.locator('#criticalClear').click();
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+  },
 });

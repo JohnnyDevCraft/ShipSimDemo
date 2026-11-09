@@ -6,7 +6,7 @@
 <title>Helm Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/game-pad.css?v=20261103f">
-<link rel="stylesheet" href="helm.css?v=20261103g">
+<link rel="stylesheet" href="helm.css?v=20261109">
 </head>
 <body>
 <canvas id="map" aria-label="Scanner map. Select a contact for its course and distance."></canvas>
@@ -42,6 +42,7 @@
     <button type="button" id="engage" class="primary">ENGAGE WARP</button>
   </div>
   <div class="speed"><b id="speed">0 km/s</b><small id="engineNote"></small></div>
+  <small id="driveLimit" class="drive-limit" data-testid="drive-limit">—</small>
 </section>
 
 <section class="panel heading octa" aria-label="Heading">
@@ -59,6 +60,7 @@
 </div>
 
 <div class="col right">
+<div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
 <section id="target" class="panel target" aria-label="Selected target">
   <div class="thead"><h2 id="targetTitle">SELECTED TARGET</h2><button type="button" id="targetCollapse" class="icon-btn small" aria-label="Hide target details"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div class="tname"><i id="targetDot"></i><div><h3 id="targetName">Unset</h3><p id="targetKind"></p><p id="targetRange"></p></div></div>
@@ -163,6 +165,7 @@
       <div data-ready="coils"><dt>COILS</dt><dd id="jumpCoils">—</dd></div>
       <div data-ready="impulse"><dt>IMPULSE</dt><dd id="jumpImpulse">—</dd></div>
       <div data-ready="field"><dt>EXTERNAL FIELD</dt><dd id="jumpField">—</dd></div>
+      <div data-ready="heading"><dt>HEADING</dt><dd id="jumpHeading">—</dd></div>
       <div data-ready="clear"><dt>STATION CLEARANCE</dt><dd id="jumpClear">—</dd></div>
       <div><dt>TIME AT WARP</dt><dd id="jumpTime">—</dd></div>
     </dl>
@@ -212,7 +215,7 @@
   <div id="demoControls" class="demo-controls" hidden>
     <div class="msection">
       <h3>WEAPONS FIRE</h3>
-      <div class="mrow"><button type="button" data-demo-enemy aria-pressed="false">ADD ENEMY SHIP</button></div>
+      <div class="mrow"><button type="button" data-demo-enemy aria-pressed="false">ADD ENEMY SHIP</button><button type="button" data-demo-wreck disabled>DISABLE ENEMY SHIP</button></div>
       <p class="mnote">Stand-in fire on the scanners and scopes: a hostile drill ship fires on us (red), we fire back (cyan) and two other ships exchange fire (amber). A volley also comes every 15 seconds.</p>
     </div>
     <div class="msection">
@@ -242,10 +245,11 @@
 <script src="safety.js?v=2"></script>
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
-<script src="../Shared/demo-battle.js?v=20261103c"></script>
+<script src="../Shared/demo-battle.js?v=20261109"></script>
 <script src="../Shared/game-pad.js?v=20261103f"></script>
-<script src="helm.js?v=20261103g"></script>
+<script src="helm.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

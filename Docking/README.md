@@ -20,3 +20,10 @@ Files: `index.html`, `styles.css` and `docking.js`, minified with `../Shared/con
 - The gangway pressurizes in 8 s and seals in 4 s, only while secured.
 - Release is the station's. It holds it until our umbilical is retracted and the gangway sealed (and logs why), then opens the clamps (0.5 s each) and reels in the moorings (0.75 s each); the ship backs out of the berth in 4 s and is in free flight.
 - This page does not share state with the Helm, Reactor, Battery or Power Distribution yet: docking, fuel and station power here are its own.
+
+## Since Beta9 (MissionProtocol 1.0.0-Beta10)
+
+- **Clearance** in the Berth panel: Required · hail the station (free flight), Granted · Earth Orbital Station, Used for this berth (docked), or Not required. Dock (the Helm's Auto Dock) is refused without clearance while stations require it. Demo controls: the station grants clearance (standing in for a hail from Communications) and whether stations require it.
+- **Released:** after the station opens the clamps and reels in the moorings the ship waits, RELEASED, until the Helm's Auto Undock backs it clear (Demo controls → Auto Undock).
+- **Station repair** in the Berth panel while secured: the station's repair drones (×2) and each system they are repairing, with units and %/s. Read-only; Demo controls switch it off. Sample data.
+- **Critical banner** over Services, as on the live console (no critical effect is defined for the docking port, fuel tank or life support, so it stays hidden).

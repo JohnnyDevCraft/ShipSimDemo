@@ -28,7 +28,7 @@ for (const [width, height] of sizes)
     const overlap = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
     const names = Object.keys(boxes);
     for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) assert.ok(!overlap(boxes[names[i]], boxes[names[j]]), `${names[i]} and ${names[j]} do not overlap`);
-    for (const control of ['#enginesBtn', '#shieldsCmd', '#weaponsCmd', '#ownShields', '#flightStick', '#thrustBtn', '#stopBtn', '#fireBtn', '#torpedoBtn', '#shotPower', '#torpedoState', '#srs', '#srsZoom', '#menuBtn', '#state'])
+    for (const control of ['#enginesBtn', '#shieldsCmd', '#weaponsCmd', '#ownShields', '#flightStick', '#thrustBtn', '#stopBtn', '#fireBtn', '#torpedoBtn', '#shotPower', '#torpedoState', '#srs', '#menuBtn', '#state'])
       await expect(page.locator(control)).toBeInViewport({ ratio: 1 });
     const clipped = await page.evaluate(() => [...document.querySelectorAll('.panel')].filter(panel => !panel.hidden && panel.scrollHeight > panel.clientHeight + 1).map(panel => panel.className));
     assert.deepEqual(clipped, [], 'no panel has content cut off');

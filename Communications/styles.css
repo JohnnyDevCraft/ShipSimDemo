@@ -212,4 +212,44 @@ body.comms { background: radial-gradient(ellipse at 50% 50%, rgba(20, 60, 110, 0
 #relayStatus { color: #ff6e78; }
 /* The setup scrolls when the route makes it longer than the overlay. */
 #commSetup { min-height: 0; }
-#setupFields { overflow-y: auto; min-height: 0; padding-right: 0.2rem; }
+#setupFields { overflow-y: auto; min-height: 0; padding-right: 0.2rem; padding-bottom: 0.2rem; }
+
+/* ── From the live 1.0.0-Beta10 console ───────────────────────────────────────────────────────── */
+/* Space Traffic: four filters, network kinds, our organization's decrypted traffic, and the distress banner. */
+.seg.four button { font-size: 0.66rem; letter-spacing: 0.04em; padding-inline: 0.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx[data-kind="distress"] { border-color: var(--danger, #ff4d4d); box-shadow: inset 3px 0 0 var(--danger, #ff4d4d); }
+.tx[data-kind="refused"] { --tone: var(--amber); }
+.tx[data-kind="clearance"], .tx[data-kind="delivery-approved"] { --tone: var(--green); }
+.tx[data-kind="delivery-refused"] { --tone: var(--amber); }
+.tx[data-encrypted="true"] b { opacity: .85; }
+.monitor.off { color: var(--muted); }
+.monitor.off i { background: var(--muted); box-shadow: none; animation: none; }
+.distress-banner {
+  position: fixed; left: 50%; top: calc(5.2rem + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 30;
+  width: min(40rem, calc(100vw - var(--left-w) - var(--right-w) - 4rem)); padding: .8rem 1rem; border-radius: .6rem;
+  background: color-mix(in srgb, #3a0608 88%, transparent); border: 1px solid var(--danger, #ff4d4d);
+  box-shadow: 0 0 1.6rem color-mix(in srgb, var(--danger, #ff4d4d) 45%, transparent); color: #ffe9e9;
+  animation: distress-pulse 1.6s ease-in-out infinite;
+}
+.distress-banner[hidden] { display: none; }
+.distress-head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.distress-head i { width: .7rem; height: .7rem; border-radius: 50%; background: var(--danger, #ff4d4d); align-self: center; }
+.distress-head b { letter-spacing: .14em; color: var(--danger, #ff6b6b); }
+.distress-head span { font-weight: 700; }
+.distress-head small { margin-left: auto; opacity: .85; }
+.distress-banner p { margin: .45rem 0 .6rem; font-size: .9rem; line-height: 1.35; }
+.distress-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.distress-actions button { flex: 1 1 8rem; }
+@keyframes distress-pulse { 50% { box-shadow: 0 0 2.4rem color-mix(in srgb, var(--danger, #ff4d4d) 70%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .distress-banner { animation: none; } }
+/* The chat's ROUTE button beside SEND, the setup's contact matches, and the array in contact settings. */
+.composer { grid-template-columns: 1fr auto auto; }
+.recipient-matches { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.recipient-matches .match { padding: 0.4rem 0.7rem; font-size: 0.72rem; letter-spacing: 0.04em; text-align: left; }
+.recipient-matches .match.active { border-color: var(--cyan); background: rgba(30, 90, 160, 0.45); }
+.recipient-matches .mnote { margin: 0; }
+.array-section { display: grid; gap: 0.5rem; margin-top: 0.6rem; }
+.array-section h3 { margin: 0; }
+.array-section .mnote { margin: 0; }
+.array-critical { margin: 0; color: #ff6e78; }
+.array-critical:empty { display: none; }

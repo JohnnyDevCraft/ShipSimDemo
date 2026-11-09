@@ -20,3 +20,4 @@ Files: `index.html`, `styles.css` and `battery.js`, minified with `../Shared/con
 - With Bus Power on, the battery covers whatever the reactor cannot supply, down to the reserve; with it off, any shortfall goes unmet.
 - The umbilical attaches ten seconds after docking. Power sync needs it; stopping power sync takes ten seconds. In the demo, power sync must be stopped before undocking.
 - This page does not share state with Reactor Control: its reactor, ship load and station are demo stand-ins.
+- **Critical damage (MissionProtocol 1.0.0-Beta10, as the live console):** set from Menu → Critical damage. A red banner at the top of the left column names the battery's effects. A battery that cannot recharge takes no charge and Recharge is disabled (its title says why); one that cannot supply gives the bus nothing, so the shortfall goes unmet.

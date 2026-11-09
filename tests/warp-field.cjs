@@ -177,6 +177,42 @@ run({
     assert.equal(now.ships.length, 2);
   },
 
+  'critical damage on the warp drive shows the banner; max warp halved rescales the Warp Limit gauge and says HALVED': async ({ open }) => {
+    const page = await open('/WarpField/');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('warp', ['max-warp-halved', 'coil-charge-slowed']));
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Warp drive: Maximum warp halved; Coil charge takes six times as long');
+    await expect(page.locator('#caption')).toHaveText('WARP DRIVE · MARK I · 140 PU · MAX WARP 3 (HALVED) · DISTANCES IN M');
+    await expect(page.locator('#capValue')).toHaveText('3.0');
+    await expect(page.locator('#capNote')).toHaveText('of 3 · HALVED · no limit');
+    await expect(page.locator('#capNote')).toHaveClass(/crit/);
+    await expect(page.locator('#limitScale span')).toHaveText(['0', '1', '2', '3']);
+    assert.equal((await state(page)).cap, 3);
+    // Coil charging is the Helm's and not simulated here: the slowed charge shows in Diagnostics.
+    await page.locator('.dock [data-open="diagnosticsDialog"]').click();
+    await expect(page.locator('#diagnostics')).toContainText('six times as long (critical)');
+    await expect(page.locator('#diagnostics div', { has: page.locator('dt', { hasText: 'CRITICAL DAMAGE' }) }).locator('dd')).toHaveText('Maximum warp halved; Coil charge takes six times as long');
+    await page.locator('#diagnosticsDialog [data-close]').click();
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await expect(page.locator('#capNote')).toHaveText('of 6 · no limit');
+  },
+  'hostile ships show red and wrecks dim, marked by name on the field and in the Ships list': async ({ open }) => {
+    const page = await open('/WarpField/');
+    await page.locator('#menuBtn').click();
+    await page.locator('#openDemoControls').click();
+    await page.locator('#addHostile').click();
+    await page.locator('#addWreck').click();
+    await page.locator('#menuDialog [data-close]').last().click();
+    await expect(page.locator('.ship.hostile')).toHaveCount(1);
+    await expect(page.locator('.ship.wreck')).toHaveCount(1);
+    await expect(page.locator('.ship.hostile .s-name')).toHaveText('Corsair Black Pearl · HOSTILE');
+    await expect(page.locator('.ship.wreck .s-name')).toHaveText('Freighter Halcyon · WRECK');
+    await page.locator('#shipsBtn').click();
+    await expect(page.locator('.ship-row.hostile b')).toHaveText('Corsair Black Pearl · HOSTILE');
+    await expect(page.locator('.ship-row.wreck b')).toHaveText('Freighter Halcyon · WRECK');
+    await expect(page.locator('.ship-row:not(.hostile):not(.wreck)')).toHaveCount(2);
+  },
   'ships lie at their own headings, and the field must reach the hull\'s far corner': async ({ open }) => {
     const page = await open('/WarpField/');
     await page.evaluate(() => WarpFieldControl.ships([{ name: 'Across', bearing: 90, distance: 200, length: 100, heading: 0 }, { name: 'Along', bearing: 90, distance: 200, length: 100, heading: 90 }]));

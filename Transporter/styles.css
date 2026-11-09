@@ -224,3 +224,15 @@ body.transporter {
 .r-pick-detail { fill: var(--pick); font-size: 16px; letter-spacing: 1.5px; paint-order: stroke; stroke: rgba(2, 10, 20, 0.85); stroke-width: 4px; }
 @keyframes pick-pulse { from { transform: scale(1); opacity: 0.9; } to { transform: scale(2.6); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .r-pick-pulse { animation: none; opacity: 0; } }
+
+/* Combat (Beta9; the live console's look): critical damage, troops in the target list, shielded places */
+.crit-banner { flex: none; width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 0.5rem; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.target-item .troop-tag { display: inline-block; padding: 0 0.3rem; border: 1px solid var(--amber); border-radius: 3px; color: var(--amber); font-style: normal; font-size: 0.62rem; letter-spacing: 0.08em; vertical-align: 0.08em; }
+.target-item.troop small { color: var(--green); }
+.target-item.out-of-action small { color: #ff8f9b; font-weight: 600; }
+.target-item.out-of-action .troop-tag { border-color: var(--red); color: #ff8f9b; }
+.place .shield-tag { font-style: normal; font-weight: 600; letter-spacing: 0.08em; color: #ff8f9b; }
+.place.shielded { border-color: rgba(255, 79, 79, 0.55); }
+.range-row.shielded em { color: #ff8f9b; }

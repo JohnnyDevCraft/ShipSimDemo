@@ -6,7 +6,7 @@
 <title>EPW Control · Phase Cannon · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="../Shared/scope.css?v=20261103e">
+<link rel="stylesheet" href="../Shared/scope.css?v=20261109">
 <link rel="stylesheet" href="../Shared/energy-weapon.css?v=1">
 </head>
 <body class="scope-page energy" data-weapon="cannon">
@@ -35,6 +35,8 @@
   <div class="tape" aria-hidden="true"><i id="leadMarker" class="lead" hidden></i><i id="aimMarker" class="mark"></i></div>
   <b id="aimValue">0.0°</b>
 </div>
+<!-- Critical damage to the targeting sensors: no guidance reticle -->
+<div id="targetingOffline" class="targeting-offline" data-testid="targeting-offline" role="status" hidden>TARGETING COMPUTER OFFLINE</div>
 
 <!-- Left: the weapon: shot power, charge, arm and fire -->
 <div class="col left" id="weaponCol">
@@ -54,6 +56,7 @@
       <div><dt>LAST SHOT</dt><dd id="lastShot">None</dd></div>
       <div><dt>SHOTS FIRED</dt><dd id="shotsFired">0</dd></div>
     </dl>
+    <p id="weaponCritical" class="critical-note" data-testid="weapon-critical" role="status" hidden></p>
     <div class="fire-row"><button type="button" id="armBtn">ARM</button><button type="button" id="fireBtn" class="danger fire">FIRE PULSE</button></div>
   </section>
 </div>
@@ -69,6 +72,7 @@
       <div><small>INTERCEPT</small><b id="targetIntercept">—</b></div>
       <div><small>SOLUTION</small><b id="targetSolution">—</b></div>
     </div>
+    <button type="button" id="lockBtn" class="lock-btn" data-testid="lock-target">LOCK</button>
     <div id="shieldBlock" class="shield-block">
       <div class="shields" id="shieldDiagram" aria-label="Shield SEO per quadrant">
         <span class="qv f"><small>F</small><b id="q0">50</b></span>
@@ -90,8 +94,14 @@
         <p class="mnote" id="subsystemNote"></p>
       </div>
     </div>
+    <!-- A station's or settlement's shield (it has no hull) -->
+    <div id="placeShieldBlock" class="place-shield hull-stack" data-testid="place-shield" hidden>
+      <div class="hull-line"><small>SHIELD</small><b id="placeShieldValue">—</b></div>
+      <div class="bar hull-bar"><i id="placeShieldBar"></i></div>
+      <p class="mnote" id="placeShieldNote"></p>
+    </div>
   </section>
-  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP</div>
+  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP OR PLACE</div>
   <section class="panel zoom-panel" aria-label="Zoom">
     <div class="thead"><h2>ZOOM</h2><small id="zoomValue">1.0×</small></div>
     <div id="zoomSlider" class="vslider range-slider" aria-label="Scope zoom"></div>
@@ -121,6 +131,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
+    <button type="button" id="openWeapons"><b>Phase cannons</b><span>Each phase cannon: charge, charge rate, fire power, damage, arc, range, critical damage and power</span></button>
     <button type="button" id="openDemoControls"><b>Demo controls</b><span>Ships, supply and charge times, damage, pulses and chambers, and the bridge's aim and fire</span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>One training ship, an empty charge and the default settings</span></button>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
@@ -179,16 +190,21 @@
       <p class="mnote" data-error role="alert"></p>
     </div>
   </div>
+  <!-- After the demo controls: the demo form uses the dialog's first .fields-view -->
+  <div id="weaponsView" hidden>
+    <div class="fields-view weapons-list" id="weaponsList"></div>
+  </div>
 </dialog>
 
 <script src="../Shared/console-ui.js?v=5"></script>
 <script src="../Shared/scene.js?v=20261103b"></script>
 <script src="../Shared/space-dust.js?v=20261103e"></script>
-<script src="../Shared/scope.js?v=20261103e"></script>
+<script src="../Shared/scope.js?v=20261109"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
-<script src="../Shared/energy-weapon.js?v=20261103b"></script>
+<script src="../Shared/energy-weapon.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

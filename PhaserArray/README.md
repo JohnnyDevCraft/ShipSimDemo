@@ -21,3 +21,7 @@ On the targeting scope (`../Shared/scope.js`) the four ships are contacts beside
 - Firing needs the array armed, local fire control, no beam already firing and the capacitor charged to the shot power, which the shot spends.
 - The beam hits at once and lasts one second, following the aim. Each moment it damages the first ship along it, out to 100 km: full damage (60 WED, 60 WKD a second at 100% shot power) to 50 km, falling to a tenth at 100 km. Shield and hull hits work as for torpedoes.
 - The intercept is the ship's present bearing, within 100 km.
+
+## Combat (as the live console in MissionProtocol 1.0.0-Beta9/Beta10)
+
+As EPW Control (see `../PhaseCannon/README.md`): the capacitor is the phaser array EBW1; `range-halved` halves the beam's reach to 50 km and marks BEAM "(halved)"; the targeting computer offline pill; LOCK (a beam fired at the lock follows the locked target); stations and settlements with their shields; hostile and wrecked ships; the shot split in LAST SHOT and History; Menu → Phaser arrays.

@@ -218,4 +218,61 @@ run({
     await expect(page.locator('#destName')).toHaveText('No destination');
     await expect(page.locator('#navSource')).toHaveText('NO COURSE');
   },
+  'hostile ships are red on the scope and the scanners, with HOSTILE over a heavier bracket; a wreck is grey, dashed and WRECK': async ({ open }) => {
+    const page = await open('/ViewScreen/?models=0');
+    const bracket = name => page.evaluate(n => ViewScreen.hud().brackets.find(b => b.name === n) || null, name);
+    await expect.poll(() => bracket('Corsair Vex')).toMatchObject({ mark: 'hostile', color: '#ff5a64', lineWidth: 2, dashed: false });
+    assert.equal((await bracket('TSC Valiant')).mark, '');
+    // A raider's label (whichever one has room among the ships' labels) reads HOSTILE · distance.
+    await page.evaluate(() => ViewScreenSettings.write({ labels: { stars: false, planets: false, starbases: false, settlements: false, anomalies: false } }));
+    await expect.poll(() => page.evaluate(() => ViewScreen.hud().labels.find(l => l.name.startsWith('Corsair'))?.sub ?? '')).toMatch(/^HOSTILE · /);
+    await expect.poll(() => page.evaluate(() => ViewScreen.scanner('srs').contacts.find(c => c.name === 'Corsair Vex')?.mark)).toBe('hostile');
+    await demo(page, () => page.locator('#demoTarget').selectOption('Sol|Corsair Vex'));
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE');
+    await demo(page, () => page.locator('[data-demo-enemy]').click()); // the duel's enemy takes the engagement's place
+    await demo(page, () => page.locator('[data-demo-wreck]').click()); // a wreck stops where it is
+    await page.evaluate(() => { // the tactical officer turns the camera onto it
+      const pose = ViewScreen.state().pose, wreck = NavWorld.worldObjects().find(o => o.name === 'Black Pearl');
+      const bearing = (Math.atan2(wreck.x - pose.x, wreck.y - pose.y) * 180) / Math.PI;
+      ViewScreenSettings.write({ camera: ((bearing - pose.heading) % 360 + 360) % 360 });
+    });
+    await expect.poll(() => bracket('Black Pearl')).toMatchObject({ mark: 'wreck', color: '#7d8a96', dashed: true });
+    await expect.poll(() => page.evaluate(() => ViewScreen.scanner('srs').contacts.find(c => c.name === 'Black Pearl')?.mark)).toBe('wreck');
+    await demo(page, () => page.locator('#demoTarget').selectOption('Sol|Black Pearl'));
+    await expect(page.locator('#targetKind')).toHaveText('WRECK');
+  },
+  'a raised station shield is a bubble with SHIELD UP, a ring on the scanners and the target\'s subtitle; inside it the screen says so': async ({ open }) => {
+    const page = await open('/ViewScreen/?models=0');
+    const helm = await open('/ViewScreen/?models=0');
+    const shield = () => page.evaluate(() => ViewScreen.hud().shields.find(s => s.name === 'Earth Orbital Station')?.text ?? null);
+    await expect.poll(shield).toBe('SHIELD UP 100%'); // ahead of the stand-in, 93,000 km off
+    await demo(page, () => page.locator('#demoTarget').selectOption('Sol|Earth Orbital Station'));
+    await expect(page.locator('#targetSub')).toHaveText('Radius 5 km · SHIELD UP 100%');
+    const station = await page.evaluate(() => NavWorld.worldObjects().find(o => o.name === 'Earth Orbital Station'));
+    await page.evaluate(() => ViewScreenSettings.write({ srs: '100-km' }));
+    await report(helm, { x: station.x, y: station.y + 50, bearing: 180, course: 180 });
+    await expect.poll(() => page.evaluate(() => ViewScreen.scanner('srs').shields.map(s => s.name))).toContain('Earth Orbital Station');
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', true, 5000));
+    await expect.poll(shield).toBe('SHIELD UP 50%');
+    await report(helm, { x: station.x, y: station.y + 3, bearing: 180, course: 180 });
+    await expect.poll(() => page.evaluate(() => ViewScreen.hud().inside)).toBe('INSIDE EARTH ORBITAL STATION SHIELD · SHIELD UP 50%');
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', true, 0)); // drained: not drawn here
+    await expect.poll(() => page.evaluate(() => ViewScreen.hud().inside)).toBe(null);
+    await expect(page.locator('#targetSub')).toHaveText('Radius 5 km');
+  },
+  'the scanners show the sensors\' reach as a dashed ring, halved by critical damage, and the short range scanner is blind at warp': async ({ open }) => {
+    const page = await open('/ViewScreen/?models=0');
+    const helm = await open('/ViewScreen/?models=0');
+    await expect.poll(() => page.evaluate(() => ViewScreen.scanner('lrs')?.reachPx)).toBeGreaterThan(0);
+    const lrs = await page.evaluate(() => ViewScreen.scanner('lrs'));
+    assert.ok(Math.abs(lrs.reachPx - lrs.r / 10) < 0.5, '3 LY on a 30 LY scanner');
+    await page.evaluate(() => DemoCombat.set('lrs', ['range-halved']));
+    await expect.poll(() => page.evaluate(() => { const s = ViewScreen.scanner('lrs'); return Math.round((s.reachPx / s.r) * 1000); })).toBe(50);
+    await page.evaluate(() => DemoCombat.set('srs', ['range-halved']));
+    await expect.poll(() => page.evaluate(() => { const s = ViewScreen.scanner('srs'); return Math.round((s.reachPx / s.r) * 100); })).toBe(50);
+    assert.ok((await page.evaluate(() => ViewScreen.scanner('srs').contacts.some(c => c.name === 'Corsair Vex'))), 'ships within reach still show');
+    await report(helm, { speedKmS: 299792.458 * 2, atWarp: true, warpFactor: 1.2 });
+    await expect.poll(() => page.evaluate(() => ViewScreen.scanner('srs').why)).toBe('BLIND AT WARP');
+    assert.equal(await page.evaluate(() => ViewScreen.scanner('srs').contacts.filter(c => c.mark !== undefined && NavWorld.worldObjects().some(o => o.name === c.name && o.kind === 'ship')).length), 0, 'no ships on the short range scanner at warp');
+  },
 });

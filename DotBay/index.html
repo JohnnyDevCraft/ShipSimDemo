@@ -6,7 +6,7 @@
 <title>DOT Bay Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="dotbay">
 
@@ -48,6 +48,7 @@
       <div><dt>DEPLOYED</dt><dd id="deployedCount">—</dd></div>
       <div><dt>TRANSPORTER</dt><dd id="transporterRow">—</dd></div>
     </dl>
+    <div class="crits bay-crits" id="bayCritical" data-testid="bay-critical" aria-label="The bay's critical damage" hidden></div>
   </section>
   <section class="panel selected-dot" id="dotPanel" aria-label="Selected DOT">
     <div class="thead"><h2 id="dotTitle">DOT 1</h2><small id="dotState" class="chip">—</small></div>
@@ -61,6 +62,12 @@
 
 <!-- Right: the ship's components -->
 <div class="col right">
+  <!-- A docked ship's station drones (Combat CL-B9-8): the station's, twice as fast, not under the crew's control — no controls here. -->
+  <section class="panel station-drones" id="stationPanel" data-testid="station-drones" aria-label="Station repair drones" hidden>
+    <div class="thead"><h2>STATION DRONES</h2><small id="stationChip" class="chip">—</small></div>
+    <p class="snote" id="stationNote">—</p>
+    <ul class="station-list" id="stationList"></ul>
+  </section>
   <section class="panel components" aria-label="Ship components">
     <div class="thead"><h2>COMPONENTS</h2><small id="componentsChip" class="chip">—</small></div>
     <ul class="component-list" id="componentList"></ul>
@@ -114,6 +121,10 @@
         <p class="mnote">Stands in for combat damage, faults and wear.</p>
       </div>
       <div class="msection">
+        <h3>STATION</h3>
+        <label class="switch"><input type="checkbox" id="demoStation"><span></span>Docked at Earth Orbital Station: its repair drones at work</label>
+      </div>
+      <div class="msection">
         <h3>DEMO CLOCK</h3>
         <div class="seg" role="group" aria-label="Demo clock"><button type="button" data-speed="1">×1</button><button type="button" data-speed="10">×10</button><button type="button" data-speed="60">×60</button></div>
         <p class="mnote">Repairs take minutes; speed the clock to watch DOTs run down, beam home, recharge and go back.</p>
@@ -126,7 +137,8 @@
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/dot-bay-report.js?v=1"></script>
-<script src="dotbay.js?v=4"></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="dotbay.js?v=20261109"></script>
 </body>
 </html>

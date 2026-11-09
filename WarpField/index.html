@@ -6,7 +6,7 @@
 <title>Warp Field Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="warpfield">
 
@@ -62,6 +62,7 @@
 
 <!-- Right: how fast the drive can push this field, and what it costs -->
 <div class="col right">
+  <div id="criticalBanner" class="crit-banner" data-testid="critical-banner" role="alert" hidden></div>
   <section class="panel controls" aria-label="Warp drive">
     <div class="thead"><h2>WARP DRIVE</h2><small id="driveNote">STANDBY</small></div>
     <div class="drive-row">
@@ -112,7 +113,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Warp drive, supply, the Helm's warp factor and engage, the universal stretch rate, ships and reset</span></button>
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Warp drive, supply, the Helm's warp factor and engage, the universal stretch rate, ships (hostile and wrecked too) and reset</span></button>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
   </div>
   <div id="demoControls" hidden>
@@ -144,6 +145,8 @@
       <div class="msection">
         <h3>SHIPS</h3>
         <div class="mrow"><button type="button" id="addShip">ADD SHIP NEARBY</button><button type="button" id="clearShips">CLEAR SHIPS</button></div>
+        <div class="mrow"><button type="button" id="addHostile">ADD HOSTILE SHIP</button><button type="button" id="addWreck">ADD WRECK</button></div>
+        <p class="mnote">Hostile ships show red and wrecks dim, named · HOSTILE or · WRECK, on the field and in Ships.</p>
         <div class="mrow"><button type="button" id="resetDemo" class="danger">RESET DEMO</button></div>
       </div>
       <p class="mnote" data-error role="alert"></p>
@@ -152,8 +155,9 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=6"></script>
-<script src="warpfield.js?v=4"></script>
+<script src="warpfield.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

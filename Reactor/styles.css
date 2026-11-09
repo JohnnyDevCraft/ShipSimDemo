@@ -128,3 +128,19 @@ body.reactor {
 #fuelControl { position: relative; }
 .flow-lock { position: absolute; left: 0; right: 0; top: 50%; z-index: 2; transform: translateY(-50%); padding: 0.45rem 0.3rem; border: 1px solid var(--red); border-radius: 0.5rem; background: rgba(58, 6, 8, 0.92); color: #ff8f8f; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em; text-align: center; line-height: 1.35; box-shadow: 0 0 1rem rgba(255, 79, 79, 0.45); }
 .intrusion-locked b { color: var(--red); }
+
+/* Critical damage (Combat, Beta9): the banner over the left column and the locks on the sliders (the live console's). */
+.crit-banner { flex: none; pointer-events: auto; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 4px; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel-solid); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+.crit-banner div + div { margin-top: 0.2rem; }
+.crit-badge { display: inline-block; margin: 0 0 0 0.3rem; padding: 0 0.35rem; border: 1px solid var(--red); border-radius: 3px; color: #ffb3b3; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.crit-badge[hidden] { display: none; }
+/* The lock note takes its own row under the unit, so a narrow column never widens; the slider keeps the last row. */
+.slider-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.control { grid-template-rows: auto auto auto auto 1fr; }
+.control > small { grid-row: 1; }
+.control > b { grid-row: 2; }
+.control > em { grid-row: 3; margin-bottom: 0.15rem; }
+.control > .lock-note { grid-row: 4; justify-self: start; margin: 0 0 0.25rem; font-size: 0.6rem; white-space: nowrap; }
+.control > .vslider { grid-row: 5; }

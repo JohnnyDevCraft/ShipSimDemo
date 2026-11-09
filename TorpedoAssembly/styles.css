@@ -137,8 +137,11 @@ textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select
 .form { min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; align-content: start; }
 .form.warhead { grid-template-columns: minmax(7rem, 9rem) 1fr; align-content: stretch; }
 .form-col { min-width: 0; display: flex; flex-direction: column; gap: 0.8rem; }
-.cgroup { display: grid; gap: 0.4rem; }
+.cgroup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
 .cgroup > small, .control small { font-size: 0.62rem; letter-spacing: 0.14em; white-space: nowrap; }
+/* A long group title or the telemetry note runs on past the column as before, but no longer widens the column, so the
+   interval chips stay in it (the probe's second column is fuller since the scan range and engage-after fields). */
+.cgroup > small, #intervalNote { width: 0; min-width: 100%; white-space: nowrap; }
 .option { display: grid; gap: 0.5rem; padding-left: 0.8rem; border-left: 2px solid var(--edge-soft); }
 .option .mnote { font-size: 0.7rem; }
 .pair { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: stretch; }
@@ -241,8 +244,16 @@ textarea { font: inherit; color: inherit; -webkit-user-select: text; user-select
 .message-dialog .search-keys { flex: none; }
 
 /* Telemetry Transmission Interval (Science Console spec A.7): quick chips under the keypad field */
-.ipair { display: grid; grid-template-columns: minmax(6.5rem, 0.9fr) 1.6fr; gap: 0.4rem; align-items: stretch; }
-.ichips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; }
+.ipair { display: grid; grid-template-columns: minmax(6.5rem, 0.9fr) minmax(0, 1.6fr); gap: 0.4rem; align-items: stretch; }
+.ichips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.25rem; }
 .ichips button { min-height: 2rem; padding: 0.1rem; font-size: 0.62rem; letter-spacing: 0.02em; }
 .ichips button[aria-pressed="true"] { border-color: var(--probe); background: rgba(30, 110, 200, 0.35); }
 #intervalNote { font-size: 0.64rem; line-height: 1.35; }
+
+/* The ship's launchers (live 1.0.0-Beta10): the magazine, rack and next round below are the chosen launcher's. */
+.launcher-seg { flex: none; }
+.launcher-seg button { min-height: 2.3rem; font-size: 0.72rem; letter-spacing: 0.1em; }
+/* Critical damage to the chosen launcher (live Combat, Beta9). */
+.critical-note { flex: none; margin: 0; padding: 0.4rem 0.6rem; border: 1px solid rgba(255, 90, 90, 0.55); border-radius: 0.55rem; background: rgba(70, 12, 12, 0.6);
+  color: #ff8f8f; font-size: 0.68rem; line-height: 1.35; letter-spacing: 0.04em; }
+#ratingsRows dd { max-width: 60%; text-align: right; }

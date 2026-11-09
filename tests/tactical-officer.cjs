@@ -1,7 +1,8 @@
 // Tactical Officer Control: the tactical scanner fills the window; a tap selects a contact; the six weapons
 // fire with lead and cool down; detailed scans reveal the target and its subsystems; the training ships fire
 // back at our shields and hull; the view screen camera turns and zooms with a joystick and jumps to the four
-// views; the readiness condition; and the demo controls in the menu.
+// views; the readiness condition; and the demo controls in the menu. Combat (live Beta9/10): hostile and wrecked contacts,
+// AUTO TARGET, critical damage, the targeting computer offline, the last hit on us, station shields and Menu → Sensors.
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
@@ -41,7 +42,7 @@ run({
     await expect(page.locator('#noTarget')).toBeVisible();
     await expect(page.locator('#conditionValue')).toHaveText('IV');
     await expect(page.locator('#advisory')).toHaveText('No target. Tap a contact on the scanner.');
-    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'CLEAR TARGET', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
+    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
     // Shields on and off is a bottom-bar command; the panel only reports it.
     await expect(page.locator('.shields button')).toHaveCount(0);
     await expect(page.locator('#shieldsState')).toHaveText('ON');
@@ -71,9 +72,10 @@ run({
     assert.equal(after.shots.length, 0);
     assert.ok(after.targetShields['Training ship A'].drain.some(d => d > 100), 'the pulse drained a shield quadrant');
     await expect(weapon(page, 'EPW1').locator('.wstate')).toHaveText('READY');
-    // Enemies are identified within 100 km.
+    // Enemies are identified within 100 km, and shown as hostile.
     await set(page, { contacts: [{ range: 90000 }] });
-    await expect(page.locator('#targetKind')).toHaveText('ENEMY');
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE');
+    await expect(page.locator('#targetSub')).toHaveText('Starship · 430 m hull · hostile');
     // Close in, the array reaches; Clear Target leaves nothing to fire at.
     await set(page, { contacts: [{ range: 40000 }] });
     await expect(weapon(page, 'EBW1').locator('.wstate')).toHaveText('READY');
@@ -163,15 +165,179 @@ run({
     await expect(page.locator('#destroyedDialog')).toBeHidden();
     await expect(page.locator('#ownHullValue')).toHaveText('500.0 / 500.0 · 100.0%');
   },
-  'a ship whose shields and hull are gone is destroyed and drops off the scanner': async ({ open }) => {
+  'a ship whose shields and hull are gone is destroyed and stays on the scanner as a wreck no one fires at': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
     await tap(page, 'ship:Training ship A');
     await set(page, { contacts: [{ range: 30000, yaw: 168 }], targetShields: { 'Training ship A': { drain: [50, 50, 50, 50], flash: 0, hull: 10 } } });
     await weapon(page, 'TPD1').click();
     await step(page, 40);
-    await expect(page.locator('#notice')).toHaveText('Training ship A destroyed.');
-    await expect(page.locator('#noTarget')).toBeVisible();
-    assert.equal(await page.evaluate(() => TacticalOfficer.tapPoint('ship:Training ship A')), null);
+    assert.deepEqual((await state(page)).destroyed, ['Training ship A']);
+    // Still selected, now a wreck: grey, stopped, and nothing to fire at.
+    await expect(page.locator('#targetPanel')).toBeVisible();
+    await expect(page.locator('#targetKind')).toHaveText('WRECK');
+    await expect(page.locator('#targetSub')).toHaveText('Starship · 430 m hull · wreck');
+    await expect(page.locator('[data-weapon] .wstate')).toHaveText(Array(6).fill('NO TARGET'));
+    await expect(page.locator('#advisory')).toHaveText(/^Training ship A · wreck · [\d,.]+ km\.$/);
+    assert.ok(await page.evaluate(() => TacticalOfficer.tapPoint('ship:Training ship A')), 'the wreck is still on the scanner');
+    const before = (await state(page)).contacts[0];
+    await step(page, 30);
+    const after = await state(page);
+    assert.equal(after.contacts[0].speed, 0, 'the wreck has stopped');
+    assert.equal(after.enemyShots.length, 0, 'the wreck fires no more');
+    assert.ok(Math.abs(after.contacts[0].range - before.range) < 700, 'it moves on the scan only as we do');
+    // A Scan Target on it is refused like an empty selection.
+    await page.locator('#scanBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Select a ship to request a detailed scan.');
+  },
+  'hostile ships carry HOSTILE with their lock state; AUTO TARGET locks the nearest hostile and is lost to critical damage': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await set(page, { contacts: [{ range: 60000 }], demo: { scanKm: 100000 } });
+    await page.locator('#demoAddShip').evaluate(b => b.click());
+    await set(page, { contacts: [{}, { name: 'Training ship 2', bearing: 10, range: 40000 }] });
+    // Auto target takes the nearest identified hostile in reach and sight.
+    await page.locator('#autoTargetBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Auto target: locking on Training ship 2.');
+    await expect(page.locator('#targetName')).toHaveText('Training ship 2');
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE · LOCKING');
+    await step(page, 100);
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE · LOCKED');
+    // Not hostile (enemy contacts off): CONTACT, then LOCKED once scanned.
+    await page.locator('#demoHostile').evaluate(box => { box.checked = false; box.dispatchEvent(new Event('change')); });
+    await page.evaluate(() => TacticalOfficer.select('ship:Training ship A'));
+    await expect(page.locator('#targetKind')).toHaveText('CONTACT');
+    // The targeting sensors' 'no-auto-target' critical disables the button (set from Menu → Critical damage).
+    await page.locator('#menuBtn').click();
+    await page.locator('#openCritical').click();
+    await page.locator('#criticalDialog [data-component="targeting"] [data-effect="no-auto-target"]').click();
+    await page.locator('#criticalDialog .mhead button').click();
+    await expect(page.locator('#autoTargetBtn')).toBeDisabled();
+    await expect(page.locator('#autoTargetBtn')).toHaveAttribute('title', 'Auto target unavailable (critical damage)');
+    await expect(page.locator('#weaponCritical')).toHaveText('TARGETINGAuto target unavailable');
+  },
+  'critical damage: weapons list it and show CRIT, a halved range changes OUT OF RANGE, and shield SEO and quadrants follow': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await tap(page, 'ship:Training ship A');
+    // A running ship holds its fire, so our shield figures stay put.
+    await set(page, { contacts: [{ range: 80000 }], demo: { behavior: 'run' } });
+    await expect(weapon(page, 'EBW1').locator('.wstate')).toHaveText('READY');
+    await expect(page.locator('#weaponCritical')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('EBW1', ['range-halved']));
+    await expect(weapon(page, 'EBW1').locator('.wstate')).toHaveText('OUT OF RANGE');
+    await expect(weapon(page, 'EBW1')).toHaveAttribute('data-critical', 'true');
+    await expect(weapon(page, 'EBW1')).toHaveAttribute('title', /CRITICAL: Range halved/);
+    await expect(weapon(page, 'EPW1')).toHaveAttribute('data-critical', 'false');
+    await expect(page.locator('#weaponCritical li')).toHaveText(['ARRAY 1Range halved (50 km of 100 km)']);
+    // Shields: SEO halved and one quadrant disabled.
+    await expect(page.locator('#shieldCritical')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('shields', ['quadrant-disabled', 'seo-halved']));
+    await expect(page.locator('#shieldCritical li')).toHaveText(['SHIELDSOne shield quadrant disabled', 'SHIELDSShield SEO halved']);
+    await expect(page.locator('#totalSeo')).toHaveText('150.0 / 150.0 SEO');
+    await expect(page.locator('#ownQuadrants [data-qv="3"]')).toHaveText('0.0 SEO');
+    await expect(page.locator('#ownQuadrants path[data-q="3"]')).toHaveAttribute('data-level', 'down');
+    // Repairs clear it.
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#totalSeo')).toHaveText('400.0 / 400.0 SEO');
+    await expect(weapon(page, 'EBW1').locator('.wstate')).toHaveText('READY');
+  },
+  'the targeting computer offline: a banner, no lead on the shots, and the advisory says to aim by hand': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await tap(page, 'ship:Training ship A');
+    await set(page, { contacts: [{ range: 20000, yaw: 90 }] });
+    await page.locator('#scanBtn').click();
+    await step(page, 95);
+    // Crossing at 2 km/s, read in one go so the page's own clock does not move the ship between the two.
+    const crossing = () => page.evaluate(() => {
+      const c = TacticalOfficer.state().contacts[0];
+      TacticalOfficer.set({ contacts: [{ range: 20000, yaw: (c.bearing + 90) % 360, speed: 2000 }], demo: { enemyImpulse: 10 } });
+      const s = TacticalOfficer.state();
+      return { bearing: s.contacts[0].bearing, lead: s.weapons.find(w => w.id === 'EPW1').lead };
+    });
+    const led = await crossing();
+    assert.ok(!led.lead.unguided && Math.abs(led.lead.bearing - led.bearing) > 2, `the computer leads a crossing target (${JSON.stringify(led)})`);
+    await expect(page.locator('#targetingOffline')).toBeHidden();
+    await page.evaluate(() => DemoCombat.set('targeting', ['targeting-computer-offline']));
+    await expect(page.locator('#targetingOffline')).toBeVisible();
+    await expect(page.locator('#targetingOffline')).toHaveText('TARGETING COMPUTER OFFLINE');
+    await expect(page.locator('#advisory')).toHaveText('TARGETING COMPUTER OFFLINE · Training ship A locked: no guidance, aim by hand.');
+    const offline = await crossing();
+    assert.ok(offline.lead.unguided, 'no lead');
+    assert.equal(offline.lead.bearing, offline.bearing, 'aimed where the target is now');
+  },
+  'the last hit on us shows for 8 seconds and flashes that side: shields held, then a hull hit naming the component': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await expect(page.locator('#lastHit')).toBeHidden();
+    // The beam lands first, on the forward shield (read at once: the page's own clock keeps the fight going).
+    const first = await page.evaluate(() => {
+      TacticalOfficer.set({ contacts: [{ bearing: 0, range: 20000, yaw: 180 }] });
+      TacticalOfficer.step(3);
+      return TacticalOfficer.state().lastHit;
+    });
+    assert.equal(first.kind, 'shieldonly');
+    assert.equal(first.side, 'forward');
+    assert.equal(first.by, 'Training ship A');
+    await expect(page.locator('#lastHit')).toBeVisible();
+    await expect(page.locator('#lastHit')).toHaveText(/^(FORWARD SHIELDS HELD · [\d.]+ stopped|HIT FORWARD · .+) by Training ship A$/);
+    // Shields off: the hull takes it, and a component is struck.
+    await page.locator('#shieldsBtn').click();
+    await step(page, 25);
+    await expect(page.locator('#lastHit')).toHaveText(/^HIT FORWARD · (PULSE|BEAM|TORPEDO) · [\d.]+ hull damage · \w+ took [\d.]+.* by Training ship A$/);
+    const hit = (await state(page)).lastHit;
+    assert.ok(hit.hullDamage > 0 && hit.componentSlot, `a hull hit (${JSON.stringify(hit)})`);
+    // A torpedo at full yield on the hull leaves critical damage on the component it struck, shared with every console.
+    if (hit.critical) assert.ok(await page.evaluate(h => DemoCombat.has(h.componentSlot, h.critical), hit));
+    // Out of reach, the line goes after 8 seconds.
+    await set(page, { contacts: [{ range: 900000 }], demo: { enemyImpulse: 0 } });
+    await step(page, 120);
+    await expect(page.locator('#lastHit')).toBeHidden();
+  },
+  'a station shield shows on the target panel; Scan Target locks the station and our weapons drain its shield': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await page.evaluate(() => TacticalOfficer.select('body:Sol|Earth Orbital Station'));
+    await expect(page.locator('#targetKind')).toHaveText('STATION');
+    await expect(page.locator('#tShield')).toHaveText('SHIELD UP 100% · 10,000 / 10,000 · 8 km');
+    await expect(page.locator('[data-weapon] .wstate')).toHaveText(Array(6).fill('NO LOCK'));
+    await expect(page.locator('#advisory')).toHaveText('Earth Orbital Station selected · Scan Target to lock the targeting sensors on it.');
+    await page.locator('#scanBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Locking on Earth Orbital Station.');
+    await step(page, 1);
+    await expect(page.locator('#scanStatus')).toHaveText(/^Waiting for target within 30,000 km · 0%$/);
+    await set(page, { demo: { scanKm: 200000, cannonRangeKm: 200000, cannonSpeed: 1e8, cannonZeroKm: 300000, cannonFullKm: 250000 }, heading: 0 });
+    await set(page, { demo: { ownImpulse: 0 } });
+    await step(page, 35);
+    await expect(page.locator('#notice')).toHaveText('Targeting sensors locked on Earth Orbital Station.');
+    await expect(page.locator('#targetKind')).toHaveText('STATION · LOCKED');
+    await expect(page.locator('#scanStatus')).toHaveText('TARGET LOCKED');
+    // The station lies astern: the aft cannon reaches it.
+    await expect(weapon(page, 'EPW3').locator('.wstate')).toHaveText('READY');
+    await weapon(page, 'EPW3').click();
+    await expect(page.locator('#notice')).toHaveText('Phaser cannon 3 fired at Earth Orbital Station.');
+    await step(page, 15);
+    await expect(page.locator('#tShield')).toHaveText('SHIELD UP 99% · 9,880 / 10,000 · 8 km');
+    assert.equal(await page.evaluate(() => DemoCombat.placeShield('Earth Orbital Station').strength), 9880);
+    // Drained from the menu: the panel follows.
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', true, 0));
+    await expect(page.locator('#tShield')).toHaveText('SHIELD DRAINED · 0 / 10,000 · 8 km');
+    // Clear Target drops the lock.
+    await page.locator('#clearBtn').click();
+    assert.equal((await state(page)).bodyLock, null);
+  },
+  'Menu → Sensors sets the power of the three sensors; the reach follows, and a scan waits for the targeting reach': async ({ open }) => {
+    const page = await open('/TacticalOfficer/');
+    await page.locator('#menuBtn').click();
+    await page.locator('#openSensors').click();
+    await expect(page.locator('#menuTitle')).toHaveText('SENSORS');
+    await expect(page.locator('#sensorControls [data-field="targeting"] [data-value]')).toHaveText('100%');
+    await expect(page.locator('#sensorReach')).toHaveText(/^Targeting 30,000 km \(1 km–30,000 km\) · short-range 1 MKM · long-range 3\.000 LY \(0\.001–3 LY\)$/);
+    await setField(page, 'targeting', '0');
+    await expect(page.locator('#sensorControls [data-field="targeting"] [data-value]')).toHaveText('0%');
+    await expect(page.locator('#sensorReach')).toHaveText(/^Targeting 1 km \(1 km–30,000 km\) · /);
+    await page.evaluate(() => DemoCombat.set('srs', ['range-halved']));
+    await expect(page.locator('#sensorReach')).toHaveText(/short-range 500,000 KM · .* · short-range: CRITICAL — Range halved$/i);
+    await page.locator('#menuDialog [data-close]').last().click();
+    await tap(page, 'ship:Training ship A');
+    await page.locator('#scanBtn').click();
+    await step(page, 2);
+    await expect(page.locator('#scanStatus')).toHaveText(/^Waiting for target within 1 km · 0%$/);
   },
   'the view screen camera turns and zooms with the joystick, jumps to the four views, and the View Screen follows': async ({ open }) => {
     const page = await open('/TacticalOfficer/');

@@ -144,3 +144,16 @@ body.cargo-bay {
   body.cargo-bay { --left-w: 15rem; --right-w: 17rem; }
   .side-by-side { grid-template-columns: 1fr; }
 }
+
+/* The hold's size and troops; the transporter's critical damage (live 1.0.0-Beta10, Combat Beta9) */
+.hold-capacity { border-top: 1px solid var(--edge-soft); padding-top: .3rem; }
+.hold-capacity dd.bad { color: #ff8f9b; }
+.troop-row { flex: none; margin: .3rem 0; padding: .3rem .5rem; border: 1px solid rgba(255, 182, 72, .5); border-radius: 4px; color: var(--amber); font-size: .78rem; font-weight: 600; letter-spacing: .04em; }
+.troop-row[hidden] { display: none; }
+.troop-row span { color: var(--muted); font-weight: 400; }
+.crit-banner { flex: none; width: 100%; box-sizing: border-box; margin: .4rem 0; padding: .45rem .7rem; border: 1px solid var(--red); border-radius: 4px; background: rgba(255, 79, 79, .14); color: #ffb3b3; font-weight: 600; font-size: .8rem; letter-spacing: .05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+#demoControls .seg button[aria-pressed="true"] { background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 0.7rem rgba(40, 130, 255, 0.45); }
+.hold-demo { display: grid; grid-template-columns: 3fr 2fr; gap: 0.5rem; }
+.hold-demo .seg button { font-size: 0.68rem; letter-spacing: 0.04em; padding-inline: 0.2rem; white-space: nowrap; }

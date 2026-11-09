@@ -173,6 +173,8 @@ run({
     assert.equal((await state(page)).tab, 'view', 'the tab is remembered');
     await page.locator('#viewTabBtn').focus();
     await page.keyboard.press('ArrowRight');
+    assert.equal((await state(page)).tab, 'range');
+    await page.keyboard.press('ArrowRight');
     assert.equal((await state(page)).tab, 'labels');
     await page.keyboard.press('ArrowRight');
     assert.equal((await state(page)).tab, 'status');
@@ -231,5 +233,121 @@ run({
     await bay.waitForTimeout(600);
     await expect(page.locator('#demoDamage')).toBeDisabled();
     await expect(page.locator('#demoSource')).toContainText('DOT Bay Control is open');
+  },
+
+  'the hull panel: integrity, a hit from a hostile with what it struck, the panel flashing, and the hostiles row': async ({ open }) => {
+    const page = await open('/Command/');
+    await expect(page.locator('#hullValue')).toHaveText('100%');
+    await expect(page.locator('#hullPoints')).toHaveText('2400 of 2400');
+    await expect(page.locator('#hullChip')).toHaveText('SOUND');
+    await expect(page.locator('#lastHitRows')).toHaveText('No hits taken.');
+    await expect(page.locator('#hostileRow')).toBeHidden();
+    await page.evaluate(() => CommandControl.takeHit({ by: 'ZLX01A', byName: 'Black Pearl', kind: 'pulse', side: 'starboard', shieldStopped: 42, hullDamage: 900, component: 'warp', componentDamage: 12.5, critical: null }));
+    await expect(page.locator('#hullValue')).toHaveText('62%');
+    await expect(page.locator('#hullChip')).toHaveText('DAMAGED');
+    await expect(page.locator('#hullPanel')).toHaveAttribute('data-level', 'warn');
+    await expect(page.locator('#lastHitRows')).toContainText('STARBOARD');
+    await expect(page.locator('#lastHitRows')).toContainText('Black Pearl · PULSE');
+    await expect(page.locator('#lastHitRows')).toContainText('42.0 KD');
+    await expect(page.locator('#lastHitRows')).toContainText('900.0 KD');
+    await expect(page.locator('#lastHitRows')).toContainText('Warp drive −12.5');
+    await expect(page.locator('#lastHitAgo')).toHaveText(/AGO$/);
+    await expect(page.locator('#lastHitShake')).toBeHidden();
+    // The stand-in's struck component loses the damage: 40% − 12.5.
+    await expect(page.locator('#componentList li[data-component="warp"] b')).toHaveText('27%');
+    await expect(page.locator('#hostileRow')).toBeVisible();
+    await expect(page.locator('#hostileCount')).toHaveText('1');
+    await expect(page.locator('#hostileNames')).toHaveText('Black Pearl');
+    // A second hit flashes the panel; a torpedo shakes the ship; the hull at 0 is destroyed.
+    await page.evaluate(() => CommandControl.takeHit({ by: 'ASH-07', byName: 'Ash Corsair Viper', kind: 'torpedo', hullDamage: 1600, component: null }));
+    await expect(page.locator('#hullPanel')).toHaveClass(/hit/);
+    await expect(page.locator('#lastHitShake')).toBeVisible();
+    await expect(page.locator('#lastHitShake')).toHaveText('TORPEDO SHOOK THE SHIP');
+    await expect(page.locator('#hullChip')).toHaveText('DESTROYED');
+    await expect(page.locator('#hostileNames')).toHaveText('Black Pearl, Ash Corsair Viper');
+    await expect(page.locator('#lastHitRows')).toContainText('None');
+    // Demo controls repair the hull.
+    await page.locator('#menuBtn').click();
+    await page.locator('#openDemoControls').click();
+    await page.locator('#demoHullRepair').click();
+    await expect(page.locator('#hullChip')).toHaveText('SOUND');
+    await expect(page.locator('#hostileRow')).toBeHidden();
+  },
+
+  'critical damage: a badge under the component, its name in red, the CRITICAL row of the last hit, and repaired from the menu': async ({ open }) => {
+    const page = await open('/Command/');
+    await page.evaluate(() => CommandControl.takeHit({ by: 'ZLX01A', byName: 'Black Pearl', kind: 'beam', side: 'forward', hullDamage: 50, component: 'shields', componentDamage: 5, critical: 'seo-halved' }));
+    const row = page.locator('#componentList li[data-component="shields"]');
+    await expect(row).toHaveAttribute('data-critical', 'true');
+    await expect(row.locator('.crit')).toHaveText('Shield SEO halved');
+    await expect(page.locator('#lastHitRows .hit-critical')).toContainText('CRITICAL');
+    await expect(page.locator('#lastHitRows .hit-critical .crit')).toHaveText('Shield SEO halved');
+    // Any console's Critical damage menu reaches this one: the reactor's words before the dash on the badge.
+    await page.evaluate(() => DemoCombat.set('reactor', ['confinement-locked']));
+    await expect(page.locator('#componentList li[data-component="reactor"] .crit')).toHaveText('Confinement locked below 50 %');
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#componentList .crit')).toHaveCount(0);
+  },
+
+  'the repair bay: OUT OF ACTION under bay critical damage, NO POWER and STANDING BY without power, MAINTAINING a whole component': async ({ open }) => {
+    const page = await open('/Command/');
+    await page.evaluate(() => DemoCombat.set('repair', ['dot-count-halved']));
+    await expect(page.locator('.dot-card[data-state="disabled"]')).toHaveCount(2);
+    await expect(page.locator('.dot-card').nth(3)).toContainText('OUT OF ACTION');
+    await expect(page.locator('.dot-card').nth(3)).toContainText('Bay critical damage');
+    await page.evaluate(() => DemoCombat.set('repair', []));
+    await page.evaluate(() => CommandControl.bayPower(false));
+    await expect(page.locator('#dotsChip')).toHaveText('NO POWER');
+    await expect(page.locator('.dot-card').nth(0)).toContainText('STANDING BY');
+    await expect(page.locator('.dot-card').nth(3)).toContainText('NO POWER');
+    await page.evaluate(() => CommandControl.bayPower(true));
+    await expect(page.locator('#dotsChip')).toHaveText('2 DEPLOYED');
+    // DOT 1 stays on the phaser array once it is whole: maintaining; on a destroyed one it stands by.
+    await page.evaluate(() => CommandControl.setIntegrity('array', 100));
+    await expect(page.locator('.dot-card').nth(0)).toContainText('MAINTAINING');
+    await page.evaluate(() => CommandControl.setIntegrity('array', 0));
+    await expect(page.locator('.dot-card').nth(0)).toContainText('STANDING BY');
+  },
+
+  'docked at a station: STATION DRONES lists what its drones repair, an S chip on each component, and they repair the ship': async ({ open }) => {
+    const page = await open('/Command/');
+    await expect(page.locator('#stationPanel')).toBeHidden();
+    await page.locator('#menuBtn').click();
+    await page.locator('#openDemoControls').click();
+    await page.locator('#demoDock').click();
+    await expect(page.locator('#demoDock')).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#stationPanel')).toBeVisible();
+    await expect(page.locator('#stationChip')).toHaveText('×2');
+    await expect(page.locator('#stationNote')).toHaveText('Earth Orbital Station — not under crew control');
+    await expect(page.locator('#stationList li')).toHaveCount(4);
+    await expect(page.locator('#stationList li[data-station-slot="sensors"]')).toContainText('2 units');
+    await expect(page.locator('#stationList li[data-station-slot="sensors"]')).toContainText('0.20%/s');
+    await expect(page.locator('#componentList li[data-component="sensors"] .station-chip')).toHaveText('S2');
+    const before = await page.evaluate(() => CommandControl.state().ship.components.find(c => c.key === 'array').integrity);
+    await page.waitForTimeout(2300);
+    const after = await page.evaluate(() => CommandControl.state().ship.components.find(c => c.key === 'array').integrity);
+    assert.ok(after > before, `the drones repair the phaser array (${before} → ${after})`);
+    await page.evaluate(() => CommandControl.dock(false));
+    await expect(page.locator('#stationPanel')).toBeHidden();
+  },
+
+  'the RANGE tab sets the view screen scanners\' ranges, shared with Communications and the View Screen': async ({ open }) => {
+    const page = await open('/Command/');
+    await page.locator('#rangeTabBtn').click();
+    await expect(page.locator('#rangeTab')).toBeVisible();
+    await expect(page.locator('#srsRanges button')).toHaveCount(10);
+    await expect(page.locator('#lrsRanges button')).toHaveCount(6);
+    await expect(page.locator('#srsRangeChip')).toHaveText('1 BKM');
+    await page.locator('#srsRanges [data-range="100-km"]').click();
+    await expect(page.locator('#srsRangeChip')).toHaveText('100 km');
+    await expect(page.locator('#srsRanges [data-range="100-km"]')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('#lrsRanges [data-range="5-ly"]').click();
+    const s = await settings(page);
+    assert.equal(s.srs, '100-km');
+    assert.equal(s.lrs, '5-ly');
+    // A change from another page (Communications) shows here.
+    await page.evaluate(() => ViewScreenSettings.write({ lrs: '1-ly' }));
+    await expect(page.locator('#lrsRangeChip')).toHaveText('1 LY');
   },
 });

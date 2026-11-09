@@ -30,3 +30,11 @@ On the targeting scope (`../Shared/scope.js`) the four ships are contacts beside
 - The intercept is the constant-course solution for the selected ship at the torpedo speed, within the torpedo's lifetime and 50,000 km.
 - Ships hold still until the 3D models have loaded.
 - The page starts with three prepared warheads (50% yield, impact) for the demo; the Angular page started empty. Reset demo reloads it.
+
+## Two launchers and combat (as the live console in MissionProtocol 1.0.0-Beta9/Beta10)
+
+- **FWD / AFT** in the launcher's header: TPD1 forward and TPD2 aft, each with its own tube, prepared torpedoes, Auto Arm and Auto Load (both load at once). The scope, the caption and the aim tape follow the chosen launcher's facing: aft, the Moon is behind the ship.
+- **WARHEAD RANGE** (torpedo speed × lifetime, 600 km); a launcher's `range-halved` critical damage (Menu → Critical damage, `Shared/demo-combat.js`) halves its lifetime and range, marks it "(halved)" and shows a red critical line.
+- **Targeting computer offline**: a red pill; no intercept circle or lead marker; INTERCEPT Offline, SOLUTION No guidance.
+- **LOCK** on the target panel: the target reads LOCKING, then LOCKED; a locked launch leads the target itself, whatever the aim.
+- **Stations and settlements** (Cislunar Relay Station, Tycho Rock Outpost): selectable, with their shield on the target panel and an intercept straight at them; hostile ships read HOSTILE, and a ship whose hull is gone stays as a grey WRECK. Hits report the shield stopped and hull KD.

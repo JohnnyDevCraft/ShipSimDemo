@@ -6,7 +6,7 @@
 <title>Tactical Officer Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=20261103g">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="tactical">
 
@@ -30,7 +30,9 @@
 <div class="col left">
   <section class="panel weapons" aria-label="Weapons control">
     <div class="thead"><h2>WEAPONS</h2><small id="weaponsState" class="chip">—</small></div>
+    <p id="targetingOffline" class="crit-banner" data-testid="targeting-offline" role="alert" hidden>TARGETING COMPUTER OFFLINE</p>
     <div class="weapon-grid" id="weaponGrid"></div>
+    <ul id="weaponCritical" class="crit-list" data-testid="weapon-critical" aria-label="Critical damage to targeting and weapons" hidden></ul>
   </section>
   <section class="panel shields" aria-label="Shields monitoring">
     <div class="thead"><h2>SHIELDS</h2><small id="shieldsState" class="chip">—</small></div>
@@ -44,6 +46,8 @@
       <div><dt>HULL</dt><dd id="ownHullValue">—</dd></div>
     </dl>
     <div class="bar hull-bar" aria-hidden="true"><i id="ownHullFill"></i></div>
+    <ul id="shieldCritical" class="crit-list" data-testid="shield-critical" aria-label="Critical damage to the shield generator" hidden></ul>
+    <p id="lastHit" class="last-hit" data-testid="last-hit" role="status" aria-live="assertive" hidden></p>
   </section>
 </div>
 
@@ -61,10 +65,11 @@
       <div data-ship><dt>PEOPLE ABOARD</dt><dd id="tPeople">—</dd></div>
       <div data-ship><dt>WARP COILS</dt><dd id="tCoils">—</dd></div>
       <div data-body hidden><dt>RADIUS</dt><dd id="tRadius">—</dd></div>
+      <div data-body hidden><dt>SHIELD</dt><dd id="tShield" data-testid="target-place-shield">—</dd></div>
     </dl>
     <div class="bar coil-bar" data-ship aria-hidden="true"><i id="tCoilFill"></i></div>
     <div class="target-shields" data-ship id="targetShields" aria-label="Target shield quadrants"></div>
-    <div class="scan-state" data-ship><small id="scanStatus">—</small><div class="bar"><i id="scanFill"></i></div></div>
+    <div class="scan-state"><small id="scanStatus">—</small><div class="bar"><i id="scanFill"></i></div></div>
     <p class="tsub" data-ship>SUBSYSTEM <b id="tSubsystem">None selected</b></p>
   </section>
   <section class="panel target-empty" id="noTarget" aria-label="No target">
@@ -79,6 +84,7 @@
 <nav class="dock" aria-label="Tactical functions">
   <button type="button" id="scanBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 12 18 6"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg></span>SCAN TARGET</button>
   <button type="button" id="subsystemsBtn" aria-haspopup="dialog"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/></svg></span>SUBSYSTEMS</button>
+  <button type="button" id="autoTargetBtn" data-testid="auto-target"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 2.5v5M12 16.5v5M2.5 12h5M16.5 12h5"/><path d="M4.5 4.5l2.2 2.2M19.5 4.5l-2.2 2.2M4.5 19.5l2.2-2.2M19.5 19.5l-2.2-2.2"/></svg></span>AUTO TARGET</button>
   <button type="button" id="clearBtn"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="m8.5 8.5 7 7M15.5 8.5l-7 7"/></svg></span>CLEAR TARGET</button>
   <span class="dock-sep" aria-hidden="true"></span>
   <button type="button" id="shieldsBtn" class="shields-toggle" aria-pressed="true"><span class="ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8 7.5 9.5 4.3-1.5 7.5-4.9 7.5-9.5V6Z"/><path d="M8.5 12 11 14.5 15.5 9.5"/></svg></span><span id="shieldsLabel">SHIELDS ON</span></button>
@@ -145,6 +151,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
+    <button type="button" id="openSensors"><b>Sensors</b><span>Power and reach of the targeting, short-range and long-range sensors</span></button>
     <button type="button" id="openDemoControls"><b>Demo controls</b><span>The training ships, our flight, weapon settings, scans and identification</span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>One training ship 110 km out, our hull and shields full</span></button>
     <a href="../ViewScreen/index.html" target="_blank" rel="noopener"><b>View Screen</b><span>The bridge screen this console's camera points</span></a>
@@ -208,14 +215,30 @@
       <p class="mnote" data-error role="alert"></p>
     </div>
   </div>
+  <div id="sensorControls" hidden>
+    <div class="fields-view">
+      <div class="msection">
+        <h3>SENSOR POWER</h3>
+        <div class="field-grid">
+          <div class="field" data-field="targeting"><div><small>TARGETING SENSORS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="shortRange"><div><small>SHORT-RANGE SENSORS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+          <div class="field" data-field="longRange"><div><small>LONG-RANGE SENSORS</small><b data-value></b></div><button type="button" data-edit>SET</button></div>
+        </div>
+        <p class="mstatus" id="sensorReach"></p>
+        <p class="mnote">Each sensor reaches its minimum range at idle power (0%) and its maximum at full power (100%). A detailed scan (the lock) needs the target within the targeting sensors' reach; the short-range scan shows ships within its reach and in sight. In the demo the targeting sensors' maximum is the Demo controls' scan distance.</p>
+      </div>
+      <p class="mnote" data-error role="alert"></p>
+    </div>
+  </div>
 </dialog>
 
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/nav-world.js?v=20261103b"></script>
 <script src="../Shared/view-screen-settings.js?v=2"></script>
 <script src="camera.js?v=1"></script>
-<script src="tactical.js?v=20261103g"></script>
+<script src="tactical.js?v=20261109"></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 </body>
 </html>

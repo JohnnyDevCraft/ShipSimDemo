@@ -206,3 +206,14 @@
 #fireBtn { padding-bottom: 0.75rem; }
 #fireBtn .charge-bar { bottom: 0.32rem; }
 #axesTab .pad-axes { max-height: 50dvh; overflow-y: auto; }
+
+/* Menu → Jump drive (as the live console): the plot along the nose, the coils, the external field and the jump. */
+#jumpDialog { width: min(40rem, 94vw); }
+#jumpDialog > .engine-rows { margin-top: 0.4rem; }
+#jumpDistance { display: grid; grid-template-columns: repeat(4, 1fr); }
+#jumpDistance button { padding: 0.45rem 0.2rem; font-size: 0.75rem; }
+.jump-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; margin-top: 0.8rem; }
+.jump-actions button { min-height: 2.6rem; font-size: 0.66rem; letter-spacing: 0.08em; }
+.jump-actions button.blocked { opacity: 0.45; }
+/* Combat (Beta9): the cannon's critical damage, a little smaller in the Weapons panel. */
+.arms-panel .critical-note { padding: 0.35rem 0.55rem; border-radius: 0.5rem; font-size: 0.64rem; }

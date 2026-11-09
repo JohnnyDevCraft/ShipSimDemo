@@ -6,7 +6,7 @@
 <title>Cargo Bay · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="cargo-bay">
 
@@ -26,6 +26,7 @@
 
 <!-- Left: what is aboard -->
 <div class="col left">
+  <div id="criticalBanner" class="crit-banner" role="alert" hidden></div>
   <section class="panel hold" aria-label="Cargo aboard">
     <div class="thead"><h2>CARGO ABOARD</h2><small id="holdNote">—</small></div>
     <dl class="rows hold-totals">
@@ -33,6 +34,13 @@
       <div><dt>MASS</dt><dd id="crateMass">0 KG</dd></div>
       <div><dt>INSPECTED</dt><dd id="inspectedCount">0 / 0</dd></div>
     </dl>
+    <dl class="rows hold-totals hold-capacity">
+      <div><dt>HOLD</dt><dd id="holdCapacity">—</dd></div>
+      <div><dt>ABOARD</dt><dd id="holdAboard">—</dd></div>
+      <div><dt>ROOM LEFT</dt><dd id="holdRoom">—</dd></div>
+      <div><dt>TROOPS</dt><dd id="holdTroops">—</dd></div>
+    </dl>
+    <div id="troopRow" class="troop-row" hidden></div>
     <div class="list-head"><small>BY TYPE</small></div>
     <div id="typeList" class="type-list" role="list" aria-label="Crates aboard by type"></div>
     <div class="list-head"><small>CRATES</small><b id="crateListCount">0</b></div>
@@ -134,7 +142,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Cargo orders, the communications array, the ship's position, more cargo and reset</span></button>
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Cargo orders, the communications array, the ship's position, the hold and troops, more cargo and reset</span></button>
     <a href="../Transporter/index.html"><b>Transporter Control</b><span>Beam cargo aboard, or to its receiver once approved</span></a>
     <a href="../Communications/index.html"><b>Communications</b><span>Hail your organization for a mission; delivery answers arrive here too</span></a>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
@@ -142,10 +150,11 @@
   <div id="demoControls" hidden>
     <div class="fields-view">
       <div class="msection">
-        <h3>ORDERS AND SHIP</h3>
+        <h3>ORDERS, SHIP AND HOLD</h3>
         <label class="switch"><input type="checkbox" id="ordersActive"><span></span>Cargo orders active (Atlas Bulk Transport)</label>
         <label class="switch"><input type="checkbox" id="commsPowered"><span></span>Communications array powered</label>
         <label class="switch"><input type="checkbox" id="shipFar"><span></span>Ship far from Earth (every receiver out of reach)</label>
+        <div class="hold-demo"><div class="seg" role="group" aria-label="Hold size" title="The hull's cargo hold (no limit when not set)"><button type="button" data-hold="6000">6,000 KG</button><button type="button" data-hold="12000">12,000 KG</button><button type="button" data-hold="0">NO LIMIT</button></div><div class="seg" role="group" aria-label="Troops aboard" title="Soldiers in the hold, 100 kg each with kit, no manifest"><button type="button" data-troops="0">NO TROOPS</button><button type="button" data-troops="20">20</button><button type="button" data-troops="60">60</button></div></div>
       </div>
       <div class="msection">
         <h3>CARGO</h3>
@@ -162,8 +171,9 @@
 </dialog>
 
 <script src="../Shared/console-ui.js?v=4"></script>
-<script src="cargobay.js?v=2"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="cargobay.js?v=20261109"></script>
 </body>
 </html>

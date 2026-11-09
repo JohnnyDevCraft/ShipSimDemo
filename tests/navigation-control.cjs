@@ -272,4 +272,51 @@ run({
     const select = await page.locator('.dock [data-open="knownDialog"]').evaluate(button => { const computed = getComputedStyle(button); return computed.webkitUserSelect || computed.userSelect; });
     assert.equal(select, 'none');
   },
+  'critical damage to the navigation computer shows in the banner and makes the course lock take four times as long': async ({ open }) => {
+    const page = await open('/Navigation/');
+    await expect(page.locator('#odShip')).toHaveText('TNS VIGILANT');
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+    await calculationSeconds(page, 2);
+    await page.evaluate(() => DemoCombat.set('navigation', ['course-lock-slowed']));
+    await expect(page.locator('#criticalBanner')).toHaveText('CRITICAL · Navigation computer: Course lock takes four times as long');
+    await pickKnown(page, 'Mars');
+    await page.locator('#setOwn').click();
+    await expect(page.locator('#ownDestination')).toHaveAttribute('data-state', 'calculating');
+    await page.waitForTimeout(3500);
+    await expect(page.locator('#ownDestination')).toHaveAttribute('data-state', 'calculating'); // 2 s rated, 8 s slowed
+    const fill = await page.locator('#odCalcFill').evaluate(bar => parseFloat(bar.style.width));
+    assert.ok(fill > 30 && fill < 70, `the bar fills at a quarter of the pace (${fill}% after 3.5 s of 8)`);
+    await expect(page.locator('#odName')).toHaveText('Mars', { timeout: 8000 });
+    await demoControls(page, async () => expect(page.locator('#calcSeconds [data-seconds="2"]')).toHaveClass(/active/)); // the rating is unchanged
+    await page.evaluate(() => DemoCombat.clearCritical());
+    await expect(page.locator('#criticalBanner')).toBeHidden();
+  },
+  'an enemy ship is HOSTILE on the map, the target card and Known Objects, and WRECK once disabled': async ({ open }) => {
+    const page = await open('/Navigation/');
+    await demoControls(page, () => page.locator('[data-demo-enemy]').click());
+    await pickKnown(page, 'Black Pearl');
+    await expect(page.locator('#mtKind')).toHaveText('HOSTILE · Ship · Ash Corsairs · ZLX-01A');
+    await expect.poll(() => page.evaluate(() => NavigationControl.labels().find(label => label.name === 'Black Pearl')?.detail)).toMatch(/ · HOSTILE$/);
+    await page.locator('.dock [data-open="knownDialog"]').click();
+    await expect(knownRow(page, 'Black Pearl').locator('.known-detail')).toHaveText(/^HOSTILE · Ship ZLX-01A · /);
+    await page.locator('#knownDialog [data-close]').click();
+    await demoControls(page, () => page.locator('[data-demo-wreck]').click());
+    await expect(page.locator('#mtKind')).toHaveText('WRECK · Ship · Ash Corsairs · ZLX-01A');
+    assert.equal(await page.evaluate(() => NavigationControl.describe(NavWorld.worldObjects().find(object => object.name === 'Black Pearl')).color), '#6b7c8c');
+    await expect.poll(() => page.evaluate(() => NavigationControl.labels().find(label => label.name === 'Black Pearl')?.detail)).toMatch(/ · WRECK$/);
+  },
+  'a station with its shield raised is SHIELDED on the map and SHIELD RAISED in Known Objects': async ({ open }) => {
+    const page = await open('/Navigation/');
+    await pickKnown(page, 'Earth Orbital Station');
+    await expect.poll(() => page.evaluate(() => NavigationControl.labels().find(label => label.name === 'Earth Orbital Station')?.detail)).toMatch(/ · SHIELDED$/);
+    await page.locator('.dock [data-open="knownDialog"]').click();
+    const detail = knownRow(page, 'Earth Orbital Station').locator('.known-detail');
+    await expect(detail).toHaveText(/ · SHIELD RAISED 100%$/);
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', true, 0));
+    await expect(detail).toHaveText(/ · SHIELD RAISED 0%$/);
+    await page.evaluate(() => DemoCombat.setPlaceShield('Earth Orbital Station', false));
+    await expect(detail).not.toHaveText(/SHIELD/);
+    await page.locator('#knownDialog [data-close]').click();
+    await expect.poll(() => page.evaluate(() => NavigationControl.labels().find(label => label.name === 'Earth Orbital Station')?.detail)).not.toMatch(/SHIELDED/);
+  },
 });

@@ -3,7 +3,7 @@
 const assert = require('node:assert/strict');
 const { run, expect } = require('./browser-harness.cjs');
 
-const URL = '/TorpedoLaunch/?models=0';
+const URL = '/TorpedoLaunch/?models=0', QUIET = URL + '&battle=0';
 const state = page => page.evaluate(() => TorpedoLaunch.state());
 async function demo(page, act) {
   await page.locator('#menuBtn').click();
@@ -81,7 +81,7 @@ run({
     await tapShip(page);
     await expect(page.locator('#targetPanel')).toBeVisible();
     await expect(page.locator('#targetName')).toHaveText('Training ship A');
-    await expect(page.locator('#targetKind')).toHaveText('ENEMY');
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE');
     await expect(page.locator('#targetRange')).toHaveText('8 km');
     await expect(page.locator('#targetBearing')).toHaveText('+3.0°');
     await expect(page.locator('#targetSolution')).toHaveText('In arc');
@@ -203,6 +203,103 @@ run({
     });
     await expect(page.locator('#preparedCount')).toHaveText('5 / 5');
     assert.equal((await state(page)).contacts.length, 2);
+  },
+  // As the live console (1.0.0-Beta10) and Combat (Beta9, the shared Shared/demo-combat.js). The demo's engagement is switched
+  // off in these cases, so its ships do not pass in front of the target.
+  'the ship\'s two launchers: AFT turns the scope aft, with its own tube and prepared torpedoes, while the forward one keeps loading': async ({ open }) => {
+    const page = await open(QUIET);
+    await expect(page.locator('#scanCaption')).toHaveText('TPD1 · FORWARD TORPEDO LAUNCHER · 60° ACQUISITION ARC · MANUAL LEAD');
+    await page.locator('#prepared .round button').first().click();
+    await page.locator('#launcherSeg [data-launcher="TPD2"]').click();
+    await expect(page.locator('#notice')).toHaveText('TPD2 launcher: the scope looks aft.');
+    await expect(page.locator('#scanCaption')).toHaveText('TPD2 · AFT TORPEDO LAUNCHER · 60° ACQUISITION ARC · MANUAL LEAD');
+    await expect(page.locator('#launcherSeg [data-launcher="TPD2"]')).toHaveClass(/active/);
+    await expect(page.locator('#tubeTitle')).toHaveText('TUBE EMPTY');
+    await expect(page.locator('#prepared .round')).toHaveCount(3);
+    await expect(page.locator('#prepared .round b').first()).toHaveText('#4 WARHEAD');
+    let s = await state(page);
+    assert.equal(Math.abs(s.facing), 180, 'the scope looks aft');
+    assert.equal(s.aim, 0, 'aim at the launcher\'s centre');
+    await page.evaluate(() => TorpedoLaunch.advance(3000));
+    s = await state(page);
+    assert.equal(s.launchers[0].tube.id, 1, 'the forward launcher loaded while the aft one was shown');
+    await page.locator('#prepared .round button').first().click();
+    await page.evaluate(() => TorpedoLaunch.advance(3000));
+    await page.locator('#armBtn').click();
+    await page.locator('#launchBtn').click();
+    s = await state(page);
+    assert.equal(Math.abs(s.flight[0].aim), 180, 'the aft torpedo runs astern');
+    await page.locator('#launcherSeg [data-launcher="TPD1"]').click();
+    await expect(page.locator('#tubeTitle')).toHaveText('#1 WARHEAD LOADED');
+  },
+  'critical damage: a launcher\'s range halved halves its WARHEAD RANGE and shows a red line, for that launcher only': async ({ open }) => {
+    const page = await open(QUIET);
+    await expect(page.locator('#warheadRange')).toHaveText('600 km');
+    await page.evaluate(() => DemoCombat.set('TPD2', ['range-halved']));
+    await expect(page.locator('#launcherCritical')).toBeHidden();
+    await page.locator('#launcherSeg [data-launcher="TPD2"]').click();
+    await expect(page.locator('#warheadRange')).toHaveText('300 km (halved)');
+    await expect(page.locator('#torpedoSpeed')).toHaveText('10 km/s · 30 s');
+    await expect(page.locator('#launcherCritical')).toHaveText('CRITICAL · Range halved');
+  },
+  'targeting computer offline: the red pill shows, and there is no intercept circle, lead marker or intercept': async ({ open }) => {
+    const page = await open(QUIET);
+    await placeShip(page, { bearing: 3, range: 8000, yaw: 90 });
+    await tapShip(page);
+    await expect(page.locator('#leadMarker')).toBeVisible();
+    await page.evaluate(() => DemoCombat.set('targeting', ['targeting-computer-offline']));
+    await expect(page.locator('#targetingOffline')).toBeVisible();
+    await expect(page.locator('#leadMarker')).toBeHidden();
+    await expect(page.locator('#targetIntercept')).toHaveText('Offline');
+    await expect(page.locator('#targetSolution')).toHaveText('No guidance');
+    await expect(page.locator('#advisory')).toHaveText('Targeting computer offline: no guidance reticle. Aim by hand.');
+  },
+  'LOCK: the target reads LOCKING then LOCKED, and a locked launch leads the target whatever the aim': async ({ open }) => {
+    const page = await open(QUIET);
+    await placeShip(page, { bearing: 4, range: 6000, yaw: 90 });
+    await tapShip(page);
+    await expect(page.locator('#targetKind')).toHaveText('HOSTILE');
+    await page.locator('#lockBtn').click();
+    await expect(page.locator('#targetKind')).toHaveText('LOCKING');
+    await page.evaluate(() => TorpedoLaunch.advance(2100));
+    await expect(page.locator('#targetKind')).toHaveText('LOCKED');
+    await expect(page.locator('#lockBtn')).toHaveText('UNLOCK');
+    await expect(page.locator('#advisory')).toHaveText(/Locked: the launcher leads the target\.$|Align the reticle|Pan toward/);
+    await loadAndArm(page);
+    await page.evaluate(() => TorpedoLaunch.set({ aim: -25 }));
+    const lead = (await state(page)).lead.bearing;
+    await page.locator('#launchBtn').click();
+    await expect(page.locator('#notice')).toHaveText('Torpedo #1 launched at Training ship A.');
+    await page.evaluate(() => TorpedoLaunch.advance(1500));
+    const shot = (await state(page)).flight[0];
+    assert.ok(Math.abs(shot.aim - lead) < 0.01, `the torpedo ran along the solution (${shot.aim} vs ${lead})`);
+    assert.equal(shot.hitShip, 'Training ship A');
+  },
+  'a settlement is a target: its shield, the lock and a led intercept on it': async ({ open }) => {
+    const page = await open(QUIET);
+    await placeShip(page, { bearing: 25, range: 8000, yaw: 90 });
+    const point = await page.evaluate(() => TorpedoLaunch.tapPoint('body:tycho-outpost'));
+    assert.ok(point, 'the outpost is on the scope');
+    await page.mouse.click(point.x, point.y);
+    await expect(page.locator('#targetName')).toHaveText('Tycho Rock Outpost');
+    await expect(page.locator('#targetKind')).toHaveText('SETTLEMENT');
+    await expect(page.locator('#targetSub')).toHaveText('Settlement · Tycho Rock');
+    await expect(page.locator('#placeShieldValue')).toHaveText('None raised');
+    await expect(page.locator('#targetIntercept')).toHaveText(/^29\.5 s · −6\.0°$/);
+    await page.evaluate(() => DemoCombat.setPlaceShield('Tycho Rock Outpost', true));
+    await expect(page.locator('#placeShieldValue')).toHaveText('10,000 / 10,000');
+    await page.locator('#lockBtn').click();
+    await page.evaluate(() => TorpedoLaunch.advance(2100));
+    await expect(page.locator('#targetKind')).toHaveText('LOCKED');
+  },
+  'a ship whose hull is gone is a wreck: grey, WRECK on the target panel': async ({ open }) => {
+    const page = await open(QUIET);
+    await placeShip(page, { bearing: 3, range: 8000, yaw: 90 });
+    await page.evaluate(() => TorpedoLaunch.set({ hulls: { 'Training ship A': 0 } }));
+    await page.evaluate(() => TorpedoLaunch.advance(200));
+    await tapShip(page);
+    await expect(page.locator('#targetKind')).toHaveText('WRECK');
+    assert.deepEqual((await state(page)).wrecks, ['Training ship A']);
   },
   'the 3D models load, or the scope falls back to outlines': async ({ open }) => {
     const page = await open('/TorpedoLaunch/');

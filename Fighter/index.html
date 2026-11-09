@@ -7,8 +7,8 @@
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
 <link rel="stylesheet" href="../Shared/game-pad.css?v=20261103f">
-<link rel="stylesheet" href="../Shared/scope.css?v=1">
-<link rel="stylesheet" href="styles.css?v=20261103g">
+<link rel="stylesheet" href="../Shared/scope.css?v=20261109">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="scope-page fighter">
 
@@ -88,10 +88,13 @@
       <div class="target-hull"><small>HULL</small><div class="bar hull-bar"><i id="hullBar"></i></div><b id="hullValue">500 / 500</b></div>
       <p class="mnote" id="subsystemNote" hidden></p>
     </div>
+    <!-- A station's or settlement's shield (it has no hull) -->
+    <div id="placeShieldBlock" class="target-hull place-shield" data-testid="place-shield" hidden><small>SHIELD</small><div class="bar hull-bar"><i id="placeShieldBar"></i></div><b id="placeShieldValue">—</b></div>
   </section>
-  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP</div>
+  <div class="target-chip" id="noTarget"><i aria-hidden="true"></i>NO TARGET · TAP A SHIP OR PLACE</div>
   <section class="panel arms-panel" aria-label="Weapons">
     <div class="thead"><h2>WEAPONS</h2><small id="weaponState">OFFLINE</small></div>
+    <p id="weaponCritical" class="critical-note" data-testid="weapon-critical" role="status" hidden></p>
     <div class="shot-row"><small>SHOT</small><div class="seg" id="shotPower"><button type="button" data-shot="30">30</button><button type="button" data-shot="60">60</button><button type="button" data-shot="120">120</button></div><small>PU</small></div>
     <div class="fire-row"><button type="button" id="fireBtn" class="danger fire"><span>FIRE CANNON</span><small id="chargeValue">0 SHOTS · 0 PU</small><span class="bar charge-bar" id="chargeBarWrap" aria-hidden="true"><i id="chargeBar"></i></span></button><button type="button" id="torpedoBtn" class="danger fire"><span>TORPEDO</span><small><b id="torpedoValue">12 / 12</b> · <em id="torpedoState">OFFLINE</em></small></button></div>
   </section>
@@ -152,10 +155,32 @@
   <p class="mnote">Discovery model: power, the cannon, the torpedoes and the shield come from the V3 catalog's TSC Fighter Mk1; the flight ratings are demo values.</p>
 </dialog>
 
+<!-- Jump drive: a manual plot along the nose, the coils and the jump (no navigation computer is fitted) -->
+<dialog id="jumpDialog" class="modal" aria-labelledby="jumpTitle">
+  <div class="mhead"><h2 id="jumpTitle">JUMP DRIVE</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
+  <dl class="rows compact engine-rows">
+    <div><dt>DRIVE</dt><dd id="jumpDrive">—</dd></div>
+    <div><dt>PLOT</dt><dd id="jumpPlot">—</dd></div>
+    <div><dt>COILS</dt><dd id="jumpCoils">—</dd></div>
+    <div><dt>EXTERNAL DAMPENER FIELD</dt><dd id="jumpField">—</dd></div>
+  </dl>
+  <h3 class="systems-title">JUMP DISTANCE ALONG THE NOSE</h3>
+  <div class="seg" id="jumpDistance"><button type="button" data-km="10000">10K KM</button><button type="button" data-km="100000">100K KM</button><button type="button" data-km="1000000">1M KM</button><button type="button" data-km="10000000">10M KM</button></div>
+  <div class="mrow jump-actions">
+    <button type="button" id="jumpPlotBtn">PLOT</button>
+    <button type="button" id="jumpFieldBtn">EXTERNAL FIELD</button>
+    <button type="button" id="jumpChargeBtn">CHARGE COILS</button>
+    <button type="button" id="jumpEngageBtn" class="danger">JUMP</button>
+    <button type="button" id="jumpExitBtn">DROP OUT</button>
+  </div>
+  <p class="mnote">The fighter has no navigation computer, so it jumps by a manual plot: a course along the nose and a distance. A jump needs zero impulse, a settled heading, charged coils, the external dampener field off and 10 km clear of every station.</p>
+</dialog>
+
 <!-- Menu and demo controls -->
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
+    <button type="button" id="openJump"><b>Jump drive</b><span>Plot a jump along the nose, charge the coils and jump</span></button>
     <button type="button" id="openDemoControls"><b>Demo controls</b><span>Flight ratings, power, ships, enemy fire, rearm and repair</span></button>
     <button type="button" id="openControls"><b>Controls</b><span>Key bindings and joystick: <span id="padName">no joystick connected</span></span></button>
     <button type="button" id="resetDemo"><b>Reset demo</b><span>Engines off and cold, full battery, full rack, one training ship</span></button>
@@ -219,12 +244,13 @@
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/scene.js?v=20261103b"></script>
 <script src="../Shared/space-dust.js?v=20261103e"></script>
-<script src="../Shared/scope.js?v=20261103e"></script>
+<script src="../Shared/scope.js?v=20261109"></script>
 <script src="../Shared/star-field.js?v=20261103b"></script>
 <script src="../Shared/weapons-fire.js?v=20261103b"></script>
 <script src="../Shared/demo-battle.js?v=20261103c"></script>
 <script src="../Shared/game-pad.js?v=20261103f"></script>
-<script src="fighter.js?v=20261103g"></script>
+<script src="fighter.js?v=20261109"></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
 </body>
 </html>

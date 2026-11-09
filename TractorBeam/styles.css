@@ -107,3 +107,9 @@
 .diag-rows div { padding: 0.4rem 0; }
 .diag-rows dd { max-width: 65%; }
 .ship-shields { display: grid; gap: 0.1rem; }
+
+/* Critical damage (Combat, Beta9; the live console's look) */
+.crit-banner { flex: none; width: 100%; box-sizing: border-box; margin: 0; padding: 0.45rem 0.7rem; border: 1px solid var(--red); border-radius: 0.5rem; background: linear-gradient(rgba(255, 79, 79, 0.14), rgba(255, 79, 79, 0.14)), var(--panel); color: #ffb3b3; font-weight: 600; font-size: 0.8rem; letter-spacing: 0.05em; line-height: 1.35; }
+.crit-banner[hidden] { display: none; }
+.crit-banner b { color: var(--red); }
+#rangeLimit.bad { color: #ff8f9b; }

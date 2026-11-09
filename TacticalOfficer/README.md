@@ -34,3 +34,16 @@ Files: `index.html`, `styles.css`, `tactical.js` and `camera.js`, minified from 
 - A subsystem can be picked as soon as the scan completes; it locks within 25 km (the Angular page refused the pick until then).
 
 **Scanner range (John, 2026-11-03):** the RANGE slider is gone. The scanner zooms by the scroll wheel, a two-finger pinch and the zoom keys (= or + in, − out); the subtitle and the rings show the range.
+
+## Combat (live 1.0.0-Beta9/10, 2026-11-09)
+
+Ported from the live console's "Beta9 combat"; the critical damage and station shields are the shared demo state (`../Shared/demo-combat.js`, Menu → **Critical damage**, shared by every console in the browser).
+
+- **Hostile ships:** an identified enemy is red with a dashed red ring and `HOSTILE · <distance>`; the target chip reads HOSTILE, HOSTILE · LOCKING (detailed scan running) or HOSTILE · LOCKED (scanned), and the subtitle "· hostile". Other ships read UNKNOWN (enemy contacts on, not yet identified) or CONTACT, then LOCKING / LOCKED. The locked target and hostile ships beyond the window get an edge arrow.
+- **Wrecks:** a destroyed ship stays on the scan as a dim grey chevron, `WRECK · <distance>`, chip WRECK. It stops; no one fires at it or from it, and it cannot be scanned.
+- **AUTO TARGET** (bottom bar): selects the nearest identified hostile in reach and sight, else the nearest ship, and starts its detailed scan. Disabled ("Auto target unavailable (critical damage)") while the targeting sensors carry that effect.
+- **Critical damage:** the weapons panel lists the targeting sensors' and each weapon's effects, a weapon card with one shows CRIT; *Range halved* halves the range OUT OF RANGE uses (the list gives the halved figure against the design's). **TARGETING COMPUTER OFFLINE** shows at the top of the weapons panel: the shots lose their lead (they go where the target is now) and the advisory says to aim by hand. The shields panel lists the generator's effects: *SEO halved* halves every quadrant, *One shield quadrant disabled* takes out the port quadrant.
+- **Last hit on us:** for 8 s in the shields panel (side, kind, hull damage, what the shields stopped, the component struck, any critical, who fired; "<SIDE> SHIELDS HELD" when the shields took it all), said when it lands, and that side's arc on the compass flashes. A hull hit strikes one of our components for half its kinetic damage; a heavy one (a torpedo at full yield) gives it a critical effect, which every console then shows.
+- **Station shields:** a ring at a station's shield radius on the short range scan (dashed when lowered or drained) and `SHIELD UP nn%` / `SHIELD DOWN nn%` / `SHIELD DRAINED` in its label; a selected station shows a SHIELD row. **Scan Target** on a station locks the targeting sensors on it (the scan time, once within their reach); our weapons then fire at it and drain its shield.
+- **Menu → Sensors:** power (0–100 %) of the targeting sensors (1 km to the Demo controls' scan distance; the detailed scan needs the target within it), short-range sensors (10,000 km to 1 MKM; the SRS shows ships within it) and long-range sensors (0.001 to 3 LY), with their reach and any critical damage.
+- The bottom bar is a little tighter (seven commands), and the left panels scroll inside their column if every effect is on at once.

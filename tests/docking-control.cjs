@@ -137,11 +137,19 @@ run({
     await expect(page.locator('#clampCount')).toHaveText('OPEN');
     await expect(page.locator('#moorings rect[data-state="open"]')).toHaveCount(4);
     await step(page, 3.1);
+    await expect(page.locator('#state')).toHaveText('RELEASED');
+    await expect(page.locator('#advisory')).toHaveText('Released by the station. Undock from the Helm to back clear.');
+    await step(page, 5);
+    await expect(page.locator('#state')).toHaveText('RELEASED', { timeout: 100 });
+    await demo(page, async () => {
+      await expect(page.locator('#demoUndock')).toHaveText('AUTO UNDOCK');
+      await page.locator('#demoUndock').click();
+    });
     await expect(page.locator('#state')).toHaveText('DEPARTING');
     await step(page, 4.1);
     await expect(page.locator('#state')).toHaveText('FREE FLIGHT');
     await expect(page.locator('#mooringCount')).toHaveText('STOWED');
-    await expect(page.locator('#advisory')).toHaveText('Free flight. Dock at a station from the Helm.');
+    await expect(page.locator('#advisory')).toHaveText('Free flight. Hail a station from Communications for docking clearance, then dock from the Helm.');
     for (const id of ['#umbilicalBtn', '#gangwayBtn']) await expect(page.locator(id)).toBeDisabled();
   },
   'docking (a demo control) closes on the berth, then the moorings tension and the clamps lock': async ({ open }) => {
@@ -149,6 +157,7 @@ run({
     await expect(page.locator('#demoControls')).toBeHidden();
     await demo(page, async () => {
       await page.locator('#demoUndock').click();
+      await page.locator('#demoClearance').click();
       await page.locator('#demoDock').click();
     });
     await expect(page.locator('#state')).toHaveText('APPROACHING');
@@ -165,5 +174,43 @@ run({
     await expect(page.locator('#logList li').first()).toContainText('Clamps locked. Ship secured at Berth 3.');
     await expect(page.locator('#logList')).toContainText('Moorings engaged, four of four.');
     await expect(page.locator('#logList')).toContainText('Approaching Earth Orbital Station, Berth 3.');
+  },
+  'clearance: required in free flight, granted by the station, used up at the berth; Auto Dock is refused without it': async ({ open }) => {
+    const page = await open('/Docking/');
+    await expect(page.locator('#clearanceRow')).toHaveText('Used for this berth');
+    await demo(page, async () => {
+      await page.locator('#demoUndock').click();
+      await page.locator('#demoDock').click();
+    });
+    await expect(page.locator('#notice')).toHaveText('Auto Dock refused: no docking clearance. Hail the station from Communications.');
+    await expect(page.locator('#state')).toHaveText('FREE FLIGHT');
+    await expect(page.locator('#clearanceRow')).toHaveText('Required · hail the station');
+    await expect(page.locator('#clearanceRow')).toHaveAttribute('data-level', 'warn');
+    await demo(page, () => page.locator('#demoClearance').click());
+    await expect(page.locator('#clearanceRow')).toHaveText('Granted · Earth Orbital Station');
+    await expect(page.locator('#advisory')).toHaveText('Docking clearance from Earth Orbital Station. Auto Dock from the Helm within 10 km.');
+    await demo(page, () => page.locator('#demoDock').click());
+    await step(page, 9);
+    await expect(page.locator('#state')).toHaveText('SECURED');
+    await expect(page.locator('#clearanceRow')).toHaveText('Used for this berth');
+    await demo(page, () => page.locator('#demoClearanceRequired').uncheck({ force: true }));
+    await expect(page.locator('#clearanceRow')).toHaveText('Not required');
+  },
+  'while secured, the station\'s repair drones show in the Berth panel, read-only; they leave with the ship': async ({ open }) => {
+    const page = await open('/Docking/');
+    const group = page.locator('[data-testid="station-repair"]');
+    await expect(group).toBeVisible();
+    await expect(page.locator('#stationRepairState')).toHaveText('×2');
+    await expect(page.locator('#stationRepairNote')).toHaveText("Earth Orbital Station's repair drones · not under the crew's control");
+    await expect(page.locator('#stationRepairList li')).toHaveCount(2);
+    await expect(page.locator('#stationRepairList li').first()).toHaveText(/Warp drive · 2 units\s*\+0\.22 %\/s/);
+    await expect(group.locator('button')).toHaveCount(0);
+    await expect(page.locator('[data-testid="critical-banner"]')).toBeHidden();
+    await demo(page, () => page.locator('#demoStationRepair').uncheck({ force: true }));
+    await expect(group).toBeHidden();
+    await demo(page, () => page.locator('#demoStationRepair').check({ force: true }));
+    await expect(group).toBeVisible();
+    await demo(page, () => page.locator('#demoUndock').click());
+    await expect(group).toBeHidden();
   },
 });

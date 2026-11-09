@@ -49,3 +49,10 @@
 .mini-warhead { --tone: var(--warhead); }
 .mini-probe { --tone: var(--probe); }
 .mini-beacon { --tone: var(--beacon); }
+
+/* The ship's launchers (TPD1 forward, TPD2 aft), in the panel's header: the tube and rack below are the chosen launcher's. */
+.launcher-head { gap: 0.5rem; padding-bottom: 0.4rem; }
+/* The tube drawing a little shorter, so the rack keeps room for three prepared torpedoes with the launcher choice above. */
+.launcher .tube-art { max-height: 2.6rem; }
+.launcher-seg { flex: none; padding: 0.12rem; }
+.launcher-seg button { min-height: 1.9rem; padding: 0.2rem 0.6rem; font-size: 0.68rem; letter-spacing: 0.1em; }

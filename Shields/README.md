@@ -25,3 +25,12 @@ The rules are the Angular demo's:
 - A nearby ship is protected when all four corners of its hull, at its own heading, are inside the envelope under a facing that still holds.
 - Enemies sit kilometres away; only their bearing matters to the shields. Each fires every interval (4 s) at the hit strength on the facing over its bearing, and they drift round the ship at 1.5° a second, alternating direction.
 - The demo starts with shields up, facings balanced at 25%, no drain, one rescue ship (180 m to starboard, heading 030°) and no enemies; Reset Demo returns to that.
+
+## Combat (MissionProtocol 1.0.0-Beta10)
+
+As the live console shows it; critical damage comes from Menu → **Critical damage** (`../Shared/demo-combat.js`, shared by every console in the browser).
+
+- **Critical banner** over the emitter panel: "CRITICAL · Shield generator: …", naming the disabled facing.
+- **Shield SEO halved:** a HALVED badge on MAX SEO; max, available and every facing's SEO use half the output; Diagnostics says so.
+- **One quadrant disabled:** the side last struck (Aft if none was) holds nothing: a dashed dim-red arc, DISABLED on the map, in the table and on its slider column; the state reads FACING DISABLED; Available SEO counts only the working facings; hits there reach the hull; the advisory asks to move its allocation.
+- **Last hit:** the side struck blinks red outside its arc for 2.5 s, with its table row and slider label.

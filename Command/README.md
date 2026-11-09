@@ -6,13 +6,15 @@ Files: `index.html`, `styles.css` and `command.js`, minified from `demo-app/stat
 
 - **Status strip (always on screen):** how many components are damaged, how many DOTs are out of the bay, and the worst component, coloured by the worst damage. A light on the right is green while DOT Bay Control is reporting and amber for the stand-in. A tap opens the Status tab.
 - **Status tab:** the four DOTs (state, where each one is or is going, battery) and the ship's twelve components as DOT Bay Control lists them: damaged first, integrity, the DOTs on each, and the repair time left.
+  - **Combat (live 1.0.0-Beta10):** a HULL panel first: integrity, "n of max", a bar and SOUND / DAMAGED / CRITICAL / DESTROYED, flashing red on each new hit; HOSTILES (how many, the first three names); LAST HIT (how long ago, side, who fired with what, what the shield stopped, hull damage in KD, the component struck, its CRITICAL effect, TORPEDO SHOOK THE SHIP). Each component's critical damage (menu → Critical damage, shared by every console) is a red badge under it with its name in red. Docked at a station, STATION DRONES lists what the station's drones repair (read-only, ×2, units and %/s) and each component carries an amber S chip. The DOTs also show the live states OUT OF ACTION (bay critical damage halves the units), MAINTAINING, STANDING BY and NO POWER, and the DOTS chip NO REPAIR BAY / BAY OFFLINE / NO POWER.
 - **View tab:** the main view screen's camera.
   - The stick: left and right swing the camera round the ship (all 360°), up and down zoom in and out (1× to 20×). The further it is pushed, the faster it turns or zooms; let go and it springs back and the camera holds.
   - The camera bearing from the bow, the zoom, and a small dial with the camera's field of view.
   - PORT, FWD, AFT and STBD jump straight to those views.
   - **Scanners:** SRS, LRS, DUAL (both) or NONE (the forward scope alone) on the view screen.
+- **Range tab:** the short- and long-range scanners' ranges on the main view screen (the same settings Communications sets).
 - **Labels tab:** which names the view screen shows (stars, planets, anomalies, star bases, ships, settlements), one at a time or all on or off. The objects stay on screen either way.
-- **Menu:** demo controls (damage the stand-in ship at random, repair it, reset it) and links to DOT Bay Control and the View Screen.
+- **Menu:** demo controls (damage the stand-in ship at random, repair it, reset it; take a hit or a torpedo hit, repair the hull, dock at Earth Orbital Station, the repair bay's power) and links to DOT Bay Control and the View Screen.
 
 ## Rules
 

@@ -10,7 +10,7 @@
 <title>Command Control · Ship Sim</title>
 <link rel="icon" type="image/x-icon" href="../favicon.ico">
 <link rel="stylesheet" href="../Shared/console.css?v=3">
-<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="styles.css?v=20261109">
 </head>
 <body class="command">
 
@@ -37,6 +37,24 @@
   <main class="tabs">
     <!-- Status: the DOTs and the components, as DOT Bay Control shows them -->
     <section class="tab" id="statusTab" role="tabpanel" aria-labelledby="statusTabBtn">
+      <!-- Combat (Beta9): the hull, hostile contacts and the last hit the ship took -->
+      <section class="panel hull-panel" id="hullPanel" aria-label="Hull">
+        <div class="thead"><h2>HULL</h2><small id="hullChip" class="chip">—</small></div>
+        <div class="hull-read"><b id="hullValue">—</b><small id="hullPoints">—</small></div>
+        <div class="bar hull-bar"><i id="hullFill"></i></div>
+        <div class="hostiles" id="hostileRow" hidden><small>HOSTILES</small><b id="hostileCount">0</b><span id="hostileNames"></span></div>
+        <div class="last-hit" id="lastHit">
+          <div class="lhead"><small>LAST HIT</small><small id="lastHitAgo">—</small></div>
+          <p class="shake" id="lastHitShake" hidden>TORPEDO SHOOK THE SHIP</p>
+          <dl class="hit-rows" id="lastHitRows"></dl>
+        </div>
+      </section>
+      <!-- A station's repair drones while docked (Combat CL-B9-8): read-only, the crew does not control them -->
+      <section class="panel station-panel" id="stationPanel" aria-label="Station repair drones" hidden>
+        <div class="thead"><h2>STATION DRONES</h2><small id="stationChip" class="chip">—</small></div>
+        <p class="snote" id="stationNote">—</p>
+        <ul class="station-list" id="stationList"></ul>
+      </section>
       <section class="panel dots-panel" aria-label="DOTs">
         <div class="thead"><h2>DOTS</h2><small id="dotsChip" class="chip">—</small></div>
         <div class="dot-grid" id="dotGrid"></div>
@@ -84,6 +102,19 @@
       </section>
     </section>
 
+    <!-- Range: how far the view screen's scanners reach (as Communications sets them) -->
+    <section class="tab" id="rangeTab" role="tabpanel" aria-labelledby="rangeTabBtn" hidden>
+      <section class="panel range-panel" aria-label="Short-range scanner range">
+        <div class="thead"><h2>SHORT-RANGE SCANNER</h2><small id="srsRangeChip" class="chip">—</small></div>
+        <div class="range-grid" id="srsRanges" role="group" aria-label="Short-range scanner range"></div>
+      </section>
+      <section class="panel range-panel" aria-label="Long-range scanner range">
+        <div class="thead"><h2>LONG-RANGE SCANNER</h2><small id="lrsRangeChip" class="chip">—</small></div>
+        <div class="range-grid" id="lrsRanges" role="group" aria-label="Long-range scanner range"></div>
+      </section>
+      <p class="mnote">The range each scanner shows on the main view screen. Every view screen of this ship follows.</p>
+    </section>
+
     <!-- Labels: which names the main view screen shows -->
     <section class="tab" id="labelsTab" role="tabpanel" aria-labelledby="labelsTabBtn" hidden>
       <section class="panel labels-panel" aria-label="View screen labels">
@@ -98,6 +129,7 @@
   <nav class="tabbar" role="tablist" aria-label="Command Control">
     <button type="button" role="tab" id="statusTabBtn" data-tab="status" aria-controls="statusTab"><span class="ticon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6Z"/><path d="M8 12h2.5l1.5-3 2 6 1.5-3H17"/></svg><em id="statusBadge" class="badge" hidden></em></span>STATUS</button>
     <button type="button" role="tab" id="viewTabBtn" data-tab="view" aria-controls="viewTab"><span class="ticon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/></svg></span>VIEW</button>
+    <button type="button" role="tab" id="rangeTabBtn" data-tab="range" aria-controls="rangeTab"><span class="ticon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/></svg></span>RANGE</button>
     <button type="button" role="tab" id="labelsTabBtn" data-tab="labels" aria-controls="labelsTab"><span class="ticon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9Z"/><circle cx="8.5" cy="8.5" r="1.5"/></svg></span>LABELS</button>
   </nav>
 </div>
@@ -108,7 +140,7 @@
 <dialog id="menuDialog" class="modal" aria-labelledby="menuTitle">
   <div class="mhead"><button type="button" class="icon-btn small" id="menuBack" aria-label="Back to menu" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button><h2 id="menuTitle">MENU</h2><button type="button" class="icon-btn small" data-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19"/></svg></button></div>
   <div id="menuMain" class="menu-list">
-    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Damage the stand-in ship while DOT Bay Control is closed</span></button>
+    <button type="button" id="openDemoControls"><b>Demo controls</b><span>Damage the stand-in ship, take a hit, dock at a station</span></button>
     <a href="../DotBay/index.html" target="_blank" rel="noopener"><b>DOT Bay Control</b><span>The repairs this console reports</span></a>
     <a href="../ViewScreen/index.html" target="_blank" rel="noopener"><b>View Screen</b><span>The main view screen this console turns, zooms and labels</span></a>
     <a href="../index.html"><b>All demos</b><span>Back to the demo selector</span></a>
@@ -120,15 +152,21 @@
       <div class="demo-buttons"><button type="button" id="demoDamage">DAMAGE AT RANDOM</button><button type="button" id="demoRepair">REPAIR ALL</button><button type="button" id="demoReset">RESET</button></div>
       <p class="mnote">With DOT Bay Control open in this browser, this console shows the live bay. Without it, a stand-in ship shows here.</p>
     </div>
-  </div>
+    <div class="msection">
+      <h3>COMBAT AND STATION</h3>
+      <div class="demo-buttons"><button type="button" id="demoHit">TAKE A HIT</button><button type="button" id="demoTorpedo">TORPEDO HIT</button><button type="button" id="demoHullRepair">REPAIR HULL</button><button type="button" id="demoDock" class="toggle light" aria-pressed="false"><i aria-hidden="true"></i>DOCKED</button><button type="button" id="demoBayPower" class="toggle light" aria-pressed="true"><i aria-hidden="true"></i>BAY POWER</button></div>
+      <p class="mnote">A hostile's hit lands on the hull and may give a component critical damage. Docked at Earth Orbital Station, its drones repair the stand-in; without bay power the DOTs stand by.</p>
+    </div>
+</div>
 </dialog>
 
 <script src="../Shared/console-ui.js?v=6"></script>
 <script src="../Shared/view-screen-settings.js?v=2"></script>
 <script src="../Shared/dot-bay-report.js?v=1"></script>
 <script src="../TacticalOfficer/camera.js?v=1"></script>
-<script src="command.js?v=1"></script>
 <script src="../Shared/habitability.js?v=2" data-watch></script>
 <script src="../Shared/quick-switch.js?v=20261103b"></script>
+<script src="../Shared/demo-combat.js?v=20261109"></script>
+<script src="command.js?v=20261109"></script>
 </body>
 </html>

@@ -184,7 +184,7 @@ run({
     await page.locator('#trackBtn').click();
     await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#contactChip')).toContainText('TRACKING · Black Pearl');
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(300); // read at once: our fire may disable Black Pearl, which ends tracking
     // The helm flies after it (Helm Track Autopilot): the course is the autopilot's, closing on or holding 10 km from the enemy.
     const steer = await page.evaluate(() => ({ goal: goal ?? heading, plan: window.helmTrackState().plan }));
     assert.ok(Math.abs(wrap(steer.goal - steer.plan.course)) < 0.1, `the course follows the autopilot (${steer.goal.toFixed(1)}° for ${steer.plan.course.toFixed(1)}°)`);

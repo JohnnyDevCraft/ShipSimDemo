@@ -501,6 +501,39 @@ run({
     const coasting = await page.evaluate(() => window.helmDriftState());
     assert.ok(coasting.brake === null && coasting.speed > coasting.full * 0.24, `coasting with auto drift off (${JSON.stringify(coasting)})`);
   },
+  'TRACK on an enemy closes to 10 km and holds there as it moves, and impulse by hand takes the ship back': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.evaluate(() => DemoBattle.addEnemy()); // Black Pearl, 14 km ahead, weaving
+    await expect(page.locator('#tacTarget')).toBeVisible();
+    await page.locator('#trackBtn').click();
+    await expect(page.locator('#notice')).toContainText('the helm closes to 10 km and holds');
+    const range = () => page.evaluate(() => window.helmTrackState().plan?.rangeKm ?? NaN);
+    // Holding: within a kilometre of 10 km on five checks in a row, a second apart.
+    await expect.poll(async () => {
+      for (let check = 0; check < 5; check++) {
+        const km = await range();
+        if (!(Math.abs(km - 10) <= 1)) return km;
+        await page.waitForTimeout(1000);
+      }
+      return 10;
+    }, { timeout: 90000, intervals: [1000] }).toBe(10);
+    await expect(page.locator('#engineNote')).toHaveText('TRACK · HOLDING 10 KM');
+    // Impulse by hand: tracking ends and the slider is the helmsman's again.
+    await page.locator('#impulse').focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#notice')).toHaveText('Impulse by hand · tracking off.');
+  },
+  'TRACK on an enemy ends at a brake by hand': async ({ open }) => {
+    const page = await open('/Helm/');
+    await page.evaluate(() => DemoBattle.addEnemy());
+    await page.locator('#trackBtn').click();
+    await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.dock #light').focus();
+    await page.keyboard.down(' '); // held, as a finger on the button would
+    await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#notice')).toHaveText('Light brake by hand · tracking off.');
+  },
   'with an enemy present, TRACK keeps the course on Tactical\'s target, whose shields and hull Helm shows': async ({ open }) => {
     const page = await open('/Helm/');
     await expect(page.locator('#tacTarget')).toBeHidden();
@@ -525,9 +558,12 @@ run({
     await expect(page.locator('#tacTracking')).toBeVisible();
     const tracking = await page.evaluate(() => window.helmTacticalTarget().tracking);
     assert.equal(tracking.tactical, true);
-    const bearing = await page.evaluate(() => NavWorld.bearingTo(ship, worldObjects().find(object => object.battleId === 'black-pearl')));
+    // The helm flies it (Helm Track Autopilot): the course is the autopilot's, toward the 10 km standoff.
+    const track = await page.evaluate(() => window.helmTrackState());
+    assert.equal(track.pilot, true, 'tracking a ship flies its speed too');
     const aimed = await page.evaluate(() => goal ?? heading);
-    assert.ok(Math.abs(((aimed - bearing + 540) % 360) - 180) < 0.1, `the course points at Black Pearl (${aimed} vs ${bearing})`);
+    assert.ok(Math.abs(((aimed - track.plan.course + 540) % 360) - 180) < 0.1, `the course is the autopilot's (${aimed} vs ${track.plan.course})`);
+    await expect(page.locator('#tacTracking')).toHaveText(/^(CLOSING|HOLDING|OPENING|CLEAR OF)/);
     // Disabled at hull 0, it is no longer Tactical's target: the panel goes and tracking ends.
     await page.evaluate(() => { for (let i = 0; i < 4; i++) DemoBattle.hitEnemy('TPD', 2); });
     await expect(page.locator('#tacTarget')).toBeHidden();

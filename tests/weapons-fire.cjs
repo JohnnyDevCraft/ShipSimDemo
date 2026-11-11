@@ -185,11 +185,10 @@ run({
     await expect(page.locator('#trackBtn')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#contactChip')).toContainText('TRACKING · Black Pearl');
     await page.waitForTimeout(2500);
-    const steer = await page.evaluate(() => {
-      const place = trackedPlace();
-      return { goal: goal ?? heading, bearing: NavWorld.bearingTo(ship, place) };
-    });
-    assert.ok(Math.abs(wrap(steer.goal - steer.bearing)) < 3, `the course follows the enemy (${steer.goal.toFixed(1)}° for ${steer.bearing.toFixed(1)}°)`);
+    // The helm flies after it (Helm Track Autopilot): the course is the autopilot's, closing on or holding 10 km from the enemy.
+    const steer = await page.evaluate(() => ({ goal: goal ?? heading, plan: window.helmTrackState().plan }));
+    assert.ok(Math.abs(wrap(steer.goal - steer.plan.course)) < 0.1, `the course follows the autopilot (${steer.goal.toFixed(1)}° for ${steer.plan.course.toFixed(1)}°)`);
+    assert.ok(['closing', 'holding', 'opening'].includes(steer.plan.state), `after the enemy: ${steer.plan.state}`);
     // Far out the fire is too small to see; on the LRS there is none, and no enemy.
     await page.evaluate(() => setZoom(zoomFor(rangeScales.SRS, 1e6)));
     await page.waitForTimeout(300);

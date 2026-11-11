@@ -10,6 +10,9 @@ const state = page => page.evaluate(() => TacticalOfficer.state());
 const step = (page, n) => page.evaluate(count => TacticalOfficer.step(count), n);
 const set = (page, values) => page.evaluate(v => TacticalOfficer.set(v), values);
 const weapon = (page, id) => page.locator(`[data-weapon="${id}"]`);
+// Weapons start safe (tests/tactical-weapons.cjs sets them up from the overlays); these cases start with every
+// weapon armed and every tube loaded, as the demo's "Weapons ready on entry" switch does.
+const readyWeapons = page => page.evaluate(() => TacticalOfficer.readyWeapons());
 async function tap(page, key) {
   const point = await page.evaluate(k => TacticalOfficer.tapPoint(k), key);
   assert.ok(point, `${key} is on the scanner`);
@@ -36,13 +39,15 @@ run({
     assert.deepEqual([map.x, map.y, map.width, map.height], [0, 0, 1500, 1000]);
     await expect(page.locator('.scan-caption')).toHaveText('TACTICAL · SHORT RANGE SCAN · 200 KM RADIUS');
     await expect(page.locator('[data-weapon] .wname')).toHaveText(['CANNON 1', 'CANNON 2', 'TORPEDO 1', 'TORPEDO 2', 'ARRAY 1', 'CANNON 3']);
+    await expect(page.locator('[data-weapon] .wstate')).toHaveText(['SAFE', 'SAFE', 'TUBE EMPTY', 'TUBE EMPTY', 'SAFE', 'SAFE']);
+    await readyWeapons(page);
     await expect(page.locator('[data-weapon] .wstate')).toHaveText(Array(6).fill('NO TARGET'));
     await expect(page.locator('#totalSeo')).toHaveText('400.0 / 400.0 SEO');
     await expect(page.locator('#ownHullValue')).toHaveText('500.0 / 500.0 · 100.0%');
     await expect(page.locator('#noTarget')).toBeVisible();
     await expect(page.locator('#conditionValue')).toHaveText('IV');
     await expect(page.locator('#advisory')).toHaveText('No target. Tap a contact on the scanner.');
-    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
+    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'TORPEDOES', 'EPW', 'EBW', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
     // Shields on and off is a bottom-bar command; the panel only reports it.
     await expect(page.locator('.shields button')).toHaveCount(0);
     await expect(page.locator('#shieldsState')).toHaveText('ON');
@@ -54,6 +59,7 @@ run({
   },
   'a tap selects a contact; the weapons fire with lead, hit and cool down; arc and range are checked': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
+    await readyWeapons(page);
     await tap(page, 'ship:Training ship A');
     await expect(page.locator('#targetName')).toHaveText('Training ship A');
     await expect(page.locator('#targetKind')).toHaveText('UNKNOWN');
@@ -85,6 +91,7 @@ run({
   },
   'a detailed scan reveals the target; a subsystem can be picked at once, and locks within 25 km': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
+    await readyWeapons(page);
     await page.locator('#scanBtn').click();
     await expect(page.locator('#notice')).toHaveText('Select a ship to request a detailed scan.');
     await tap(page, 'ship:Training ship A');
@@ -167,6 +174,7 @@ run({
   },
   'a ship whose shields and hull are gone is destroyed and stays on the scanner as a wreck no one fires at': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
+    await readyWeapons(page);
     await tap(page, 'ship:Training ship A');
     await set(page, { contacts: [{ range: 30000, yaw: 168 }], targetShields: { 'Training ship A': { drain: [50, 50, 50, 50], flash: 0, hull: 10 } } });
     await weapon(page, 'TPD1').click();
@@ -216,6 +224,7 @@ run({
   },
   'critical damage: weapons list it and show CRIT, a halved range changes OUT OF RANGE, and shield SEO and quadrants follow': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
+    await readyWeapons(page);
     await tap(page, 'ship:Training ship A');
     // A running ship holds its fire, so our shield figures stay put.
     await set(page, { contacts: [{ range: 80000 }], demo: { behavior: 'run' } });
@@ -292,6 +301,7 @@ run({
   },
   'a station shield shows on the target panel; Scan Target locks the station and our weapons drain its shield': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
+    await readyWeapons(page);
     await page.evaluate(() => TacticalOfficer.select('body:Sol|Earth Orbital Station'));
     await expect(page.locator('#targetKind')).toHaveText('STATION');
     await expect(page.locator('#tShield')).toHaveText('SHIELD UP 100% · 10,000 / 10,000 · 8 km');
@@ -403,6 +413,7 @@ run({
       await setField(page, 'cannonPower', '50');
       await setField(page, 'ownImpulse', '0');
     });
+    await readyWeapons(page);
     const s = await state(page);
     assert.equal(s.contacts.length, 2);
     assert.deepEqual(s.identified.sort(), ['Training ship 2', 'Training ship A']);

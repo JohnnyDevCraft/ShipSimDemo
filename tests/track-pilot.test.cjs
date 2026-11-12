@@ -40,6 +40,15 @@ test('a ship that comes closer than the standoff is opened to 10 km again', () =
   assert.ok(Math.abs(Math.hypot(end.ship.x, end.ship.y - 3) - 10) < 1);
 });
 
+test('a ship just inside the standoff backs off in reverse, still facing its target, and holds', () => {
+  const target = () => ({ key: 'ship:B', ship: true, x: 0, y: 8.5, vx: 0, vy: 0 });
+  let worstOff = 0, astern = false;
+  const end = fly({ seconds: 240, target, onStep: ({ ship, speed, answer }) => { astern ||= speed < 0; worstOff = Math.max(worstOff, Math.abs(delta(answer.course, 0))); } });
+  assert.ok(astern, 'it went astern');
+  assert.ok(worstOff < 10, `kept facing the target (course off by up to ${worstOff.toFixed(1)}°)`);
+  assert.ok(Math.abs(Math.hypot(end.ship.x, end.ship.y - 8.5) - 10) <= 1, `holds (range ${Math.hypot(end.ship.x, end.ship.y - 8.5).toFixed(2)} km)`);
+});
+
 test('chasing a ship past a planet never enters the planet\'s clearance', () => {
   // The target runs past a planet of 6,000 km radius whose surface is 50 km off its line; we follow from far behind at speed.
   const planet = { key: 'planet', name: 'Kestrel', x: 6050, y: 2000, radius: 6000 };

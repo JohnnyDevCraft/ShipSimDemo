@@ -38,3 +38,12 @@ Files: `index.html`, `styles.css`, `gto-data.js` (the chart: stars, planets, moo
 - A transmission's ends are where its detection says: an origin or destination that is our ship or a named station, planet or star is drawn exactly there; a ship the chart does not hold is placed near its system's station, clear of the star. A destination with no known place ("Unresolved") is not drawn. (The preview placed origins beside the station and sent every point-to-point link to the next system over, whatever the destination.)
 
 Changes from the preview: Send now adds the message to the chat (the preview's final script left it doing nothing), the dictation button, which did nothing, is replaced by working voice entry, and a frequency tapped in the overlay opens a multicast communication on its channel (the preview opened unicast, which forced the channel to 0).
+
+## Places' frequencies (MissionProtocol "Settlement and Base Communications", John 2026-11-12)
+
+Frequencies lists, before the standard channels, the frequencies places answer on — each for the place itself, an organization's base there
+or an organization's seat of government — with its medium and whether it reaches us: subspace within our array's reach (or through relay
+buoys), RF within a light-hour, with its light time each way. Tranquility (Unity), the Commonwealth's base and seat of government, answers on
+subspace: Public information, Traffic control, Commonwealth Command and the Commonwealth's government (and Public information on RF 326 for
+its own system). A hail on RF in reach is in transit for the light time and the reply follows after the same time back; RF farther than a
+light-hour is refused, offering subspace. Who answers follows the frequency: the place's desk, the organization's command, or its government.

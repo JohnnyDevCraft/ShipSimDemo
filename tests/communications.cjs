@@ -117,10 +117,10 @@ run({
     const page = await open('/Communications/');
     await page.locator('#frequenciesBtn').click();
     await expect(page.locator('#frequencyDialog')).toBeVisible();
-    await expect(page.locator('#frequencyCount')).toHaveText('12 FREQUENCIES');
+    await expect(page.locator('#frequencyCount')).toHaveText('20 FREQUENCIES');
     await expect(page.locator('#frequencyList .frequency.advertised')).toHaveCount(2);
     await page.locator('[data-frequency-medium="RF"]').click();
-    await expect(page.locator('#frequencyCount')).toHaveText('10 FREQUENCIES');
+    await expect(page.locator('#frequencyCount')).toHaveText('14 FREQUENCIES');
     await page.locator('#frequencySearch').click();
     await expect(page.locator('#frequencyList')).toBeHidden();
     await typeKeys(page, '#frequencyDialog', 'EARTH');
@@ -132,6 +132,38 @@ run({
     await expect(page.locator('#recipientInput')).toHaveValue('Earth Orbital Station');
     await expect(page.locator('#channelValue')).toHaveText('229.5 MHz');
     await expect(page.locator('[data-comm-medium="RF"]')).toHaveClass(/active/);
+  },
+  'places answer on their own frequencies: what each is for, RF in transit at light speed, RF beyond a light-hour refused': async ({ open }) => {
+    // MissionProtocol "Settlement and Base Communications" (John, 2026-11-12): Tranquility, the Commonwealth's base and seat of government,
+    // talks on subspace — its settlement, Commonwealth Command and the Commonwealth's government each on a frequency of their own.
+    const page = await open('/Communications/');
+    await page.locator('#frequenciesBtn').click();
+    const card = name => page.locator('#frequencyList .frequency.place', { hasText: name });
+    await expect(card('Commonwealth Command · Tranquility').locator('small')).toHaveText('SUBSPACE · COMMONWEALTH BASE · COMMAND · BEYOND OUR REACH · ROUTE THROUGH RELAYS');
+    await expect(card('Commonwealth Government · Tranquility').locator('small')).toHaveText(/^SUBSPACE · COMMONWEALTH GOVERNMENT · GOVERNMENT · /);
+    await expect(card('Tranquility · Traffic control').locator('small')).toHaveText(/^SUBSPACE · TRANQUILITY · TRAFFIC CONTROL · /);
+    await page.locator('[data-frequency-medium="RF"]').click();
+    await expect(card('Ross Orbital Station · Public information').locator('small')).toHaveText(/^RF · ROSS ORBITAL STATION · PUBLIC INFORMATION · IN RF REACH · .* EACH WAY$/);
+    await expect(card('Paris · Public information').locator('small')).toHaveText('RF · PARIS · PUBLIC INFORMATION · BEYOND RF (OVER A LIGHT-HOUR)');
+    // RF in reach: the hail is in transit at light speed, and the place's desk replies after the light time each way.
+    await card('Ross Orbital Station · Public information').click();
+    await expect(page.locator('#channelValue')).toHaveText('412.0 MHz');
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commChat')).toBeVisible();
+    await page.locator('#messageInput').click();
+    await typeKeys(page, '#commChat', 'HELLO');
+    await page.locator('#commChat .search-keys [data-key="DONE"]').click();
+    await page.locator('#sendMessage').click();
+    await expect(page.locator('#conversation .bubble', { hasText: 'In transit by RF' })).toBeVisible();
+    await expect(page.locator('#conversation .bubble', { hasText: 'Ross Orbital Station public information. Reading you, Discovery.' })).toBeVisible({ timeout: 5000 });
+    // RF more than a light-hour away does not carry: the hail is refused, and subspace is offered.
+    await page.locator('#commsDialog [data-close]').last().click();
+    await page.locator('#frequenciesBtn').click();
+    await page.locator('[data-frequency-medium="RF"]').click();
+    await card('Paris · Public information').click();
+    await page.locator('#saveComm').click();
+    await expect(page.locator('#commStatus')).toHaveText(/Paris is .* away: RF carries only a light-hour\. Hail it on subspace\./);
+    await expect(page.locator('#commChat')).toBeHidden();
   },
   'a communication: type and channel rules, open a link, chat, and end it': async ({ open }) => {
     const page = await open('/Communications/');

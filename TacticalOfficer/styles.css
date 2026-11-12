@@ -2,7 +2,7 @@
    and target panels, the dialogs (with the weapon set-up overlay) and the view screen camera's two-axis joystick
    (drawn like the Helm's).
    Used in landscape, from an iPad to a 4K monitor. */
-:root { --left-w: 18rem; --right-w: 18.5rem; --advisory-h: 2.4rem; }
+:root { --left-w: 18rem; --right-w: 18rem; --advisory-h: 2.4rem; }
 .thead h2, .thead small { white-space: nowrap; }
 .thead { gap: 0.6rem; }
 .chip[data-level="ok"] { color: var(--green); }
@@ -101,13 +101,12 @@
 .advisory[data-level="bad"] { color: #ff8f9b; border-color: rgba(255, 79, 79, 0.6); box-shadow: 0 0 1rem rgba(255, 60, 60, 0.25); }
 .advisory[data-level="busy"] { color: var(--cyan); border-color: rgba(79, 214, 255, 0.5); }
 .advisory[data-level="off"] { color: var(--muted); }
-/* Ten commands (AUTO TARGET since Beta9; TORPEDOES, EPW and EBW): wider than the gap between the columns. The left
-   column keeps its full height (weapons, shields, critical damage and the last hit need it on a short window), so the
-   bar is centred in the space right of it and the right column ends above the bar. A little tighter, too. */
-.col.right { bottom: calc(var(--dock-h) + 0.5rem); }
-.dock { left: calc((var(--pad) * 2 + var(--left-w) + 100vw) / 2); padding: 0.75rem 1.4rem 0; gap: 0.3rem; }
-.dock button { min-width: 4.75rem; }
-/* TORPEDOES, EPW and EBW glow red while any weapon of theirs is armed. */
+/* Eight commands, centred (one WEAPONS button for torpedoes, EPW and EBW, John 2026-11-12: three were more than the bar could take).
+   The bar is set tighter than the other consoles' and the right column is half a rem narrower, so the bar fits between the side
+   columns while both keep their full height (the weapons, shields, critical damage and the last hit need it on a short window). */
+.dock { padding: 0.75rem 0.8rem 0; gap: 0.15rem; }
+.dock button { min-width: 4.6rem; letter-spacing: 0.03em; }
+/* WEAPONS glows red while any weapon is armed. */
 .dock button[data-weapons][data-armed="true"] { color: #ffd0d4; }
 .dock button[data-weapons][data-armed="true"] .ring { border-color: rgba(255, 90, 90, 0.75); box-shadow: 0 0 1rem rgba(255, 70, 85, 0.4), inset 0 0 0.8rem rgba(255, 70, 85, 0.25); }
 .dock .shields-toggle { color: var(--green); }
@@ -226,6 +225,11 @@
 .wcard[data-level="ok"] { background: linear-gradient(180deg, rgba(120, 28, 36, 0.7), rgba(60, 12, 18, 0.8)); box-shadow: 0 0 0.9rem rgba(255, 70, 85, 0.3); }
 .wcard[data-level="ok"] .wc-state { color: #ffd0d4; }
 .wcard[data-level="busy"] .bar i { background: var(--amber); box-shadow: none; }
+/* The weapon types, the overlay's first level: a card each, with its icon. */
+.kcard { min-height: 11rem; }
+.kcard .wc-head { display: flex; align-items: center; justify-content: flex-start; gap: 0.6rem; }
+.kcard .kc-icon { width: 1.9rem; height: 1.9rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; color: var(--cyan); }
+.kcard[data-armed="true"] .kc-icon { color: #ff9aa5; }
 
 .wdetail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 0.9rem 1.6rem; padding: 0.2rem 0 0.8rem; }
 .wpart { display: grid; align-content: start; gap: 0.65rem; min-width: 0; }

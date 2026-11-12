@@ -79,7 +79,9 @@ for (const [width, height] of sizes)
     // The weapon set-up overlays: the launcher list, a launcher's set-up at its tallest (proximity, a round
     // assembling and loading), and an energy weapon's set-up. The training ship stops firing so we survive.
     await page.evaluate(() => TacticalOfficer.set({ demo: { behavior: 'run' }, hull: 500 }));
-    await page.locator('#torpedoesBtn').click();
+    await page.locator('#weaponsBtn').click();
+    assert.ok(await dialogFits(page, 'weaponsDialog'), 'the weapon types fit');
+    await page.locator('#weaponKinds [data-kind="TPD"]').click();
     assert.ok(await dialogFits(page, 'weaponsDialog'), 'the torpedo launcher list fits');
     await page.locator('#weaponsList [data-choose="TPD1"]').click();
     await page.locator('#tdTrigger [data-trigger="Proximity"]').click();
@@ -87,20 +89,30 @@ for (const [width, height] of sizes)
     await page.evaluate(() => TacticalOfficer.step(105));
     await page.locator('#tdLoad').click();
     assert.ok(await dialogFits(page, 'weaponsDialog'), 'the launcher set-up fits');
-    const cutInDialog = () => page.evaluate(() => [...document.querySelectorAll('#weaponsDialog button, #weaponsDialog .wline > *, #weaponsDialog .rows dd, #weaponsDialog .wc-head > *')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => e.textContent));
+    const cutInDialog = () => page.evaluate(() => [...document.querySelectorAll('#weaponsDialog button, #weaponsDialog .wline > *, #weaponsDialog .rows dd, #weaponsDialog .wc-head > *, #weaponsDialog .wc-line, #weaponsDialog .wc-state')].filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => e.textContent));
     assert.deepEqual(await cutInDialog(), [], 'no launcher text is cut off');
     await page.locator('#weaponsDialog [data-close]').click();
-    await page.locator('#epwBtn').click();
+    await page.locator('#weaponsBtn').click();
+    assert.deepEqual(await cutInDialog(), [], 'no weapon type card text is cut off');
+    await page.locator('#weaponKinds [data-kind="EPW"]').click();
     assert.ok(await dialogFits(page, 'weaponsDialog'), 'the EPW list fits');
     assert.deepEqual(await cutInDialog(), [], 'no EPW card text is cut off');
     await page.locator('#weaponsList [data-choose="EPW1"]').click();
     assert.ok(await dialogFits(page, 'weaponsDialog'), 'the EPW set-up fits');
     assert.deepEqual(await cutInDialog(), [], 'no EPW set-up text is cut off');
     await page.locator('#weaponsDialog [data-close]').click();
-    // The ten bottom-bar commands keep apart.
+    // The eight bottom-bar commands keep apart, centred, clear of both side columns (John, 2026-11-12).
     const commands = await page.locator('.dock button').evaluateAll(buttons => buttons.map(b => { const r = b.getBoundingClientRect(); return { l: r.left, r: r.right, cut: b.scrollWidth > b.clientWidth + 1 }; }));
     for (let i = 1; i < commands.length; i++) assert.ok(commands[i].l >= commands[i - 1].r, `bottom-bar command ${i + 1} clears the one before`);
     assert.ok(commands.every(c => !c.cut), 'no bottom-bar label is cut off');
+    const bar = await page.evaluate(() => {
+      const dock = document.querySelector('.dock').getBoundingClientRect(), buttons = [...document.querySelectorAll('.dock button')].map(b => b.getBoundingClientRect());
+      const left = Math.min(...buttons.map(b => b.left)), right = Math.max(...buttons.map(b => b.right)), top = Math.min(...buttons.map(b => b.top));
+      const cols = [...document.querySelectorAll('.col')].map(c => c.getBoundingClientRect()).filter(c => c.bottom > top);
+      return { offCentre: Math.abs((dock.left + dock.right) / 2 - innerWidth / 2), overlaps: cols.filter(c => c.right > left && c.left < right).length };
+    });
+    assert.ok(bar.offCentre < 2, `the bottom bar is centred (${bar.offCentre.toFixed(1)} px off)`);
+    assert.equal(bar.overlaps, 0, 'the bottom bar clears both side columns');
     await page.locator('#menuBtn').click();
     await page.locator('#openDemoControls').click();
     assert.ok(await dialogFits(page, 'menuDialog'), 'the demo controls fit');

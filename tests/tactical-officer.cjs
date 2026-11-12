@@ -47,7 +47,7 @@ run({
     await expect(page.locator('#noTarget')).toBeVisible();
     await expect(page.locator('#conditionValue')).toHaveText('IV');
     await expect(page.locator('#advisory')).toHaveText('No target. Tap a contact on the scanner.');
-    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'TORPEDOES', 'EPW', 'EBW', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
+    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'WEAPONS', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
     // Shields on and off is a bottom-bar command; the panel only reports it.
     await expect(page.locator('.shields button')).toHaveCount(0);
     await expect(page.locator('#shieldsState')).toHaveText('ON');

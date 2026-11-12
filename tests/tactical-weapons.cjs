@@ -1,5 +1,5 @@
-// Tactical Officer Control runs every weapon when the ship is short of weapons officers: TORPEDOES, EPW and EBW on
-// the bottom bar open an overlay listing the ship's weapons of that kind. A torpedo launcher takes a warhead
+// Tactical Officer Control runs every weapon when the ship is short of weapons officers: WEAPONS on the bottom bar
+// (one button, John 2026-11-12) opens an overlay of the weapon types, then the ship's weapons of the type chosen. A torpedo launcher takes a warhead
 // set-up (yield, impact or proximity and impact, distance from target), assembles a round, keeps six ready with
 // auto assemble and feeds its tube with auto load and auto arm; an energy weapon takes its shot power and is
 // armed. Armed weapons fire from the weapons panel at the selected target.
@@ -23,23 +23,40 @@ async function slide(page, selector, value, min) {
   for (let v = min; v < value; v++) await page.keyboard.press('ArrowUp');
   await expect(page.locator(selector)).toHaveAttribute('aria-valuenow', String(value));
 }
+// WEAPONS, then a weapon type (TPD, EPW or EBW): the ship's weapons of that type.
+async function openKind(page, kind) {
+  await page.locator('#weaponsBtn').click();
+  await page.locator(`#weaponKinds [data-kind="${kind}"]`).click();
+  await expect(page.locator('#weaponsList')).toBeVisible();
+}
 async function openLauncher(page, id) {
-  await page.locator('#torpedoesBtn').click();
+  await openKind(page, 'TPD');
   await page.locator(`#weaponsList [data-choose="${id}"]`).click();
   await expect(page.locator('#torpedoDetail')).toBeVisible();
 }
 
 run({
-  'the bottom bar has TORPEDOES, EPW and EBW; weapons start safe and the overlays list the ship’s weapons': async ({ open }) => {
+  'the bottom bar has one WEAPONS button; weapons start safe; the overlay offers the weapon types, then lists the ship’s weapons of each': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
-    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'TORPEDOES', 'EPW', 'EBW', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
+    await expect(page.locator('.dock button')).toHaveText(['SCAN TARGET', 'SUBSYSTEMS', 'AUTO TARGET', 'CLEAR TARGET', 'WEAPONS', 'SHIELDS ON', 'VIEW SCREEN', 'CONDITION']);
     await expect(page.locator('[data-weapon] .wstate')).toHaveText(['SAFE', 'SAFE', 'TUBE EMPTY', 'TUBE EMPTY', 'SAFE', 'SAFE']);
     await tap(page, 'ship:Training ship A');
-    await expect(page.locator('#advisory')).toHaveText(/no weapon armed: arm them from Torpedoes, EPW or EBW\.$/);
-    // Torpedoes: one card per launcher.
-    await page.locator('#torpedoesBtn').click();
+    await expect(page.locator('#advisory')).toHaveText(/no weapon armed: arm them from Weapons\.$/);
+    // WEAPONS: the three weapon types first, a card each, all safe.
+    await page.locator('#weaponsBtn').click();
     await expect(dialog(page)).toBeVisible();
+    await expect(page.locator('#weaponsTitle')).toHaveText('WEAPONS');
+    await expect(page.locator('#weaponsBack')).toBeHidden();
+    await expect(page.locator('#weaponsList')).toBeHidden();
+    await expect(page.locator('#weaponKinds .wc-head b')).toHaveText(['TORPEDO LAUNCHERS', 'EPW · PHASE CANNONS', 'EBW · PHASER ARRAYS']);
+    await expect(page.locator('#weaponKinds [data-wc-state]')).toHaveText(['ALL SAFE', 'ALL SAFE', 'ALL SAFE']);
+    await expect(page.locator('#weaponKinds [data-wc-line]')).toHaveText(['0 IN THE RACKS · 0 / 2 TUBES LOADED', '3 CANNONS · 0 READY TO FIRE', '1 ARRAY · 0 READY TO FIRE']);
+    await expect(page.locator('#weaponsChip')).toHaveText('0 / 6 ARMED');
+    // Torpedoes: one card per launcher; ‹ goes back to the weapon types.
+    await page.locator('#weaponKinds [data-kind="TPD"]').click();
     await expect(page.locator('#weaponsTitle')).toHaveText('TORPEDO LAUNCHERS');
+    await expect(page.locator('#weaponKinds')).toBeHidden();
+    await expect(page.locator('#weaponsBack')).toHaveAttribute('aria-label', 'Back to the weapon types');
     await expect(page.locator('#weaponsList .wc-head b')).toHaveText(['TORPEDO 1', 'TORPEDO 2']);
     await expect(page.locator('#weaponsList .wc-head small')).toHaveText(['FORWARD ±30°', 'AFT ±30°']);
     await expect(page.locator('#weaponsList [data-wc-state]')).toHaveText(['TUBE EMPTY', 'TUBE EMPTY']);
@@ -51,13 +68,13 @@ run({
     await page.keyboard.press('Escape');
     await expect(dialog(page)).toBeHidden();
     // EPW: the phase cannons; EBW: the phaser array.
-    await page.locator('#epwBtn').click();
+    await openKind(page, 'EPW');
     await expect(page.locator('#weaponsTitle')).toHaveText('EPW · PHASE CANNONS');
     await expect(page.locator('#weaponsList .wc-head b')).toHaveText(['CANNON 1', 'CANNON 2', 'CANNON 3']);
     await expect(page.locator('#weaponsList [data-wc-state]')).toHaveText(['SAFE', 'SAFE', 'SAFE']);
     await page.locator('#weaponsDialog [data-close]').click();
     await expect(dialog(page)).toBeHidden();
-    await page.locator('#ebwBtn').click();
+    await openKind(page, 'EBW');
     await expect(page.locator('#weaponsTitle')).toHaveText('EBW · PHASER ARRAYS');
     await expect(page.locator('#weaponsList .wc-head b')).toHaveText(['ARRAY 1']);
     await expect(page.locator('#weaponsList .wc-head small')).toHaveText(['ALL ROUND']);
@@ -165,7 +182,7 @@ run({
     await expect(page.locator('#tdTubeTitle')).toHaveText('#1 ARMED');
     await expect(page.locator('#tdRackCount')).toHaveText(/^[12] \/ 6$/);
     await expect(page.locator('#tdFire')).toHaveText('READY');
-    await expect(page.locator('#torpedoesBtn')).toHaveAttribute('data-armed', 'true');
+    await expect(page.locator('#weaponsBtn')).toHaveAttribute('data-armed', 'true');
     await page.locator('#weaponsBack').click();
     await expect(page.locator('#weaponsList [data-wc-state]').first()).toHaveText('#1 ARMED');
     await expect(page.locator('#weaponsList [data-choose="TPD1"] [data-flag]')).toHaveText(['AUTO ASSEMBLE', 'AUTO LOAD', 'AUTO ARM']);
@@ -207,7 +224,7 @@ run({
   'EPW: a cannon’s shot power is set and it is armed, then it fires from Tactical': async ({ open }) => {
     const page = await open('/TacticalOfficer/');
     await tap(page, 'ship:Training ship A');
-    await page.locator('#epwBtn').click();
+    await openKind(page, 'EPW');
     await page.locator('#weaponsList [data-choose="EPW1"]').click();
     await expect(page.locator('#energyDetail')).toBeVisible();
     await expect(page.locator('#weaponsTitle')).toHaveText('EPW · CANNON 1');
@@ -237,7 +254,7 @@ run({
     assert.ok(s.cooldowns.EPW1 <= 750 && s.cooldowns.EPW1 > 400, `half the 1.5 s recharge at half power (${s.cooldowns.EPW1} ms left)`);
     await expect(weapon(page, 'EPW1').locator('.wstate')).toHaveText('CHARGING');
     // Made safe again, it no longer fires.
-    await page.locator('#epwBtn').click();
+    await openKind(page, 'EPW');
     await page.locator('#weaponsList [data-choose="EPW1"]').click();
     await expect(page.locator('#edCharge')).toHaveText(/^CHARGING · \d+%$/);
     await page.locator('#edArm').click();
@@ -249,7 +266,7 @@ run({
     const page = await open('/TacticalOfficer/');
     await tap(page, 'ship:Training ship A');
     await set(page, { contacts: [{ range: 40000 }] });
-    await page.locator('#ebwBtn').click();
+    await openKind(page, 'EBW');
     await page.locator('#weaponsList [data-choose="EBW1"]').click();
     await expect(page.locator('#weaponsTitle')).toHaveText('EBW · ARRAY 1');
     await expect(page.locator('#edChargeLabel')).toHaveText('CAPACITOR CHARGE');
@@ -258,7 +275,7 @@ run({
     await expect(page.locator('#edDamage')).toHaveText('WED 48.0 · WKD 48.0');
     await page.locator('#edArm').click();
     await expect(page.locator('#edFire')).toHaveText('READY');
-    await expect(page.locator('#ebwBtn')).toHaveAttribute('data-armed', 'true');
+    await expect(page.locator('#weaponsBtn')).toHaveAttribute('data-armed', 'true');
     await page.locator('#weaponsDialog [data-close]').click();
     await weapon(page, 'EBW1').click();
     await expect(page.locator('#notice')).toHaveText('Phaser array 1 fired at Training ship A.');

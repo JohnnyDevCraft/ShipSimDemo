@@ -103,3 +103,51 @@ test('stored state from another version is discarded', () => {
   assert.equal(computer.destinationFor(OWN).name, 'Earth');
   assert.equal(computer.state().power, true);
 });
+
+// One window, one console at a time (R11): the Helm's last report is carried on when the Helm page is not open.
+test('a Helm report that has stopped arriving keeps flying the ship on its last heading and speed, and a warp stops at its arrival', () => {
+  const { computer, clock } = rig();
+  const { OWN_SHIP_FRESH_MS } = require('../demo-app/static-src/Shared/nav-computer.js');
+  // Closed (the page said so): flown on at once, heading held, the turn dropped.
+  computer.reportOwnShip({ registry: OWN, x: 0, y: 0, bearing: 90, course: 90, speedKmS: 100, atWarp: false, turnRate: 3, warpFactor: 0, arrival: null, dock: 'undocked', closed: true });
+  clock.ms += 10_000;
+  let ship = computer.ownShip();
+  assert.equal(ship.continued, true);
+  assert.ok(Math.abs(ship.x - 1000) < 1e-6 && Math.abs(ship.y) < 1e-6, `1,000 km east (${ship.x}, ${ship.y})`);
+  assert.equal(ship.bearing, 90);
+  assert.equal(ship.turnRate, 0);
+  assert.equal(ship.at, clock.ms);
+  // Not closed, but silent past the freshness limit (a tablet does not always say a page closed): flown on the same way.
+  computer.reportOwnShip({ registry: OWN, x: 0, y: 0, bearing: 0, course: 0, speedKmS: 10, atWarp: false, turnRate: 0, warpFactor: 0, arrival: null, dock: 'undocked' });
+  clock.ms += 30_000;
+  assert.equal(computer.ownShip().continued, undefined, 'a fresh live report is returned as reported');
+  clock.ms += OWN_SHIP_FRESH_MS;
+  ship = computer.ownShip();
+  assert.equal(ship.continued, true);
+  assert.ok(Math.abs(ship.y - 10 * (30 + OWN_SHIP_FRESH_MS / 1000)) < 1e-6, `flown north since the report (${ship.y})`);
+  // A warp jump ends at its arrival and the ship is then out of warp and stopped.
+  computer.reportOwnShip({ registry: OWN, x: 0, y: 0, bearing: 0, course: 0, speedKmS: 299792.458, atWarp: true, turnRate: 0, warpFactor: 1, arrival: { x: 0, y: 1e6 }, dock: 'undocked', closed: true });
+  clock.ms += 60_000;
+  ship = computer.ownShip();
+  assert.deepEqual([ship.x, ship.y, ship.atWarp, ship.speedKmS, ship.warpFactor, ship.arrival], [0, 1e6, false, 0, 0, null]);
+  // Docked stays docked.
+  computer.reportOwnShip({ registry: OWN, x: 5, y: 6, bearing: 0, course: 0, speedKmS: 0, atWarp: false, turnRate: 0, warpFactor: 0, arrival: null, dock: 'clamps', closed: true });
+  clock.ms += 600_000;
+  ship = computer.ownShip();
+  assert.deepEqual([ship.x, ship.y, ship.dock], [5, 6, 'clamps']);
+});
+
+test('a Helm report older than the session limit is forgotten', () => {
+  const { computer, clock } = rig();
+  const { OWN_SHIP_SESSION_MS } = require('../demo-app/static-src/Shared/nav-computer.js');
+  assert.equal(OWN_SHIP_SESSION_MS, 4 * 3600 * 1000);
+  computer.reportOwnShip({ registry: OWN, x: 0, y: 0, bearing: 0, course: 0, speedKmS: 10, atWarp: false, turnRate: 0, closed: true });
+  clock.ms += OWN_SHIP_SESSION_MS;
+  assert.ok(computer.ownShip(), 'still carried on at the limit');
+  clock.ms += 1;
+  assert.equal(computer.ownShip(), null);
+  assert.equal(computer.resumeOwnShip(), null);
+  // A null report (Reset demo, or a test) still means no ship at all.
+  computer.reportOwnShip(null);
+  assert.equal(computer.ownShip(), null);
+});

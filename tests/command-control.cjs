@@ -1,5 +1,5 @@
 // Command Control: the captain's phone console. A stand-in ship until DOT Bay Control reports, then the live bay
-// (damage and DOTs) and back to the stand-in when the report goes stale; the camera stick turns and zooms the main
+// (damage and DOTs), and its last report carried on once it goes stale (R11: one console at a time); the camera stick turns and zooms the main
 // view screen, the four views jump, the scanners switch between SRS, LRS, DUAL and NONE, and the labels toggle,
 // all reaching an open View Screen; changes from Communications show here; the tabs and the status strip; touch
 // on a phone; and the demo controls.
@@ -54,7 +54,7 @@ run({
     await expect(page.locator('#componentList li[data-component="warp"] .cdots i')).toHaveCount(2);
   },
 
-  'the live bay from DOT Bay Control, and the stand-in again once its report is stale': async ({ open }) => {
+  'the live bay from DOT Bay Control, and its last report carried on once it is stale': async ({ open }) => {
     const bay = await open('/DotBay/');
     await bay.evaluate(() => DotBay.set({ integrity: { ...DotBay.state().integrity, reactor: 30 } }));
     // DOT 1 to the reactor, beaming there.
@@ -72,15 +72,16 @@ run({
     // Changes in the bay arrive within a second.
     await bay.locator('#recallAllBtn').click();
     await expect(page.locator('.dot-card').nth(0)).toContainText('BEAMING HOME');
-    // DOT Bay Control closed: its last report goes stale and the stand-in returns.
+    // DOT Bay Control closed: its last report goes stale and is carried on, not replaced by the stand-in (R11).
     await bay.close();
     await page.evaluate(() => {
       const report = JSON.parse(localStorage.getItem(DotBayReport.KEY));
-      localStorage.setItem(DotBayReport.KEY, JSON.stringify({ ...report, at: Date.now() - DotBayReport.STALE_MS - 1 }));
+      localStorage.setItem(DotBayReport.KEY, JSON.stringify({ ...report, closed: false, at: Date.now() - DotBayReport.STALE_MS - 1 }));
       CommandControl.refresh();
     });
-    await expect(page.locator('#sourceLight')).toHaveAttribute('data-level', 'stand-in');
-    await expect(page.locator('#damageCount')).toHaveText('4');
+    await expect(page.locator('#sourceLight')).toHaveAttribute('data-level', 'continued');
+    await expect(page.locator('#sourceNote')).toHaveText('DOT Bay closed · repairs continuing from its last report');
+    await expect(page.locator('#damageCount')).toHaveText('5');
   },
 
   'DOT Bay Control reports every component and DOT': async ({ open }) => {

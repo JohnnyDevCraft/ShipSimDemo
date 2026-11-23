@@ -29,7 +29,8 @@ test('the built app has a valid installable manifest with 192, 512 and maskable 
   assert.equal(manifest.start_url, '/ShipSimDemo/app/');
   assert.equal(manifest.scope, '/ShipSimDemo/');
   assert.ok(manifest.start_url.startsWith(manifest.scope), 'start_url inside the scope');
-  assert.equal(manifest.display, 'standalone');
+  assert.equal(manifest.display, 'fullscreen', 'the installed app asks for fullscreen (card #25)');
+  assert.equal(manifest.display_override, undefined, 'no display_override: display alone carries the mode');
   assert.equal(manifest.orientation, 'landscape');
   assert.ok(manifest.background_color && manifest.theme_color);
   assert.notEqual(manifest.prefer_related_applications, true);

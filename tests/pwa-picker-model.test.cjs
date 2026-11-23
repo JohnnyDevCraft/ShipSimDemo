@@ -47,3 +47,17 @@ test('the status shows progress, then Offline ready only when the worker reports
   assert.equal(describeOffline({ supported: true, status: null, error: 'install failed: x' }).retry, true, 'a failed install offers Retry');
   assert.equal(describeOffline({ supported: false, status: null }).title, 'Offline use is not available in this browser');
 });
+
+// Card #25: the diagnostics name the display mode the window reports. No worker condition here: the controller is
+// absent on the first launch after install, and the label must still read "fullscreen" then (ANALYSIS-002).
+test('the display mode reads fullscreen, standalone or browser from what the window reports', () => {
+  const { displayMode } = compileTs(`${SRC}/offline/display-mode.ts`);
+  const none = { fullscreenQuery: false, standaloneQuery: false, navigatorStandalone: false, fullscreenElement: false };
+  assert.equal(displayMode({ ...none, fullscreenQuery: true }), 'fullscreen', 'fullscreen app window');
+  assert.equal(displayMode({ ...none, standaloneQuery: true }), 'standalone', 'standalone app window');
+  assert.equal(displayMode({ ...none, navigatorStandalone: true }), 'standalone', 'iOS Home Screen flag');
+  assert.equal(displayMode({ ...none, fullscreenQuery: true, navigatorStandalone: true }), 'fullscreen', 'iPad as expected under the fullscreen manifest');
+  assert.equal(displayMode({ ...none, fullscreenQuery: true, fullscreenElement: true }), 'browser', 'Fullscreen API in a tab');
+  assert.equal(displayMode({ ...none, fullscreenQuery: true, fullscreenElement: true, standaloneQuery: true }), 'standalone', 'Fullscreen API inside a standalone window');
+  assert.equal(displayMode(none), 'browser', 'ordinary tab');
+});

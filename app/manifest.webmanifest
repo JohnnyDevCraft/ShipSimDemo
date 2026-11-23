@@ -5,7 +5,7 @@
   "description": "The Mission Protocol bridge console demos in one app, for a tablet in landscape.",
   "start_url": "/ShipSimDemo/app/",
   "scope": "/ShipSimDemo/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#02070f",
   "theme_color": "#02070f",

@@ -1,5 +1,5 @@
 {
- "version": "8f10d24ea84b4f902ee189cc9d2c4618d38738e5cdb913f7f5e7d7ecc33faf01",
+ "version": "bce6d08e43fde89bea89a30ec8920e5f1b2e8da94d34104951172b65db5e612d",
  "core": [
   {
    "url": "/ShipSimDemo/Assets/audio/hull-hit.wav",
@@ -28,8 +28,8 @@
   },
   {
    "url": "/ShipSimDemo/Battery/index.html",
-   "sha256": "bf148458dd75c9f7bdfad4d0bd6cebc961884bc30aa7883a33794a2054fea818",
-   "bytes": 15756
+   "sha256": "6f64fa9fe5851eb823636b9b5e900e38e43af246d09325a599f5e4d10d144f1e",
+   "bytes": 15815
   },
   {
    "url": "/ShipSimDemo/Battery/styles.css",
@@ -43,8 +43,8 @@
   },
   {
    "url": "/ShipSimDemo/CargoBay/index.html",
-   "sha256": "6e2d21b3aaa3e5ac9568dcb927f33c3a0ce35ac5fd0848ae7dc80604988d4a50",
-   "bytes": 12401
+   "sha256": "edb9082ce6385a0c3f486d37a41cc4c0f9a302c847e23a55c92935179528b0f7",
+   "bytes": 12460
   },
   {
    "url": "/ShipSimDemo/CargoBay/styles.css",
@@ -58,8 +58,8 @@
   },
   {
    "url": "/ShipSimDemo/Command/index.html",
-   "sha256": "b619403ad2158585b7dd0f73c5d849c9103def99209a000863f9c9ab1e29ccf9",
-   "bytes": 12382
+   "sha256": "80e8a8eee02ac14cfe5bd56c2c24388829104595b3518e793ca03e2ea9dce049",
+   "bytes": 12441
   },
   {
    "url": "/ShipSimDemo/Command/styles.css",
@@ -78,8 +78,8 @@
   },
   {
    "url": "/ShipSimDemo/Communications/index.html",
-   "sha256": "b87f4067e153dcfd6b40ad3ee54bceffc436187af262820fe13e25f2021b2d48",
-   "bytes": 19031
+   "sha256": "386ec5582cf7b53a269e33258921c138894aa037fb33c2eecff19735f51f7a32",
+   "bytes": 19090
   },
   {
    "url": "/ShipSimDemo/Communications/styles.css",
@@ -98,8 +98,8 @@
   },
   {
    "url": "/ShipSimDemo/Docking/index.html",
-   "sha256": "944b3008ca0fd63cc053e1e058e500c9f8e83d5ff344a31b59ce117e8af9dfdf",
-   "bytes": 12866
+   "sha256": "f5f4ac33511a1ec2d828e468ddde9345c84d4587a57d1340d28310e79658c61b",
+   "bytes": 12925
   },
   {
    "url": "/ShipSimDemo/Docking/styles.css",
@@ -113,8 +113,8 @@
   },
   {
    "url": "/ShipSimDemo/DotBay/index.html",
-   "sha256": "0dd0916c1a55f916f669fdcafadbb7daaccb06f1324613836f6d19ff4b1cc5a4",
-   "bytes": 10301
+   "sha256": "90bc7f4acdd8faf171e588e7353f6cc86cd7a33d3c876f1ba4a7a2de0ae44430",
+   "bytes": 10360
   },
   {
    "url": "/ShipSimDemo/DotBay/styles.css",
@@ -133,8 +133,8 @@
   },
   {
    "url": "/ShipSimDemo/Fighter/index.html",
-   "sha256": "5d2dfd34c3fa6b2bf39fa7359261235263368dda9d04a2ac23afa6d254f8f147",
-   "bytes": 21082
+   "sha256": "b08e43be5b75fb1d1f5cb2bf4abd03a15e12892f99a2929c716964311aa7ed1d",
+   "bytes": 21141
   },
   {
    "url": "/ShipSimDemo/Fighter/styles.css",
@@ -163,8 +163,8 @@
   },
   {
    "url": "/ShipSimDemo/Helm/index.html",
-   "sha256": "152e5f017a8f874902579d547c3897e528862022e2e985e9c14db0ab9f820fc6",
-   "bytes": 22356
+   "sha256": "cc075e8143cf76266356e113d2ae707819ea681c921fc98e775e36d7dc973741",
+   "bytes": 22415
   },
   {
    "url": "/ShipSimDemo/Helm/safety.js",
@@ -178,8 +178,8 @@
   },
   {
    "url": "/ShipSimDemo/LifeSupport/index.html",
-   "sha256": "7a2a259d511a974c6494058b3603ae31cec841c3f1766b0da8bc9c18585e0c36",
-   "bytes": 13379
+   "sha256": "cfec40d4b688189a1ecb6dc6e1b6ab1e7fdcdb4bfe5cd27bcdfa1f4427213adf",
+   "bytes": 13438
   },
   {
    "url": "/ShipSimDemo/LifeSupport/lifesupport.js",
@@ -193,8 +193,8 @@
   },
   {
    "url": "/ShipSimDemo/Navigation/index.html",
-   "sha256": "f8bddbf21ece189af5ce0d9812a2f5a8689fe4f5f324dd262b4d2a51c4a89129",
-   "bytes": 13995
+   "sha256": "b16e53f4461bd8d69500b674cd10aac5ae2eae33e5e66615c3643f18b52c5ad5",
+   "bytes": 14054
   },
   {
    "url": "/ShipSimDemo/Navigation/navigation.js",
@@ -208,18 +208,18 @@
   },
   {
    "url": "/ShipSimDemo/PhaseCannon/index.html",
-   "sha256": "ea26689573f9f2e6d877edd367f2e7fc3c808a8681da1cd4439110097fd23d4e",
-   "bytes": 14587
+   "sha256": "7145163a9d752fa2329fd163f6ea65b805c4669b301c979c933462be58f21ff9",
+   "bytes": 14646
   },
   {
    "url": "/ShipSimDemo/PhaserArray/index.html",
-   "sha256": "c5e19da5f16e1d7f08637cdb8798305aa77c7a576310c2423dfef82cb38f332c",
-   "bytes": 13666
+   "sha256": "214ee5629dfc36f2cca072583434a3fc4eaec8aa00059cc1a6e6a2419500d7f3",
+   "bytes": 13725
   },
   {
    "url": "/ShipSimDemo/PowerDistribution/index.html",
-   "sha256": "9f41993ccd726e90651ea0a199aec9bc7fae40cddf27da8c3977b201099d272f",
-   "bytes": 12279
+   "sha256": "d64e3bd8542bf988b9723ffcc23c46bb8d73e903d49382dcfeb408547e915ccb",
+   "bytes": 12338
   },
   {
    "url": "/ShipSimDemo/PowerDistribution/power.js",
@@ -238,8 +238,8 @@
   },
   {
    "url": "/ShipSimDemo/Reactor/index.html",
-   "sha256": "264860d9722db9836c165395411255c6530793ee9d44c9ced540b6cdcc910f7e",
-   "bytes": 16470
+   "sha256": "8faf85761cc7535f57b0a3077315919c0d3bca45a4b3e02bb84fc7d0e0012166",
+   "bytes": 16529
   },
   {
    "url": "/ShipSimDemo/Reactor/reactor.js",
@@ -258,8 +258,8 @@
   },
   {
    "url": "/ShipSimDemo/Science/index.html",
-   "sha256": "835723b92a3ae99fc1977e3808db296fcfa7d39526f23cc282b073e8d194e706",
-   "bytes": 16931
+   "sha256": "d768b3efb12e7994632e527369a9fd126c206c9773464281eca98bd6efb3482c",
+   "bytes": 16990
   },
   {
    "url": "/ShipSimDemo/Science/library-data.js",
@@ -340,6 +340,11 @@
    "url": "/ShipSimDemo/Shared/energy-weapon.js",
    "sha256": "90c7d0d29244c27f7a57ee7018747f6eae24dfd1f90efe4732e51c22026113c0",
    "bytes": 10949
+  },
+  {
+   "url": "/ShipSimDemo/Shared/fullscreen.js",
+   "sha256": "7a3453d8a9f18966a8e467445cc6a7afc10edf41bded80bacca93a8ba061e898",
+   "bytes": 4984
   },
   {
    "url": "/ShipSimDemo/Shared/game-pad.css",
@@ -428,8 +433,8 @@
   },
   {
    "url": "/ShipSimDemo/Shields/index.html",
-   "sha256": "4f43705e1146ce4c846f26009bcf4a086af753af1268a7bf5aebf0a41b51f942",
-   "bytes": 11366
+   "sha256": "58a621de3ad2e1944d8c8d45985a20bdc265f8a9879e1808beb653f1015049c7",
+   "bytes": 11425
   },
   {
    "url": "/ShipSimDemo/Shields/shields.js",
@@ -448,8 +453,8 @@
   },
   {
    "url": "/ShipSimDemo/TacticalOfficer/index.html",
-   "sha256": "0ca72abe32560b8cd0abf08b78d1600f1c6addd9baf1a04601c246c44162c294",
-   "bytes": 24060
+   "sha256": "b502497d9200ade3c684178eea3f7f6cec4cf1a0a114e91a739de490b9b8544a",
+   "bytes": 24119
   },
   {
    "url": "/ShipSimDemo/TacticalOfficer/styles.css",
@@ -468,8 +473,8 @@
   },
   {
    "url": "/ShipSimDemo/TorpedoAssembly/index.html",
-   "sha256": "ec0a26366557bf86d0ca13995999552d4e33393a7d65dfb88868119e2ac09f8f",
-   "bytes": 25389
+   "sha256": "355ddb6f9b4787e5fcecf5e38dbfc61a915006a8483a5f75b840f806ee827c12",
+   "bytes": 25448
   },
   {
    "url": "/ShipSimDemo/TorpedoAssembly/styles.css",
@@ -478,8 +483,8 @@
   },
   {
    "url": "/ShipSimDemo/TorpedoLaunch/index.html",
-   "sha256": "c28e6937cc7c1698aa5e41d5e688bdc6a177ed66164cc60065765bc729113272",
-   "bytes": 15179
+   "sha256": "6fa014e849c95b5be6b286c95d5f62f07681a66bab5813ae0a971f8d436b0f2e",
+   "bytes": 15238
   },
   {
    "url": "/ShipSimDemo/TorpedoLaunch/launch.js",
@@ -498,8 +503,8 @@
   },
   {
    "url": "/ShipSimDemo/TractorBeam/index.html",
-   "sha256": "45206ac0b103a9d70c92679ef81e49c019243b983397b56d87a1cd6a0617c245",
-   "bytes": 11546
+   "sha256": "c1124069c14493574c6bf1d5e99d380f55f3cafc3143ccdf9b20a2980eca8e7a",
+   "bytes": 11605
   },
   {
    "url": "/ShipSimDemo/TractorBeam/styles.css",
@@ -518,8 +523,8 @@
   },
   {
    "url": "/ShipSimDemo/Transporter/index.html",
-   "sha256": "1480c3cdd196798336a049607ac55ea477c94a3ab3e0edb79f07161715447404",
-   "bytes": 19209
+   "sha256": "9143a28d4b75774eed7aee41659b14bf10ddcf9fd48d476d1db64ec3c9388a96",
+   "bytes": 19268
   },
   {
    "url": "/ShipSimDemo/Transporter/styles.css",
@@ -533,8 +538,8 @@
   },
   {
    "url": "/ShipSimDemo/ViewScreen/index.html",
-   "sha256": "994c033c322324a3af919a592501d4b4944455066c0cd5e07ea72bc64d9349af",
-   "bytes": 10302
+   "sha256": "036bfc56acdcd2efae9e07a04dd1803610e66ff254cd32b979907cd60ef23f7a",
+   "bytes": 10361
   },
   {
    "url": "/ShipSimDemo/ViewScreen/styles.css",
@@ -553,8 +558,8 @@
   },
   {
    "url": "/ShipSimDemo/WarpField/index.html",
-   "sha256": "00bc351f6d475d1c133f3f9ff5a7ed798b8411a2569c781195208ec8ecf8afd5",
-   "bytes": 11726
+   "sha256": "386197971bd9a16006a537015b8e190a6166d3c8b4ff9333ae2826194b3254f9",
+   "bytes": 11785
   },
   {
    "url": "/ShipSimDemo/WarpField/styles.css",
@@ -588,13 +593,13 @@
   },
   {
    "url": "/ShipSimDemo/app/index.html",
-   "sha256": "ff0468f4dda9fc902f150310e571ad0dfce9fbbadb6dfa5ac0604ad03aebaabe",
+   "sha256": "449a1161c2cf2924a41f8eff7646c405847cecf60291666aa875f065c0cfb023",
    "bytes": 1088
   },
   {
-   "url": "/ShipSimDemo/app/main-2G76KAAA.js",
-   "sha256": "5082934b3670669abfc40080f0a1dc274179b44c473a759b2f7f44de7325b303",
-   "bytes": 231041
+   "url": "/ShipSimDemo/app/main-K5GBYQ4L.js",
+   "sha256": "3d3e572f6a1bdb4efe96530e83af69434054454e70dc88784d9ec9d4f39898f0",
+   "bytes": 231570
   },
   {
    "url": "/ShipSimDemo/app/manifest.webmanifest",

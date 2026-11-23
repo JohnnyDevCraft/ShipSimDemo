@@ -9,11 +9,17 @@ The demos are also one installable app (a progressive web app) for a tablet in l
 - **Android (Chrome, ONN 8-inch):** open the URL on Wi-Fi → Chrome menu → **Install app** → open **MPS Demos** from the home screen → keep the station picker open until it says **Offline ready**.
 - **iPad (Safari):** open the URL → **Share** → **Add to Home Screen** → open the app from its icon (it keeps its own storage, separate from Safari) → keep the picker open until **Offline ready**.
 - The first set-up downloads about 210 MB: every demo, sound and 3D model. **Preparation failed · Retry** means a download failed or storage ran out (the reason is shown); reconnect or free space and tap **Retry**, and it carries on where it stopped. **Update** appears when a new version is published.
+- **Fullscreen (Android):** the installed app opens fullscreen: no Chrome address bar or tabs, and Android's status and navigation bars are hidden. Swipe in from the top or bottom edge to show them (they hide again after about 3 seconds); the on-screen keyboard also shows them while it is open. A Chrome tab showing the same address keeps Chrome's bars; that is expected.
+- **Leaving the app:** swipe in from the edge, then use **Back** or **Home**. **Back** on a demo returns to the station picker, and **Back** on the picker leaves the app. **‹ Stations** (labelled *Back to stations*) also returns to the picker.
+- **Where it installs:** only from the HTTPS address above. `http://localhost` and `http://127.0.0.1` count as secure, so a desktop browser can install from the local preview for testing, but a tablet on the local network cannot: an `http://<ip>` address (for example `http://192.168.1.20:18087/ShipSimDemo/app/`) is not a secure origin, so Chrome offers no install, registers no service worker and works only online, and **Add to Home screen** there only makes a shortcut that opens in a Chrome tab, not fullscreen.
+- **Already installed before fullscreen:** open the app → tap **Update** → close it, and leave the tablet charging on Wi-Fi; Chrome refreshes the installed app within a day of a later launch. To force it: Chrome → `about://webapks` → **Update** next to MPS Demos, then close and reopen the app. If it still opens with the status bar, uninstall MPS Demos and install it again.
+- **iPad:** the Home Screen app stays as it was (the status bar stays visible; iPadOS does not hide it for web apps).
+- **Desktop Chrome:** an installed app stays a normal app window. In a desktop browser that has opened `/app/` before, a demo page viewed in full screen (F11) may show **‹ Stations**, and that tab keeps it until it is closed; it only leads to the station picker.
 - In the app every demo has a **‹ Stations** control beside the emblem; links to the public page and links that would open another tab stay in the app window, so one console is shown at a time. Linked consoles keep the session when you switch: Helm's ship keeps flying on View Screen and Navigation, and DOT Bay's repairs carry on in Command.
 - Limits: iPad cannot lock landscape; sound unlocks with a tap on each station; on Android the installed app may open links to the public page; a wrong address under `/app/` shows GitHub's 404 until the app has been opened once; the autopilot steers only while Helm is open.
-- Offline: emulated in Chromium, all 23 demos open with their 3D models and sounds from a cold start with no network. Real-device (Android and iPad) results are reported separately once the device checklist has been run; until then no offline claim is made for real devices. Layout: every demo fits a 960×600 (8-inch) screen in emulation; Torpedo Assembly's Impact/Proximity options are flagged for a device check.
+- Offline: emulated in Chromium, all 23 demos open with their 3D models and sounds from a cold start with no network. Real-device (Android and iPad) results are reported separately once the device checklist has been run; until then no offline claim is made for real devices. Layout: every demo fits 960×600 (the whole 8-inch screen, as the fullscreen app gets it) and 1280×800 in emulation, with **‹ Stations** at least 44×44; Torpedo Assembly's Impact/Proximity options sit on its Configure page and fit once it is open (still on the device checklist).
 
-How it works: `app/` is the station picker (built from the private `demo-app/projects/station-picker`), `sw.js` is the service worker at the site root (scope `/ShipSimDemo/`, registered only by `app/`), and `app/precache-manifest.json` lists every published file with its SHA-256. `Shared/app-shell.js` adds the back control only inside the app. Build with `node scripts/build-static.cjs && node scripts/build-pwa.cjs` in the source repository, check with `node scripts/build-pwa.cjs --check` and `node scripts/check-publish.cjs <target>`, and copy with `node scripts/publish-copy.cjs <target>`.
+How it works: `app/` is the station picker (built from the private `demo-app/projects/station-picker`; its manifest asks for `"display": "fullscreen"`, and browsers that cannot do fullscreen fall back to a standalone window), `sw.js` is the service worker at the site root (scope `/ShipSimDemo/`, registered only by `app/`), and `app/precache-manifest.json` lists every published file with its SHA-256. `Shared/app-shell.js` adds the back control only inside the app: a standalone window, a fullscreen window that the app's service worker controls (a desktop tab in F11 or using the Fullscreen API does not count), or a tab the picker opened. Build with `node scripts/build-static.cjs && node scripts/build-pwa.cjs` in the source repository, check with `node scripts/build-pwa.cjs --check` and `node scripts/check-publish.cjs <target>`, and copy with `node scripts/publish-copy.cjs <target>`.
 
 ## Local preview
 
@@ -79,17 +85,18 @@ node tests/quick-switch.cjs         # the menu's quick switch (divisions, overla
 node tests/demo-combat.cjs          # every menu's Critical damage: components' critical effects and station shields, shared by every tab
 node tests/weapons-fire.cjs         # the demo's combat: the engagement on the weapon scopes, Fighter and the View Screen; Helm's and Navigation's enemy ship
 DEMO_MOUNT=/ShipSimDemo VIEWPORTS=960x600,1280x800,1180x820,1024x768 node tests/pwa-journeys.cjs  # the installable app: picker → every demo → back, reload, unknown /app/ address
-DEMO_MOUNT=/ShipSimDemo VIEWPORTS=960x600,1280x800 node tests/pwa-back-control.cjs  # ‹ Stations in the app only; links stay in the window
-node tests/pwa-installability.cjs   # /app/ installable, demos and the public root are not
+DEMO_MOUNT=/ShipSimDemo VIEWPORTS=960x600,1280x800 node tests/pwa-back-control.cjs  # ‹ Stations in the app only (standalone, fullscreen app window); not in F11 or Fullscreen API tabs; links stay in the window
+node tests/pwa-installability.cjs   # /app/ installable and fullscreen, demos and the public root are not
 node tests/pwa-offline.cjs          # full preload, then a cold start with no server (Chromium)
 node tests/pwa-update.cjs           # a new deployment: Update, only changed files download
 node tests/pwa-linked-state.cjs     # destination, camera and zoom, critical damage across a switch and a relaunch
 node tests/pwa-helm-viewscreen.cjs  # Helm → View Screen in one window
 node tests/pwa-dotbay-command.cjs   # DOT Bay → Command in one window
-node tests/pwa-tablet-fit.cjs       # report: which demos fit 960×600 (never fails)
+VIEWPORTS=960x600,1280x800 node tests/pwa-tablet-fit.cjs  # report: which demos fit each size, controls under Android's swiped-in bars
+FIT_STRICT=1 VIEWPORTS=960x600,1280x800 node tests/pwa-tablet-fit.cjs  # the same, failing on any demo that does not fit
 ```
 
-The browser tests serve this folder themselves and run in Chromium and WebKit. Set `ENGINES=chromium` to run one engine, `PLAYWRIGHT_MODULE` to use another Playwright installation, and `DEMO_BASE` to test an already running server.
+The browser tests serve this folder themselves and run in Chromium and WebKit. The real app-window cases in `pwa-back-control.cjs` open headful Chromium windows (`STANDALONE=0` skips them). Set `ENGINES=chromium` to run one engine, `PLAYWRIGHT_MODULE` to use another Playwright installation, and `DEMO_BASE` to test an already running server.
 
 The plain HTML and CSS are edited directly here. The weapon pages use compiled Angular assets built from `demo-app/`. Avoid overwriting the published repository with an older wholesale export.
 

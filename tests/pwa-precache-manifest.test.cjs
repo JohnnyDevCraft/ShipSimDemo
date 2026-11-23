@@ -98,3 +98,19 @@ test('changing any published file changes sw.js', () => {
   fs.writeFileSync(path.join(dir, 'Helm/index.html'), 'helm v2');
   assert.notEqual(stampWorker(worker, buildManifest(dir, { inventory: null }).version), after, 'a changed demo page changes sw.js');
 });
+
+// Card #25: the app's web app manifest is precached with its real hash, so changing only the manifest (for
+// example its display mode) yields a new worker version and the picker's Update on installed devices.
+test('the app manifest is precached with its hash, so a manifest-only change makes a new worker version', () => {
+  const { buildManifest } = buildPwa();
+  const built = JSON.parse(fs.readFileSync(path.join(demoRoot, 'app/precache-manifest.json'), 'utf8'));
+  const entry = [...built.core, ...built.heavy].find(item => item.url === '/ShipSimDemo/app/manifest.webmanifest');
+  assert.ok(entry, 'app/manifest.webmanifest is in the precache list');
+  const bytes = fs.readFileSync(path.join(demoRoot, 'app/manifest.webmanifest'));
+  assert.equal(entry.sha256, crypto.createHash('sha256').update(bytes).digest('hex'), 'precached hash matches the built manifest');
+
+  const dir = fixture({ 'index.html': 'root', 'app/index.html': '<app-root></app-root>', 'app/manifest.webmanifest': '{"display":"standalone"}' });
+  const before = buildManifest(dir, { inventory: null }).version;
+  fs.writeFileSync(path.join(dir, 'app/manifest.webmanifest'), '{"display":"fullscreen"}');
+  assert.notEqual(buildManifest(dir, { inventory: null }).version, before, 'a manifest-only change changes the version');
+});

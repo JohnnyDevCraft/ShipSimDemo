@@ -1,4 +1,4 @@
-const MPS_VERSION = "688f547b56fa758b03ac4efd43f01ae5891e1907afd078f84fad6d62527c5417";
+const MPS_VERSION = "8f10d24ea84b4f902ee189cc9d2c4618d38738e5cdb913f7f5e7d7ecc33faf01";
 "use strict";
 (() => {
   // demo-app/pwa/worker/worker-core.ts

@@ -20,6 +20,12 @@ async function chromeView(page) {
   return { errors: installabilityErrors.map(error => error.errorId), manifestUrl: manifest.url, manifestErrors: manifest.errors, display: manifest.manifest?.display };
 }
 
+// A page that is not the app: Chrome found no web app manifest, so it would open in neither app display mode.
+function assertNotAnApp(view, label) {
+  assert.equal(view.manifestUrl, '', `${label}: Chrome finds no web app manifest`);
+  assert.ok(!['kStandalone', 'kFullscreen'].includes(view.display), `${label}: would not open as an app (display ${view.display})`);
+}
+
 const cases = {
   'the /app/ preview is installable and its worker controls the demo pages': async ({ browser, site }) => {
     const context = await browser.newContext({ viewport: { width: 960, height: 600 } });
@@ -32,7 +38,7 @@ const cases = {
       assert.deepEqual(view.errors, [], 'Chrome installability errors');
       assert.match(view.manifestUrl, /\/ShipSimDemo\/app\/manifest\.webmanifest$/, 'Chrome found the app manifest');
       assert.deepEqual(view.manifestErrors, [], 'manifest parse errors');
-      assert.equal(view.display, 'kStandalone', 'Chrome will open it standalone');
+      assert.equal(view.display, 'kFullscreen', 'Chrome will open it fullscreen (card #25)');
       const scope = await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).scope);
       assert.equal(new URL(scope).pathname, '/ShipSimDemo/');
       await page.goto(`${site.base}/Helm/index.html`);
@@ -51,6 +57,10 @@ const cases = {
       const page = await context.newPage();
       await page.goto(`${site.base}/Reactor/index.html`);
       assert.equal(await page.locator('link[rel="manifest"]').count(), 0);
+      for (const folder of ['Helm', 'Command', 'TorpedoAssembly']) {
+        await page.goto(`${site.base}/${folder}/index.html`);
+        assertNotAnApp(await chromeView(page), folder);
+      }
     } finally {
       await context.close();
     }
@@ -62,9 +72,7 @@ const cases = {
       await page.goto(`${site.base}/`);
       await page.waitForTimeout(1500);
       assert.equal(await page.locator('link[rel="manifest"]').count(), 0, 'no manifest link');
-      const view = await chromeView(page);
-      assert.equal(view.manifestUrl, '', 'Chrome finds no web app manifest at the root');
-      assert.notEqual(view.display, 'kStandalone', 'the root would not open as a standalone app');
+      assertNotAnApp(await chromeView(page), 'the root');
       assert.equal(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length), 0, 'no worker registered');
     } finally {
       await context.close();

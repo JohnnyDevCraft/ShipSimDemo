@@ -1,5 +1,5 @@
 {
- "version": "688f547b56fa758b03ac4efd43f01ae5891e1907afd078f84fad6d62527c5417",
+ "version": "8f10d24ea84b4f902ee189cc9d2c4618d38738e5cdb913f7f5e7d7ecc33faf01",
  "core": [
   {
    "url": "/ShipSimDemo/Assets/audio/hull-hit.wav",
@@ -298,8 +298,8 @@
   },
   {
    "url": "/ShipSimDemo/Shared/app-shell.js",
-   "sha256": "e2c188c278a653c8405993d3133e09fe00cd0ab4c736c6ffa3658aee938ef6fb",
-   "bytes": 4223
+   "sha256": "9d9e3e95f247ed7049ba46fce65253993221672440798f7b1827a450aa20e137",
+   "bytes": 4356
   },
   {
    "url": "/ShipSimDemo/Shared/console-ui.js",
@@ -588,17 +588,17 @@
   },
   {
    "url": "/ShipSimDemo/app/index.html",
-   "sha256": "f937052423db651c7c2749d7a2e0b1f746d4dfe599c4ae1845202cf77907e539",
+   "sha256": "ff0468f4dda9fc902f150310e571ad0dfce9fbbadb6dfa5ac0604ad03aebaabe",
    "bytes": 1088
   },
   {
-   "url": "/ShipSimDemo/app/main-BICMGX2D.js",
-   "sha256": "20953cda42bd22ecf7213dc0725834a3718bf897d7b4b5f296e480e687e170bc",
-   "bytes": 230696
+   "url": "/ShipSimDemo/app/main-2G76KAAA.js",
+   "sha256": "5082934b3670669abfc40080f0a1dc274179b44c473a759b2f7f44de7325b303",
+   "bytes": 231041
   },
   {
    "url": "/ShipSimDemo/app/manifest.webmanifest",
-   "sha256": "f1623dbc3d98697e6ca3f71bd380c689f64fe8a340ba90f6fd18bf1c0e877297",
+   "sha256": "dddd8bee35187872b3270ab979edc7bf66e919fc0e4b70df2f950b55996a80e4",
    "bytes": 699
   },
   {
